@@ -18,7 +18,7 @@ const WAYPOINT_TYPES = [
   { value: 'landmark', label: '📍 Landmark', color: 'text-indigo-400' },
 ];
 
-const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', description: '' };
+const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', description: '', image_url: '' };
 
 export default function WaypointEditor({ waypoints, onChange }) {
   const [expanded, setExpanded] = useState(null);
