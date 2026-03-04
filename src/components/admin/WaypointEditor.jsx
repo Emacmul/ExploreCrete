@@ -265,6 +265,26 @@ export default function WaypointEditor({ waypoints, onChange }) {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div>
+                      <Label className="text-slate-400 text-xs mb-1 block">Photo</Label>
+                      {wp.image_url ? (
+                        <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-600">
+                          <img src={wp.image_url} alt="waypoint" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => updateWaypoint(index, 'image_url', '')}
+                            className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5 text-white hover:bg-black/80"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center gap-2 cursor-pointer bg-slate-700 border border-dashed border-slate-500 rounded-lg px-3 py-2 text-slate-400 hover:text-white hover:border-slate-400 transition-colors text-sm w-full">
+                          {uploadingIndex === index ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                          {uploadingIndex === index ? 'Uploading…' : 'Upload photo'}
+                          <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files[0] && handleImageUpload(e.target.files[0], index)} disabled={uploadingIndex !== null} />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
