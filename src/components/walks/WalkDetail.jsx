@@ -35,6 +35,8 @@ export default function WalkDetail({ walk, onClose }) {
   if (!walk) return null;
 
   const waypoints = walk.waypoints || [];
+  const { isDownloaded } = useOfflineWalks();
+  const downloaded = isDownloaded(walk.id);
 
   return (
     <AnimatePresence>
