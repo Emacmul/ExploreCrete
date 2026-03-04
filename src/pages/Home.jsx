@@ -18,6 +18,8 @@ export default function Home() {
   const [showDetail, setShowDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [tapLocation, setTapLocation] = useState(null);
+  const { getAllOfflineWalks } = useOfflineWalks();
+  const offlineCount = getAllOfflineWalks().length;
 
   // Check authentication
   useEffect(() => {
