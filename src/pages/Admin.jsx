@@ -94,6 +94,11 @@ export default function Admin() {
             onSave={handleSave}
             onCancel={() => setEditingWalk(null)}
           />
+        ) : voucherWalk !== null ? (
+          <VoucherManager
+            walk={voucherWalk}
+            onBack={() => setVoucherWalk(null)}
+          />
         ) : (
           <WalkAdminList
             walks={walks}
@@ -101,6 +106,7 @@ export default function Admin() {
             onNew={() => setEditingWalk({})}
             onEdit={(walk) => setEditingWalk(walk)}
             onDelete={handleDelete}
+            onVouchers={(walk) => setVoucherWalk(walk)}
           />
         )}
       </main>
