@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import OfflineTileLayer from './OfflineTileLayer';
+import LiveGpsMarker from './LiveGpsMarker';
 
-// Waypoint icons by type
 const waypointConfig = {
   start: { color: '#22c55e', icon: '🚩', label: 'Start' },
   end: { color: '#ef4444', icon: '🏁', label: 'End' },
@@ -19,11 +20,7 @@ const createWaypointIcon = (type) => {
   const config = waypointConfig[type] || waypointConfig.landmark;
   return L.divIcon({
     className: 'custom-waypoint-marker',
-    html: `<div class="flex flex-col items-center">
-      <div class="w-8 h-8 rounded-full shadow-lg flex items-center justify-center text-lg" style="background-color: ${config.color}">
-        ${config.icon}
-      </div>
-    </div>`,
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${config.color};display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${config.icon}</div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
   });
@@ -31,77 +28,53 @@ const createWaypointIcon = (type) => {
 
 function FitBoundsToTrail({ trailPath, waypoints }) {
   const map = useMap();
-  
   useEffect(() => {
-    if (trailPath && trailPath.length > 0) {
-      const bounds = L.latLngBounds(trailPath.map(p => [p.lat, p.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
-    } else if (waypoints && waypoints.length > 0) {
-      const bounds = L.latLngBounds(waypoints.map(w => [w.lat, w.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
+    const pts = trailPath?.length > 0
+      ? trailPath.map(p => [p.lat, p.lng])
+      : waypoints?.length > 0 ? waypoints.map(w => [w.lat, w.lng]) : null;
+    if (pts) map.fitBounds(L.latLngBounds(pts), { padding: [50, 50] });
   }, [map, trailPath, waypoints]);
-  
   return null;
 }
 
-export default function WalkDetailMap({ walk }) {
+export default function WalkDetailMap({ walk, followGps = false }) {
   const trailPath = walk.trail_path || [];
   const waypoints = walk.waypoints || [];
-  
-  const center = trailPath.length > 0 
+  const center = trailPath.length > 0
     ? [trailPath[0].lat, trailPath[0].lng]
-    : [walk.start_lat, walk.start_lng];
+    : [Number(walk.start_lat), Number(walk.start_lng)];
 
   return (
-    <MapContainer
-      center={center}
-      zoom={14}
-      className="w-full h-full rounded-xl"
-      style={{ minHeight: '300px' }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    <MapContainer center={center} zoom={14} className="w-full h-full" style={{ minHeight: '300px' }}>
+      <OfflineTileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       />
       <FitBoundsToTrail trailPath={trailPath} waypoints={waypoints} />
-      
-      {/* Trail line */}
+
       {trailPath.length > 1 && (
         <Polyline
           positions={trailPath.map(p => [p.lat, p.lng])}
-          pathOptions={{
-            color: '#3b82f6',
-            weight: 4,
-            opacity: 0.8,
-            dashArray: '10, 5',
-          }}
+          pathOptions={{ color: '#3b82f6', weight: 4, opacity: 0.85, dashArray: '10, 5' }}
         />
       )}
-      
-      {/* Waypoints */}
-      {waypoints.map((waypoint, index) => (
-        <Marker
-          key={index}
-          position={[waypoint.lat, waypoint.lng]}
-          icon={createWaypointIcon(waypoint.type)}
-        >
+
+      {waypoints.map((wp, i) => (
+        <Marker key={i} position={[wp.lat, wp.lng]} icon={createWaypointIcon(wp.type)}>
           <Popup>
-            <div className="text-center p-2 min-w-[150px]">
-              <span 
-                className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
-                style={{ backgroundColor: waypointConfig[waypoint.type]?.color || '#6366f1' }}
-              >
-                {waypointConfig[waypoint.type]?.label || waypoint.type}
+            <div className="text-center p-2 min-w-[140px]">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
+                style={{ backgroundColor: waypointConfig[wp.type]?.color || '#6366f1' }}>
+                {waypointConfig[wp.type]?.label || wp.type}
               </span>
-              <p className="font-semibold mt-2">{waypoint.name}</p>
-              {waypoint.description && (
-                <p className="text-xs text-gray-600 mt-1">{waypoint.description}</p>
-              )}
+              <p className="font-semibold mt-2">{wp.name}</p>
+              {wp.description && <p className="text-xs text-gray-600 mt-1">{wp.description}</p>}
             </div>
           </Popup>
         </Marker>
       ))}
+
+      <LiveGpsMarker followUser={followGps} />
     </MapContainer>
   );
 }
