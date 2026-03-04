@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Search, Mountain } from 'lucide-react';
 import WalkCard from './WalkCard';
+import OfflineWalksBanner from '../offline/OfflineWalksBanner';
 
 export default function WalkList({ walks, selectedWalk, onWalkSelect, searchQuery, onSearchChange }) {
   const filteredWalks = walks.filter(walk => 
