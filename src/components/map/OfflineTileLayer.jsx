@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { cacheTile, getCachedTile } from '../../lib/offlineStorage';
+import { cacheTile, getCachedTile } from '../offline/offlineStorage';
 
 /**
  * A custom tile layer that:
