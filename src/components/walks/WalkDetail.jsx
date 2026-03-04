@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
+import DownloadButton from './DownloadButton';
+import OfflineBadge from './OfflineBadge';
+import { useOfflineWalks } from '../offline/useOfflineWalks';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700',

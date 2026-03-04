@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Route, TrendingUp, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useOfflineWalks } from '../offline/useOfflineWalks';
+import OfflineBadge from './OfflineBadge';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700 border-green-200',
