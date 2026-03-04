@@ -13,6 +13,7 @@ export default function Admin() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingWalk, setEditingWalk] = useState(null); // null = list view, {} = new, {...} = edit
+  const [voucherWalk, setVoucherWalk] = useState(null); // walk to manage vouchers for
   const queryClient = useQueryClient();
 
   useEffect(() => {
