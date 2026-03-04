@@ -151,6 +151,28 @@ export default function WaypointEditor({ waypoints, onChange }) {
           />
         </div>
 
+        {/* Image upload for new waypoint */}
+        <div>
+          <Label className="text-slate-400 text-xs mb-1 block">Photo (optional)</Label>
+          {newWp.image_url ? (
+            <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-600">
+              <img src={newWp.image_url} alt="waypoint" className="w-full h-full object-cover" />
+              <button
+                onClick={() => setNewWp(p => ({ ...p, image_url: '' }))}
+                className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5 text-white hover:bg-black/80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-center gap-2 cursor-pointer bg-slate-700 border border-dashed border-slate-500 rounded-lg px-3 py-2 text-slate-400 hover:text-white hover:border-slate-400 transition-colors text-sm w-full">
+              {uploadingIndex === 'new' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+              {uploadingIndex === 'new' ? 'Uploading…' : 'Upload photo'}
+              <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files[0] && handleImageUpload(e.target.files[0])} disabled={uploadingIndex !== null} />
+            </label>
+          )}
+        </div>
+
         <Button onClick={addWaypoint} className="bg-amber-500 hover:bg-amber-600 gap-2 w-full">
           <Plus className="w-4 h-4" /> Add Key Point
         </Button>
