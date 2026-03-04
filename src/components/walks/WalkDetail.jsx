@@ -161,6 +161,13 @@ export default function WalkDetail({ walk, onClose }) {
                           {waypoint.description && (
                             <p className="text-sm text-gray-600 mt-1">{waypoint.description}</p>
                           )}
+                          {waypoint.image_url && (
+                            <img
+                              src={waypoint.image_url}
+                              alt={waypoint.name}
+                              className="mt-2 w-full max-w-xs h-32 object-cover rounded-lg border"
+                            />
+                          )}
                         </div>
                       </motion.div>
                     );
