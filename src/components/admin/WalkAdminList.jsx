@@ -10,7 +10,7 @@ const difficultyColors = {
   difficult: 'bg-red-900 text-red-300',
 };
 
-export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelete }) {
+export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelete, onVouchers }) {
   const [confirmDelete, setConfirmDelete] = React.useState(null);
 
   const handleDelete = (walk) => {
