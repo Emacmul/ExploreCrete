@@ -53,6 +53,7 @@ export default function WalkCard({ walk, onClick, isSelected }) {
             {walk.region && (
               <p className="text-sm text-gray-500 mt-0.5">{walk.region}</p>
             )}
+            {downloaded && <div className="mt-1"><OfflineBadge /></div>}
             
             {/* Stats */}
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-600">
