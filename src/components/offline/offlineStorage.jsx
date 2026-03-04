@@ -70,6 +70,18 @@ export async function isWalkSavedOffline(walkId) {
   return !!walk;
 }
 
+/**
+ * Returns true if the server walk's updated_date is newer than what we have stored.
+ */
+export async function isWalkOutdated(serverWalk) {
+  const stored = await getOfflineWalk(serverWalk.id);
+  if (!stored) return false;
+  if (!serverWalk.updated_date) return false;
+  const serverTime = new Date(serverWalk.updated_date).getTime();
+  const storedTime = stored._savedAt || 0;
+  return serverTime > storedTime;
+}
+
 export async function cacheTile(url, blob) {
   const db = await openDB();
   return new Promise((resolve) => {
