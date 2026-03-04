@@ -20,8 +20,11 @@ export default function Home() {
   const [showDetail, setShowDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [tapLocation, setTapLocation] = useState(null);
+  const [updatingWalkName, setUpdatingWalkName] = useState(null);
+  const [pendingWalkToOpen, setPendingWalkToOpen] = useState(null);
   const { getAllOfflineWalks } = useOfflineWalks();
   const offlineCount = getAllOfflineWalks().length;
+  const updatingRef = useRef(false);
 
   // Check authentication
   useEffect(() => {
