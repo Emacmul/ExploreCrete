@@ -33,7 +33,7 @@ export default function VoucherManager({ walk, onBack }) {
 
     const batch = [];
     while (batch.length < 50) {
-      const code = generateCode();
+      const code = generateCode(walk.code);
       if (!existingSet.has(code)) {
         existingSet.add(code);
         batch.push({ code, walk_id: walk.id, walk_name: walk.name, used: false });
