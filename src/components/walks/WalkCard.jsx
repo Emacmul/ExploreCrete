@@ -14,6 +14,9 @@ const difficultyColors = {
 };
 
 export default function WalkCard({ walk, onClick, isSelected }) {
+  const { isDownloaded } = useOfflineWalks();
+  const downloaded = isDownloaded(walk.id);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
