@@ -7,6 +7,7 @@ import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import WalkEditor from '../components/admin/WalkEditor';
 import WalkAdminList from '../components/admin/WalkAdminList';
+import VoucherManager from '../components/admin/VoucherManager';
 
 export default function Admin() {
   const [user, setUser] = useState(null);
