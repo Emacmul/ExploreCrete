@@ -104,6 +104,17 @@ export default function Home() {
               <User className="w-4 h-4" />
               <span>{user?.full_name || user?.email}</span>
             </div>
+            <Link to={createPageUrl('MyWalks')}>
+              <Button variant="outline" size="sm" className="gap-2 border-green-300 text-green-700 hover:bg-green-50 relative">
+                <WifiOff className="w-4 h-4" />
+                <span className="hidden sm:inline">My Walks</span>
+                {offlineCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-green-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {offlineCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
             {user?.role === 'admin' && (
               <Link to={createPageUrl('Admin')}>
                 <Button variant="outline" size="sm" className="gap-2 border-amber-300 text-amber-600 hover:bg-amber-50">
