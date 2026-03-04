@@ -53,7 +53,36 @@ export default function Home() {
     enabled: !!user,
   });
 
-  const handleWalkSelect = (walk) => {
+  // Auto-update downloaded walks when server version is newer
+  useEffect(() => {
+    if (!walks.length || updatingRef.current) return;
+    const runUpdates = async () => {
+      updatingRef.current = true;
+      for (const serverWalk of walks) {
+        const outdated = await isWalkOutdated(serverWalk);
+        if (outdated) {
+          setUpdatingWalkName(serverWalk.name);
+          await saveWalkOffline(serverWalk);
+          await preCacheWalkTiles(serverWalk, () => {});
+          setUpdatingWalkName(null);
+          // If user had selected this walk, update the selected walk too
+          setSelectedWalk(prev => prev?.id === serverWalk.id ? serverWalk : prev);
+        }
+      }
+      updatingRef.current = false;
+    };
+    runUpdates();
+  }, [walks]);
+
+  const handleWalkSelect = async (walk) => {
+    // Check if this walk needs an update before opening
+    const outdated = await isWalkOutdated(walk);
+    if (outdated) {
+      setUpdatingWalkName(walk.name);
+      await saveWalkOffline(walk);
+      await preCacheWalkTiles(walk, () => {});
+      setUpdatingWalkName(null);
+    }
     setSelectedWalk(walk);
     setShowDetail(true);
   };
