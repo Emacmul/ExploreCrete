@@ -72,6 +72,16 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => onVouchers(walk)}
+                  className="text-amber-400 hover:text-amber-300 hover:bg-slate-700 gap-1"
+                  title="Manage Vouchers"
+                >
+                  <Ticket className="w-4 h-4" />
+                  <span className="hidden sm:inline text-xs">Vouchers</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onEdit(walk)}
                   className="text-slate-300 hover:text-white hover:bg-slate-700"
                 >
