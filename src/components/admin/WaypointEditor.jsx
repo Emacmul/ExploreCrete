@@ -51,6 +51,19 @@ export default function WaypointEditor({ waypoints, onChange }) {
     onChange(updated);
   };
 
+  const [uploadingIndex, setUploadingIndex] = useState(null); // null = new form, number = existing index
+
+  const handleImageUpload = async (file, index) => {
+    setUploadingIndex(index ?? 'new');
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    if (index === undefined) {
+      setNewWp(p => ({ ...p, image_url: file_url }));
+    } else {
+      updateWaypoint(index, 'image_url', file_url);
+    }
+    setUploadingIndex(null);
+  };
+
   const handlePaste = (e, field) => {
     if (field !== 'lat') return;
     const text = e.clipboardData.getData('text');
