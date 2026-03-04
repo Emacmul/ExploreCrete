@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   X, Clock, Route, TrendingUp, MapPin, AlertTriangle, 
-  Eye, Droplets, TreePine, Navigation, Crosshair
+  Eye, Droplets, TreePine, Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
-import DownloadWalkButton from '../offline/DownloadWalkButton';
+import DownloadButton from './DownloadButton';
+import OfflineBadge from './OfflineBadge';
+import { useOfflineWalks } from '../offline/useOfflineWalks';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700',
@@ -30,10 +32,11 @@ const waypointIcons = {
 };
 
 export default function WalkDetail({ walk, onClose }) {
-  const [followGps, setFollowGps] = React.useState(false);
   if (!walk) return null;
 
   const waypoints = walk.waypoints || [];
+  const { isDownloaded } = useOfflineWalks();
+  const downloaded = isDownloaded(walk.id);
 
   return (
     <AnimatePresence>
@@ -55,14 +58,18 @@ export default function WalkDetail({ walk, onClose }) {
                 <p className="text-blue-100 text-sm mt-1">{walk.region}</p>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/20 -mt-1 -mr-1"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {downloaded && <OfflineBadge />}
+              <DownloadButton walk={walk} showLabel={false} />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
           
           {/* Stats bar */}
