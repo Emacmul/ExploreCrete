@@ -106,9 +106,19 @@ export default function WalkDetail({ walk, onClose }) {
 
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
+            {/* Offline download */}
+            <div className="flex items-center justify-between">
+              <DownloadWalkButton walk={walk} />
+              {followGps && (
+                <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
+                  <Crosshair className="w-3.5 h-3.5" /> Tracking location
+                </span>
+              )}
+            </div>
+
             {/* Map */}
             <div className="h-64 rounded-xl overflow-hidden border">
-              <WalkDetailMap walk={walk} />
+              <WalkDetailMap walk={walk} followGps={followGps} />
             </div>
 
             {/* Description */}
