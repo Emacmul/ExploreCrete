@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   X, Clock, Route, TrendingUp, MapPin, AlertTriangle, 
-  Eye, Droplets, TreePine, Navigation
+  Eye, Droplets, TreePine, Navigation, Crosshair
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
-import DownloadButton from './DownloadButton';
-import OfflineBadge from './OfflineBadge';
-import { useOfflineWalks } from '../offline/useOfflineWalks';
+import DownloadWalkButton from '../offline/DownloadWalkButton';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700',
@@ -32,11 +30,10 @@ const waypointIcons = {
 };
 
 export default function WalkDetail({ walk, onClose }) {
+  const [followGps, setFollowGps] = React.useState(false);
   if (!walk) return null;
 
   const waypoints = walk.waypoints || [];
-  const { isDownloaded } = useOfflineWalks();
-  const downloaded = isDownloaded(walk.id);
 
   return (
     <AnimatePresence>
