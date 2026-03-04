@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CreteMap from '../components/map/CreteMap';
 import WalkList from '../components/walks/WalkList';
 import WalkDetail from '../components/walks/WalkDetail';
+import UpdateInProgressModal from '../components/offline/UpdateInProgressModal';
+import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../components/offline/offlineStorage';
 
 export default function Home() {
   const [user, setUser] = useState(null);
