@@ -49,11 +49,13 @@
  */
 import Home from './pages/Home';
 import Admin from './pages/Admin';
+import MyWalks from './pages/MyWalks';
 
 
 export const PAGES = {
     "Home": Home,
     "Admin": Admin,
+    "MyWalks": MyWalks,
 }
 
 export const pagesConfig = {

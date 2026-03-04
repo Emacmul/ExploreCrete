@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Trash2, CheckCircle, Loader2 } from 'lucide-react';
-import { useOfflineWalks } from '@/lib/useOfflineWalks';
+import { useOfflineWalks } from '@/components/offline/useOfflineWalks';
 
 export default function DownloadButton({ walk, size = 'sm', showLabel = true }) {
   const { downloadWalk, removeWalk, isDownloaded } = useOfflineWalks();
