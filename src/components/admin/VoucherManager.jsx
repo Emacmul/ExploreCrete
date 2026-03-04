@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Ticket, Download, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 
-function generateCode() {
-  // Format: CRETE-XXXX-XXXX-XXXX  (alphanumeric, uppercase, no ambiguous chars)
+function generateCode(walkCode) {
+  // Format: WALKCODE-XXXX-XXXX  (alphanumeric, uppercase, no ambiguous chars)
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  return `CW-${seg()}-${seg()}-${seg()}`;
+  const prefix = (walkCode || 'CW').toUpperCase();
+  return `${prefix}-${seg()}-${seg()}`;
 }
 
 export default function VoucherManager({ walk, onBack }) {
