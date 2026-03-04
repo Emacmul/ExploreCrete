@@ -5,7 +5,7 @@ import { Search, Mountain } from 'lucide-react';
 import WalkCard from './WalkCard';
 import OfflineWalksBanner from '../offline/OfflineWalksBanner';
 
-export default function WalkList({ walks, selectedWalk, onWalkSelect, searchQuery, onSearchChange }) {
+export default function WalkList({ walks, selectedWalk, onWalkSelect, searchQuery, onSearchChange, isOnline }) {
   const filteredWalks = walks.filter(walk => 
     walk.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     walk.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
