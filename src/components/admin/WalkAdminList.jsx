@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Mountain, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mountain, Loader2, Ticket } from 'lucide-react';
 
 const difficultyColors = {
   easy: 'bg-green-900 text-green-300',
