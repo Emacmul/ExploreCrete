@@ -197,9 +197,11 @@ export default function WaypointEditor({ waypoints, onChange }) {
           )}
         </div>
 
-        <Button onClick={addWaypoint} className="bg-amber-500 hover:bg-amber-600 gap-2 w-full">
-          <Plus className="w-4 h-4" /> Add Key Point
+        <Button onClick={addWaypoint} className="bg-green-600 hover:bg-green-700 gap-2 w-full text-white font-semibold">
+          <Plus className="w-4 h-4" /> Save Key Point
         </Button>
+        </div>
+        )}
       </div>
 
       {/* Existing waypoints */}
