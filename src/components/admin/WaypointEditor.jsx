@@ -39,7 +39,8 @@ export default function WaypointEditor({ waypoints, onChange }) {
     const updated = [...waypoints, { ...newWp, lat, lng }];
     onChange(updated);
     setNewWp(EMPTY_WAYPOINT);
-    setExpanded(updated.length - 1);
+    setShowAddForm(false);
+    setExpanded(null);
   };
 
   const removeWaypoint = (index) => {
