@@ -59,7 +59,7 @@ export default function WaypointEditor({ waypoints, onChange }) {
     if (target < 0 || target >= updated.length) return;
     [updated[index], updated[target]] = [updated[target], updated[index]];
     onChange(updated);
-    setExpanded(target);
+    // Keep the expanded block closed — don't change expanded state
   };
 
   const [uploadingIndex, setUploadingIndex] = useState(null); // null = new form, number = existing index
