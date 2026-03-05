@@ -113,8 +113,7 @@ export default function WaypointEditor({ waypoints, onChange }) {
           {showAddForm ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </button>
 
-        {showAddForm && (
-        <div className="px-4 pb-4 pt-1 border-t border-slate-600 space-y-4">
+        {showAddForm && <div className="px-4 pb-4 pt-1 border-t border-slate-600 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-slate-400 text-xs mb-1 block">Latitude *</Label>
