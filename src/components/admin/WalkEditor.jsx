@@ -48,7 +48,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   const tabs = [
     { id: 'details', label: 'Basic Details' },
     { id: 'trail', label: 'Trail Path (GPS)' },
-    { id: 'waypoints', label: 'Key Points' },
+    { id: 'waypoints', label: `Key Points${form.waypoints.length ? ` (${form.waypoints.length})` : ''}` },
     { id: 'preview', label: 'Preview' },
   ];
 
