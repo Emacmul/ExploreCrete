@@ -199,9 +199,27 @@ export default function WaypointEditor({ waypoints, onChange }) {
             return (
               <div key={index} className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
                 <div
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-700/80"
+                  className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-slate-700/80"
                   onClick={() => setExpanded(expanded === index ? null : index)}
                 >
+                  {/* Order controls */}
+                  <div className="flex flex-col gap-0.5" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => moveWaypoint(index, -1)}
+                      disabled={index === 0}
+                      className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => moveWaypoint(index, 1)}
+                      disabled={index === waypoints.length - 1}
+                      className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <span className="text-xs text-slate-600 font-mono w-5 text-center">{index + 1}</span>
                   <span className="text-sm">{typeInfo?.label.split(' ')[0]}</span>
                   <div className="flex-1 min-w-0">
                     <span className="text-white font-medium">{wp.name}</span>
@@ -209,14 +227,12 @@ export default function WaypointEditor({ waypoints, onChange }) {
                       {typeInfo?.label.split(' ').slice(1).join(' ')}
                     </span>
                   </div>
-                  <span className="font-mono text-xs text-slate-500">
-                    {typeof wp.lat === 'number' ? wp.lat.toFixed(4) : wp.lat}, {typeof wp.lng === 'number' ? wp.lng.toFixed(4) : wp.lng}
-                  </span>
                   {expanded === index ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                   <Button
                     variant="ghost" size="icon"
                     onClick={e => { e.stopPropagation(); removeWaypoint(index); }}
                     className="text-slate-500 hover:text-red-400 w-7 h-7"
+                    title="Remove"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
