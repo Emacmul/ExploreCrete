@@ -47,13 +47,22 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
       ) : (
         <div className="space-y-3">
           {walks.map(walk => (
-            <div key={walk.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4 min-w-0">
+            <div key={walk.id} className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+              {/* Main row — click anywhere to edit */}
+              <button
+                onClick={() => onEdit(walk)}
+                className="w-full text-left px-4 py-4 flex items-center gap-4 hover:bg-slate-700/60 transition-colors group"
+              >
                 <span className="font-mono text-sm bg-slate-700 text-amber-300 px-3 py-1 rounded font-bold shrink-0">
                   {walk.code}
                 </span>
-                <div className="min-w-0">
-                  <p className="font-semibold text-white truncate">{walk.name}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-white truncate">{walk.name}</p>
+                    <span className="text-xs text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      <Pencil className="w-3 h-3" /> Edit
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {walk.region && <span className="text-xs text-slate-400">{walk.region}</span>}
                     {walk.difficulty && (
@@ -62,40 +71,43 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                       </Badge>
                     )}
                     {walk.distance_km && <span className="text-xs text-slate-500">{walk.distance_km} km</span>}
-                    <span className="text-xs text-slate-600">
-                      {(walk.waypoints || []).length} waypoints · {(walk.trail_path || []).length} path pts
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {(walk.waypoints || []).length} key points
                     </span>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
+                <Pencil className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors shrink-0" />
+              </button>
+
+              {/* Action strip */}
+              <div className="flex items-center gap-1 px-4 py-2 border-t border-slate-700 bg-slate-900/30">
+                <Button
+                  size="sm"
+                  onClick={() => onEdit(walk)}
+                  className="bg-amber-500 hover:bg-amber-600 text-white gap-1.5 text-xs h-7"
+                >
+                  <Pencil className="w-3 h-3" /> Edit Tour
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onVouchers(walk)}
-                  className="text-amber-400 hover:text-amber-300 hover:bg-slate-700 gap-1"
-                  title="Manage Vouchers"
+                  className="text-amber-400 hover:text-amber-300 hover:bg-slate-700 gap-1.5 text-xs h-7"
                 >
-                  <Ticket className="w-4 h-4" />
-                  <span className="hidden sm:inline text-xs">Vouchers</span>
+                  <Ticket className="w-3 h-3" /> Vouchers
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit(walk)}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
+                <div className="flex-1" />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDelete(walk)}
-                  className={confirmDelete === walk.id
+                  className={`h-7 text-xs gap-1 ${confirmDelete === walk.id
                     ? 'text-white bg-red-600 hover:bg-red-700'
-                    : 'text-slate-400 hover:text-red-400 hover:bg-slate-700'}
+                    : 'text-slate-500 hover:text-red-400 hover:bg-slate-700'}`}
                 >
-                  {confirmDelete === walk.id ? 'Confirm?' : <Trash2 className="w-4 h-4" />}
+                  <Trash2 className="w-3 h-3" />
+                  {confirmDelete === walk.id ? 'Confirm delete?' : 'Delete'}
                 </Button>
               </div>
             </div>
