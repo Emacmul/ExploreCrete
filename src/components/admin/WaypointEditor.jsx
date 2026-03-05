@@ -201,7 +201,7 @@ export default function WaypointEditor({ waypoints, onChange }) {
           <Plus className="w-4 h-4" /> Save Key Point
         </Button>
         </div>
-        )}
+        }
       </div>
 
       {/* Existing waypoints */}
