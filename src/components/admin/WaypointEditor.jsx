@@ -51,6 +51,15 @@ export default function WaypointEditor({ waypoints, onChange }) {
     onChange(updated);
   };
 
+  const moveWaypoint = (index, direction) => {
+    const updated = [...waypoints];
+    const target = index + direction;
+    if (target < 0 || target >= updated.length) return;
+    [updated[index], updated[target]] = [updated[target], updated[index]];
+    onChange(updated);
+    setExpanded(target);
+  };
+
   const [uploadingIndex, setUploadingIndex] = useState(null); // null = new form, number = existing index
 
   const handleImageUpload = async (file, index) => {
