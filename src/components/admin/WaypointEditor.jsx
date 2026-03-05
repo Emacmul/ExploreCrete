@@ -99,9 +99,22 @@ export default function WaypointEditor({ waypoints, onChange }) {
       </div>
 
       {/* Add new waypoint form */}
-      <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 space-y-4">
-        <Label className="text-slate-300 text-sm block font-medium">Add Key Point</Label>
-        
+      <div className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
+        {/* Header / toggle */}
+        <button
+          type="button"
+          onClick={() => setShowAddForm(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-colors"
+        >
+          <span className="flex items-center gap-2">
+            <Plus className="w-4 h-4 text-amber-400" />
+            Add New Key Point
+          </span>
+          {showAddForm ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
+
+        {showAddForm && (
+        <div className="px-4 pb-4 pt-1 border-t border-slate-600 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-slate-400 text-xs mb-1 block">Latitude *</Label>
