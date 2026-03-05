@@ -23,6 +23,7 @@ const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', descripti
 export default function WaypointEditor({ waypoints, onChange }) {
   const [expanded, setExpanded] = useState(null);
   const [newWp, setNewWp] = useState(EMPTY_WAYPOINT);
+  const [showAddForm, setShowAddForm] = useState(true);
 
   const addWaypoint = () => {
     const lat = parseFloat(newWp.lat);
