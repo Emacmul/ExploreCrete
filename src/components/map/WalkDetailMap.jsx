@@ -69,6 +69,7 @@ export default function WalkDetailMap({ walk, followGps = false }) {
               </span>
               <p className="font-semibold mt-2">{wp.name}</p>
               {wp.description && <p className="text-xs text-gray-600 mt-1">{wp.description}</p>}
+              {wp.image_url && <img src={wp.image_url} alt={wp.name} className="mt-2 rounded w-full object-cover max-h-32" />}
             </div>
           </Popup>
         </Marker>
