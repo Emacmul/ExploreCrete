@@ -202,6 +202,11 @@ export default function WaypointEditor({ waypoints, onChange }) {
           )}
         </div>
 
+        {addError && (
+          <div className="text-red-400 text-sm bg-red-900/30 border border-red-700/50 rounded-lg px-3 py-2">
+            {addError}
+          </div>
+        )}
         <Button onClick={addWaypoint} className="bg-green-600 hover:bg-green-700 gap-2 w-full text-white font-semibold">
           <Plus className="w-4 h-4" /> Save Key Point
         </Button>
