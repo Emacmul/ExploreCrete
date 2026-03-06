@@ -61,15 +61,20 @@ export default function WalkDetailMap({ walk, followGps = false }) {
 
       {waypoints.map((wp, i) => (
         <Marker key={i} position={[wp.lat, wp.lng]} icon={createWaypointIcon(wp.type)}>
-          <Popup>
-            <div className="text-center p-2 min-w-[140px]">
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full text-white"
-                style={{ backgroundColor: waypointConfig[wp.type]?.color || '#6366f1' }}>
+          <Popup minWidth={160} maxWidth={220}>
+            <div style={{ textAlign: 'center', padding: '4px' }}>
+              <span style={{
+                display: 'inline-block', fontSize: '11px', fontWeight: '600',
+                padding: '2px 8px', borderRadius: '9999px', color: 'white',
+                backgroundColor: waypointConfig[wp.type]?.color || '#6366f1'
+              }}>
                 {waypointConfig[wp.type]?.label || wp.type}
               </span>
-              <p className="font-semibold mt-2">{wp.name}</p>
-              {wp.description && <p className="text-xs text-gray-600 mt-1">{wp.description}</p>}
-              {wp.image_url && <img src={wp.image_url} alt={wp.name} className="mt-2 rounded w-full object-cover max-h-32" />}
+              <p style={{ fontWeight: '600', marginTop: '6px', marginBottom: 0 }}>{wp.name}</p>
+              {wp.description && <p style={{ fontSize: '12px', color: '#666', marginTop: '4px', marginBottom: 0 }}>{wp.description}</p>}
+              {wp.image_url && (
+                <img src={wp.image_url} alt={wp.name} style={{ marginTop: '8px', borderRadius: '6px', width: '100%', maxHeight: '120px', objectFit: 'cover', display: 'block' }} />
+              )}
             </div>
           </Popup>
         </Marker>
