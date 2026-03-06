@@ -24,16 +24,22 @@ export default function WaypointEditor({ waypoints, onChange }) {
   const [expanded, setExpanded] = useState(null);
   const [newWp, setNewWp] = useState(EMPTY_WAYPOINT);
   const [showAddForm, setShowAddForm] = useState(true);
+  const [addError, setAddError] = useState('');
 
   const addWaypoint = () => {
-    const lat = parseFloat(newWp.lat);
-    const lng = parseFloat(newWp.lng);
-    if (isNaN(lat) || isNaN(lng) || !newWp.name.trim()) {
-      alert('Please fill in Latitude, Longitude, and Name before adding.');
+    setAddError('');
+    const lat = parseFloat(String(newWp.lat).replace(',', '.'));
+    const lng = parseFloat(String(newWp.lng).replace(',', '.'));
+    if (!newWp.name.trim()) {
+      setAddError('Please enter a name for this key point.');
       return;
     }
-    if (lat < 34 || lat > 36 || lng < 23 || lng > 27) {
-      alert('Coordinates appear to be outside Crete. Please check your values.');
+    if (isNaN(lat) || String(newWp.lat).trim() === '') {
+      setAddError('Please enter a valid latitude (e.g. 35.3019).');
+      return;
+    }
+    if (isNaN(lng) || String(newWp.lng).trim() === '') {
+      setAddError('Please enter a valid longitude (e.g. 23.9633).');
       return;
     }
     const updated = [...waypoints, { ...newWp, lat, lng }];
