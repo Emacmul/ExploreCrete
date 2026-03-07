@@ -20,11 +20,29 @@ const WAYPOINT_TYPES = [
 
 const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', description: '', image_url: '' };
 
+function parseGpxWaypoints(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+  const wpts = Array.from(doc.querySelectorAll('wpt'));
+  return wpts.map(wpt => ({
+    lat: parseFloat(wpt.getAttribute('lat')),
+    lng: parseFloat(wpt.getAttribute('lon')),
+    elevation: parseFloat(wpt.querySelector('ele')?.textContent || '0'),
+    name: wpt.querySelector('name')?.textContent?.trim() || 'Unnamed',
+    type: 'landmark',
+    description: wpt.querySelector('ele')?.textContent
+      ? `Elevation: ${parseFloat(wpt.querySelector('ele').textContent).toFixed(1)}m`
+      : '',
+    image_url: '',
+  })).filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
+}
+
 export default function WaypointEditor({ waypoints, onChange }) {
   const [expanded, setExpanded] = useState(null);
   const [newWp, setNewWp] = useState(EMPTY_WAYPOINT);
   const [showAddForm, setShowAddForm] = useState(true);
   const [addError, setAddError] = useState('');
+  const [gpxImportResult, setGpxImportResult] = useState(null);
 
   const addWaypoint = () => {
     setAddError('');
