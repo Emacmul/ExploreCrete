@@ -31,6 +31,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   const [form, setForm] = useState({ ...EMPTY_WALK, ...walk });
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(walk?.id ? 'waypoints' : 'details');
+  const [interests, setInterests] = useState(DEFAULT_INTERESTS);
+  const [editingInterests, setEditingInterests] = useState(false);
+  const [newInterest, setNewInterest] = useState('');
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
