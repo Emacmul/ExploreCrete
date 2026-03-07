@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Pencil, Check, X } from 'lucide-react';
 import WaypointEditor from './WaypointEditor';
 import TrailPathEditor from './TrailPathEditor';
 import AdminPreviewMap from './AdminPreviewMap';
