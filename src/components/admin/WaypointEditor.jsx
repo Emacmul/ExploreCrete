@@ -109,6 +109,24 @@ export default function WaypointEditor({ waypoints, onChange }) {
     }
   };
 
+  const handleGpxImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const parsed = parseGpxWaypoints(ev.target.result);
+      if (parsed.length === 0) {
+        setGpxImportResult({ error: 'No waypoints found in this GPX file.' });
+        return;
+      }
+      onChange([...waypoints, ...parsed]);
+      setGpxImportResult({ count: parsed.length });
+      setTimeout(() => setGpxImportResult(null), 4000);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -120,6 +138,20 @@ export default function WaypointEditor({ waypoints, onChange }) {
             Each point appears as a labelled marker on the walk's detail map.
           </span>
         </div>
+      </div>
+
+      {/* GPX Import */}
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-2 cursor-pointer bg-blue-700/30 hover:bg-blue-700/50 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-300 hover:text-blue-100 transition-colors text-sm font-medium">
+          <Upload className="w-4 h-4" />
+          Import GPX Waypoints
+          <input type="file" accept=".gpx,application/gpx+xml" className="hidden" onChange={handleGpxImport} />
+        </label>
+        {gpxImportResult && (
+          gpxImportResult.error
+            ? <span className="text-red-400 text-sm">{gpxImportResult.error}</span>
+            : <span className="flex items-center gap-1 text-green-400 text-sm"><FileCheck className="w-4 h-4" /> {gpxImportResult.count} waypoint{gpxImportResult.count !== 1 ? 's' : ''} imported</span>
+        )}
       </div>
 
       {/* Add new waypoint form */}
