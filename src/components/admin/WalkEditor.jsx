@@ -9,6 +9,8 @@ import WaypointEditor from './WaypointEditor';
 import TrailPathEditor from './TrailPathEditor';
 import AdminPreviewMap from './AdminPreviewMap';
 
+const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology', 'Photography'];
+
 const EMPTY_WALK = {
   code: '',
   name: '',
