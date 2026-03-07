@@ -22,6 +22,7 @@ const EMPTY_WALK = {
   start_lat: '',
   start_lng: '',
   region: '',
+  main_interest: '',
   trail_path: [],
   waypoints: [],
 };
