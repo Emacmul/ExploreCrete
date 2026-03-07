@@ -159,6 +159,78 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               </div>
             </div>
 
+            {/* Main Interest */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-slate-300">Main Interest</Label>
+                <button
+                  type="button"
+                  onClick={() => setEditingInterests(v => !v)}
+                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-amber-400 transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                  {editingInterests ? 'Done editing list' : 'Edit list'}
+                </button>
+              </div>
+              {!editingInterests ? (
+                <Select value={form.main_interest} onValueChange={v => set('main_interest', v)}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue placeholder="Select main interest" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {interests.map(i => (
+                      <SelectItem key={i} value={i}>{i}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="bg-slate-700 border border-slate-600 rounded-lg p-3 space-y-2">
+                  {interests.map((interest, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2">
+                      <span className="text-white text-sm">{interest}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = interests.filter((_, i) => i !== idx);
+                          setInterests(updated);
+                          if (form.main_interest === interest) set('main_interest', '');
+                        }}
+                        className="text-slate-500 hover:text-red-400 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 pt-1 border-t border-slate-600">
+                    <Input
+                      value={newInterest}
+                      onChange={e => setNewInterest(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && newInterest.trim()) {
+                          setInterests(prev => [...prev, newInterest.trim()]);
+                          setNewInterest('');
+                        }
+                      }}
+                      placeholder="Add new interest..."
+                      className="bg-slate-600 border-slate-500 text-white h-8 text-sm"
+                    />
+                    <Button
+                      type="button" size="sm"
+                      onClick={() => {
+                        if (newInterest.trim()) {
+                          setInterests(prev => [...prev, newInterest.trim()]);
+                          setNewInterest('');
+                        }
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 h-8 px-3"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label className="text-slate-300 mb-1.5 block">Distance (km)</Label>
