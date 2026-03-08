@@ -173,10 +173,13 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               </div>
             </div>
 
-            {/* Main Interest */}
+            {/* Main Interests */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <Label className="text-slate-300">Main Interest</Label>
+                <Label className="text-slate-300">
+                  Main Interests
+                  <span className="ml-2 text-xs text-slate-500">(select up to 3)</span>
+                </Label>
                 <button
                   type="button"
                   onClick={() => setEditingInterests(v => !v)}
@@ -186,17 +189,45 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   {editingInterests ? 'Done editing list' : 'Edit list'}
                 </button>
               </div>
+
+              {/* Selected tags */}
+              {selectedInterests.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {selectedInterests.map(i => (
+                    <span key={i} className="flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                      {i}
+                      <button type="button" onClick={() => toggleInterest(i)} className="hover:text-white">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {!editingInterests ? (
-                <Select value={form.main_interest} onValueChange={v => set('main_interest', v)}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select main interest" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {interests.map(i => (
-                      <SelectItem key={i} value={i}>{i}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  {interests.map(i => {
+                    const selected = selectedInterests.includes(i);
+                    const disabled = !selected && selectedInterests.length >= 3;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => toggleInterest(i)}
+                        disabled={disabled}
+                        className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
+                          selected
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : disabled
+                              ? 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
+                              : 'bg-slate-700 border-slate-600 text-slate-300 hover:border-amber-500/50 hover:text-white'
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="bg-slate-700 border border-slate-600 rounded-lg p-3 space-y-2">
                   {interests.map((interest, idx) => (
@@ -207,7 +238,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                         onClick={() => {
                           const updated = interests.filter((_, i) => i !== idx);
                           setInterests(updated);
-                          if (form.main_interest === interest) set('main_interest', '');
+                          if (selectedInterests.includes(interest)) toggleInterest(interest);
                         }}
                         className="text-slate-500 hover:text-red-400 transition-colors"
                       >
