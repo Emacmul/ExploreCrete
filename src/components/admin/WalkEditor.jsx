@@ -35,6 +35,20 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   const [editingInterests, setEditingInterests] = useState(false);
   const [newInterest, setNewInterest] = useState('');
 
+  // helpers for multi-select interests (stored as comma-separated string)
+  const selectedInterests = form.main_interest
+    ? form.main_interest.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  const toggleInterest = (value) => {
+    const current = selectedInterests;
+    if (current.includes(value)) {
+      set('main_interest', current.filter(i => i !== value).join(', '));
+    } else if (current.length < 3) {
+      set('main_interest', [...current, value].join(', '));
+    }
+  };
+
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSave = async () => {
