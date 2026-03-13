@@ -134,6 +134,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       <UpdateInProgressModal walkName={updatingWalkName} />
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
