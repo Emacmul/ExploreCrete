@@ -13,9 +13,15 @@ export default function RegistrationForm({ user, onComplete }) {
     date_of_birth: '',
     gender: '',
     newsletter_opted_in: true,
+    password: '',
+    confirm_password: '',
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*\-_+]).{8,}$/;
 
   const set = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
