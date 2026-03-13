@@ -52,6 +52,28 @@ export default function Admin() {
     queryClient.invalidateQueries({ queryKey: ['walks'] });
   };
 
+  const handleExportUsers = async () => {
+    const appUsers = await base44.entities.AppUser.list('-created_date', 1000);
+    const headers = ['First Name', 'Last Name', 'Email', 'Date of Birth', 'Gender', 'Newsletter Opt-in', 'Registered On'];
+    const rows = appUsers.map(u => [
+      u.first_name,
+      u.last_name,
+      u.email,
+      u.date_of_birth || '',
+      u.gender || '',
+      u.newsletter_opted_in ? 'Yes' : 'No',
+      u.created_date ? new Date(u.created_date).toLocaleDateString() : '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `walking-app-users-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
