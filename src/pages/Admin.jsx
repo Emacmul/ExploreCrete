@@ -97,6 +97,9 @@ export default function Admin() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleExportUsers} className="text-green-300 hover:text-white gap-2 border border-green-700/50 hover:bg-green-800/30">
+              <Download className="w-4 h-4" /> Export Users CSV
+            </Button>
             <Link to={createPageUrl('Home')}>
               <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white gap-2">
                 <ArrowLeft className="w-4 h-4" /> Front End
