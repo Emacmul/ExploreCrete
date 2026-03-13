@@ -12,6 +12,8 @@ import WalkList from '../components/walks/WalkList';
 import WalkDetail from '../components/walks/WalkDetail';
 import UpdateInProgressModal from '../components/offline/UpdateInProgressModal';
 import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../components/offline/offlineStorage';
+import SplashScreen from '../components/onboarding/SplashScreen';
+import RegistrationForm from '../components/onboarding/RegistrationForm';
 
 export default function Home() {
   const [user, setUser] = useState(null);
