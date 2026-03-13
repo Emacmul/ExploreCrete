@@ -63,7 +63,7 @@ export default function RegistrationForm({ user, onComplete }) {
       date_of_birth: form.date_of_birth,
       gender: form.gender,
       newsletter_opted_in: form.newsletter_opted_in,
-
+      password: form.password,
       registration_complete: true,
     };
 
