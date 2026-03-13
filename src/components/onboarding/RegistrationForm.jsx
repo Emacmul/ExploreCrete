@@ -164,6 +164,50 @@ export default function RegistrationForm({ user, onComplete }) {
             {errors.gender && <p className="text-red-400 text-xs mt-1">{errors.gender}</p>}
           </div>
 
+          {/* Password */}
+          <div>
+            <Label className="text-blue-100 text-sm mb-1.5 block">Password *</Label>
+            <div className="relative">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={e => set('password', e.target.value)}
+                placeholder="••••••••"
+                className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 hover:text-white"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <Label className="text-blue-100 text-sm mb-1.5 block">Confirm Password *</Label>
+            <div className="relative">
+              <Input
+                type={showConfirm ? 'text' : 'password'}
+                value={form.confirm_password}
+                onChange={e => set('confirm_password', e.target.value)}
+                placeholder="••••••••"
+                className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 hover:text-white"
+              >
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {errors.confirm_password && <p className="text-red-400 text-xs mt-1">{errors.confirm_password}</p>}
+          </div>
+
           {/* Divider */}
           <div className="border-t border-white/10 pt-1" />
 
