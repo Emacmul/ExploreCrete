@@ -127,6 +127,11 @@ export default function Home() {
     );
   }
 
+  // Show registration form if user hasn't completed it yet
+  if (!registrationComplete && !showSplash) {
+    return <RegistrationForm user={user} onComplete={() => setRegistrationComplete(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
       <UpdateInProgressModal walkName={updatingWalkName} />
