@@ -34,6 +34,16 @@ export default function RegistrationForm({ user, onComplete }) {
     if (!form.last_name.trim()) errs.last_name = 'Required';
     if (!form.date_of_birth) errs.date_of_birth = 'Required';
     if (!form.gender) errs.gender = 'Please select one';
+    if (!form.password) {
+      errs.password = 'Required';
+    } else if (!PASSWORD_REGEX.test(form.password)) {
+      errs.password = 'Must be 8+ chars with uppercase, lowercase, number, and a special character (! @ # $ % ^ & * - _ +)';
+    }
+    if (!form.confirm_password) {
+      errs.confirm_password = 'Required';
+    } else if (form.password !== form.confirm_password) {
+      errs.confirm_password = 'Passwords do not match';
+    }
     return errs;
   };
 
