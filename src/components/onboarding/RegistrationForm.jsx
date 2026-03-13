@@ -151,14 +151,6 @@ export default function RegistrationForm({ user, onComplete }) {
           {/* Divider */}
           <div className="border-t border-white/10 pt-1" />
 
-          {/* Push notification notice */}
-          <div className="flex gap-3 bg-blue-500/20 border border-blue-400/30 rounded-xl p-3">
-            <Bell className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
-            <p className="text-blue-200 text-xs leading-relaxed">
-              <span className="font-semibold text-white">Push notifications:</span> You will receive push notifications about app updates, new walks, and important trail information.
-            </p>
-          </div>
-
           {/* Newsletter opt-in */}
           <div className="flex gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
             <div className="shrink-0 mt-0.5">
