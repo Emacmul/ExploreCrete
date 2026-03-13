@@ -24,6 +24,8 @@ export default function Home() {
   const [tapLocation, setTapLocation] = useState(null);
   const [updatingWalkName, setUpdatingWalkName] = useState(null);
   const [pendingWalkToOpen, setPendingWalkToOpen] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const { getAllOfflineWalks } = useOfflineWalks();
   const offlineCount = getAllOfflineWalks().length;
   const updatingRef = useRef(false);
@@ -39,6 +41,11 @@ export default function Home() {
         }
         const userData = await base44.auth.me();
         setUser(userData);
+        // Check if user has completed registration
+        const appUsers = await base44.entities.AppUser.filter({ user_id: userData.id });
+        if (appUsers.length > 0 && appUsers[0].registration_complete) {
+          setRegistrationComplete(true);
+        }
       } catch (error) {
         base44.auth.redirectToLogin();
       } finally {
