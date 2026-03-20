@@ -117,6 +117,16 @@ export default function VoucherManager({ walk, onBack }) {
     e.target.value = '';
   };
 
+  const handleArchiveUsed = async () => {
+    if (!archiveConfirm) { setArchiveConfirm(true); return; }
+    setArchiving(true);
+    setArchiveConfirm(false);
+    const usedVouchers = vouchers.filter(v => v.used);
+    await Promise.all(usedVouchers.map(v => base44.entities.VoucherCode.delete(v.id)));
+    queryClient.invalidateQueries({ queryKey: ['vouchers', walk.id] });
+    setArchiving(false);
+  };
+
   const handleExportCSV = () => {
     const unused = vouchers.filter(v => !v.used);
     const rows = [['Code', 'Walk', 'GPX URL', 'Status'], ...unused.map(v => [v.code, v.walk_name, v.gpx_url || '', 'Unused'])];
