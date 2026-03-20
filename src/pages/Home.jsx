@@ -14,6 +14,7 @@ import UpdateInProgressModal from '../components/offline/UpdateInProgressModal';
 import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../components/offline/offlineStorage';
 import SplashScreen from '../components/onboarding/SplashScreen';
 import RegistrationForm from '../components/onboarding/RegistrationForm';
+import RedeemCode from '../components/walks/RedeemCode';
 
 export default function Home() {
   const [user, setUser] = useState(null);
