@@ -189,7 +189,12 @@ export default function Home() {
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto p-4">
-        <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-120px)]">
+        {/* Redeem code panel */}
+        <div className="mb-4">
+          <RedeemCode />
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-180px)]">
           {/* Walk list */}
           <div className="lg:col-span-1 h-full">
             <WalkList
