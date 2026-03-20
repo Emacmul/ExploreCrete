@@ -141,7 +141,7 @@ export default function VoucherManager({ walk, onBack }) {
   };
 
   return (
-    <div>
+    <div onClick={(e) => { if (archiveConfirm && !e.target.closest('[data-archive]')) setArchiveConfirm(false); }}>
       <div className="flex items-center gap-3 mb-6 mt-2">
         <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-300 hover:text-white gap-2">
           <ArrowLeft className="w-4 h-4" /> Back
