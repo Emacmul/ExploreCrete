@@ -5,11 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Ticket, Download, ArrowLeft, CheckCircle2, Clock, Upload, AlertCircle, FileText } from 'lucide-react';
 
+// Proper RFC 4180 CSV parser — handles commas inside quoted fields, international characters
+function parseCSVLine(line) {
+  const cols = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; } // escaped quote
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) {
+      cols.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  cols.push(current.trim());
+  return cols;
+}
+
 function parseCSV(text) {
-  const lines = text.trim().split('\n').filter(l => l.trim());
+  // Strip UTF-8 BOM if present
+  const cleaned = text.replace(/^\uFEFF/, '');
+  const lines = cleaned.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) return { error: 'CSV must have a header row and at least one data row.' };
 
-  const header = lines[0].split(',').map(h => h.replace(/['"]/g, '').trim().toLowerCase());
+  const header = parseCSVLine(lines[0]).map(h => h.toLowerCase());
   const codeIdx = header.findIndex(h => h === 'code');
   const gpxIdx = header.findIndex(h => ['gpx_url', 'gpx url', 'url', 'gpx'].includes(h));
   const nameIdx = header.findIndex(h => ['walk_name', 'walk name', 'name'].includes(h));
@@ -19,7 +42,7 @@ function parseCSV(text) {
 
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+    const cols = parseCSVLine(lines[i]);
     const code = cols[codeIdx]?.toUpperCase();
     const gpx_url = cols[gpxIdx];
     const walk_name = nameIdx !== -1 ? cols[nameIdx] : null;
