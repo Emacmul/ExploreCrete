@@ -294,6 +294,20 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               </div>
             </div>
 
+            {/* GPX URL */}
+            <div>
+              <Label className="text-slate-300 mb-1.5 block">GPX File URL</Label>
+              <Input
+                value={form.gpx_url || ''}
+                onChange={e => set('gpx_url', e.target.value)}
+                placeholder="https://yourwebsite.com/gpx/walk-name.gpx"
+                className="bg-slate-700 border-slate-600 text-white font-mono text-sm"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Link to the GPX file hosted on your website. Customers download this after redeeming their voucher code.
+              </p>
+            </div>
+
             <div className="border-t border-slate-700 pt-5">
               <Label className="text-slate-300 mb-3 block font-semibold">Starting Point (GPS)</Label>
               <div className="grid grid-cols-2 gap-4">
