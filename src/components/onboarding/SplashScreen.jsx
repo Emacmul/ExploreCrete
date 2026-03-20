@@ -1,47 +1,49 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
+
+const SPLASH_IMAGE = 'https://media.base44.com/images/public/69a7d073cd7cd9b51cfe0fd0/40f0351cc_Walkingappsplashacreen.jpg';
 
 export default function SplashScreen({ onDone }) {
   const [visible, setVisible] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onDone, 500);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [onDone]);
+  const handleEnter = () => {
+    setVisible(false);
+    setTimeout(() => {
+      base44.auth.redirectToLogin();
+    }, 400);
+  };
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black"
+          className="fixed inset-0 z-[9999] flex flex-col"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
         >
-          {/* Replace the src below with your splash image once designed */}
+          {/* Full-screen background image */}
           <img
-            src="/splash.png"
-            alt="Crete Walking Trails"
-            className="w-full h-full object-cover"
-            onError={e => {
-              // Fallback if image not yet uploaded
-              e.target.style.display = 'none';
-              e.target.parentElement.classList.add('fallback-splash');
-            }}
+            src={SPLASH_IMAGE}
+            alt="Magical Crete Walking App"
+            className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Fallback shown until splash image is added */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 via-blue-800 to-amber-800 splash-fallback">
-            <div className="text-center px-8">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/30">
-                <span className="text-5xl">🥾</span>
-              </div>
-              <h1 className="text-4xl font-bold text-white mb-2 tracking-wide">Crete</h1>
-              <h2 className="text-2xl font-light text-amber-300 mb-1">Walking Trails</h2>
-              <p className="text-blue-200 text-sm mt-4">Discover the island's beauty</p>
-            </div>
+
+          {/* Subtle dark overlay at the bottom for button readability */}
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black/70 to-transparent" />
+
+          {/* Enter button */}
+          <div className="absolute bottom-12 left-0 right-0 flex justify-center px-8">
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              onClick={handleEnter}
+              className="w-full max-w-xs bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-bold text-lg py-4 rounded-2xl shadow-lg tracking-wide transition-all duration-150"
+            >
+              Enter
+            </motion.button>
           </div>
         </motion.div>
       )}
