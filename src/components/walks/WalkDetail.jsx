@@ -29,6 +29,9 @@ const waypointIcons = {
   landmark: { icon: MapPin, color: 'text-indigo-600', bg: 'bg-indigo-100' },
   kafeneon: { icon: TreePine, color: 'text-amber-600', bg: 'bg-amber-100' },
   wildlife_spot: { icon: Eye, color: 'text-green-600', bg: 'bg-green-100' },
+  church: { icon: MapPin, color: 'text-yellow-600', bg: 'bg-yellow-100' },
+  ruins: { icon: MapPin, color: 'text-orange-600', bg: 'bg-orange-100' },
+  abandoned_settlement: { icon: MapPin, color: 'text-slate-600', bg: 'bg-slate-100' },
 };
 
 export default function WalkDetail({ walk, onClose }) {

@@ -16,6 +16,9 @@ const waypointConfig = {
   landmark: { color: '#6366f1', icon: '📍', label: 'Landmark' },
   kafeneon: { color: '#d97706', icon: '☕', label: 'Kafeneon' },
   wildlife_spot: { color: '#16a34a', icon: '🦋', label: 'Wildlife' },
+  church: { color: '#ca8a04', icon: '⛪', label: 'Church' },
+  ruins: { color: '#ea580c', icon: '🏛️', label: 'Ruins' },
+  abandoned_settlement: { color: '#64748b', icon: '🏚️', label: 'Abandoned' },
 };
 
 const createWaypointIcon = (type) => {

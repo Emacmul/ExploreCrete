@@ -18,6 +18,9 @@ const WAYPOINT_TYPES = [
   { value: 'landmark', label: '📍 Landmark', color: 'text-indigo-400' },
   { value: 'kafeneon', label: '☕ Kafeneon', color: 'text-amber-300' },
   { value: 'wildlife_spot', label: '🦋 Wildlife Spot', color: 'text-green-300' },
+  { value: 'church', label: '⛪ Byzantine Church', color: 'text-yellow-300' },
+  { value: 'ruins', label: '🏛️ Ancient Ruins', color: 'text-orange-300' },
+  { value: 'abandoned_settlement', label: '🏚️ Abandoned Settlement', color: 'text-slate-300' },
 ];
 
 const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', description: '', image_url: '' };
