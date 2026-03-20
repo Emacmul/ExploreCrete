@@ -40,7 +40,7 @@ export default function SplashScreen({ onDone }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
               onClick={handleEnter}
-              className="w-full max-w-xs bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-bold text-lg py-4 rounded-2xl shadow-lg tracking-wide transition-all duration-150"
+              className="w-full max-w-xs bg-white/20 hover:bg-white/30 active:scale-95 text-white font-semibold text-base py-3 rounded-2xl border border-white/50 backdrop-blur-sm tracking-wide transition-all duration-150"
             >
               Enter
             </motion.button>
