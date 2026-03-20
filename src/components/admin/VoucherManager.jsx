@@ -75,7 +75,7 @@ export default function VoucherManager({ walk, onBack }) {
     const batch = newRows.map(r => ({
       code: r.code,
       walk_id: walk.id,
-      walk_name: walk.name,
+      walk_name: r.walk_name || walk.name,
       gpx_url: r.gpx_url,
       used: false,
     }));
