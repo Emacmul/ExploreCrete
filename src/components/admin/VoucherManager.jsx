@@ -73,7 +73,12 @@ export default function VoucherManager({ walk, onBack }) {
     setImporting(true);
     setImportResult(null);
 
-    const text = await file.text();
+    const text = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsText(file, 'UTF-8');
+    });
     const parsed = parseCSV(text);
 
     if (parsed.error) {
