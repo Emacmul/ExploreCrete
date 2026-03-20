@@ -56,6 +56,8 @@ function parseCSV(text) {
 export default function VoucherManager({ walk, onBack }) {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [archiving, setArchiving] = useState(false);
+  const [archiveConfirm, setArchiveConfirm] = useState(false);
   const fileInputRef = useRef();
   const queryClient = useQueryClient();
 
