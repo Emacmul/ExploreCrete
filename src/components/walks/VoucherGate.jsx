@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Ticket, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
-export default function VoucherGate({ walk, onSuccess }) {
+export default function VoucherGate({ walk, onSuccess, onCancel }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
