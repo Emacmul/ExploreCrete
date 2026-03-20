@@ -170,10 +170,10 @@ export default function VoucherManager({ walk, onBack }) {
         <div className="mt-4 bg-slate-900 rounded-lg p-3">
           <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Example CSV format:</p>
           <pre className="text-xs text-amber-300 font-mono">
-{`code,gpx_url
-WALK-A1B2-C3D4,https://yoursite.com/gpx/walk-name.gpx
-WALK-E5F6-G7H8,https://yoursite.com/gpx/walk-name.gpx
-WALK-J9K0-L1M2,https://yoursite.com/gpx/walk-name.gpx`}
+{`code,walk_name,gpx_url
+WALK-A1B2-C3D4,Balos Lagoon Trail,https://yoursite.com/gpx/balos.gpx
+WALK-E5F6-G7H8,Balos Lagoon Trail,https://yoursite.com/gpx/balos.gpx
+WALK-J9K0-L1M2,Balos Lagoon Trail,https://yoursite.com/gpx/balos.gpx`}
           </pre>
         </div>
       </div>
