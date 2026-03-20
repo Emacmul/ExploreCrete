@@ -199,6 +199,7 @@ export default function VoucherManager({ walk, onBack }) {
           {usedCount > 0 && (
             <Button
               variant="outline"
+              data-archive="true"
               onClick={handleArchiveUsed}
               disabled={archiving}
               className={`gap-2 transition-colors ${archiveConfirm ? 'border-red-500 text-red-400 hover:bg-red-900/30' : 'border-slate-600 text-slate-400 hover:text-white'}`}
