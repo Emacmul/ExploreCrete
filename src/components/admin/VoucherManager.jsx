@@ -195,6 +195,18 @@ export default function VoucherManager({ walk, onBack }) {
               <Download className="w-4 h-4" /> Export Unused as CSV
             </Button>
           )}
+
+          {usedCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleArchiveUsed}
+              disabled={archiving}
+              className={`gap-2 transition-colors ${archiveConfirm ? 'border-red-500 text-red-400 hover:bg-red-900/30' : 'border-slate-600 text-slate-400 hover:text-white'}`}
+            >
+              {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {archiving ? 'Archiving…' : archiveConfirm ? `Confirm — delete ${usedCount} used codes?` : `Archive ${usedCount} Used Codes`}
+            </Button>
+          )}
         </div>
 
         {importResult && (
