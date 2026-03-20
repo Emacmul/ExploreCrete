@@ -78,6 +78,12 @@ export default function VoucherGate({ walk, onSuccess, onCancel }) {
           {error}
         </div>
       )}
+
+      {onCancel && (
+        <button type="button" onClick={onCancel} className="text-xs text-amber-600 hover:underline self-start">
+          Cancel
+        </button>
+      )}
     </div>
   );
 }
