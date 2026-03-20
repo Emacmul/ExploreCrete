@@ -139,8 +139,8 @@ export default function VoucherManager({ walk, onBack }) {
           <Upload className="w-4 h-4 text-amber-400" /> Import Codes from CSV
         </h3>
         <p className="text-slate-400 text-xs mb-4">
-          Your CSV must have two columns: <span className="font-mono text-amber-300">code</span> and <span className="font-mono text-amber-300">gpx_url</span>. 
-          Each row is one unique code. The GPX URL can be the same for all rows.
+          Your CSV must have: <span className="font-mono text-amber-300">code</span>, <span className="font-mono text-amber-300">walk_name</span>, and <span className="font-mono text-amber-300">gpx_url</span> columns.
+          The <span className="font-mono text-amber-300">walk_name</span> column is optional — it falls back to the walk's name if omitted. The GPX URL can be the same for all rows.
         </p>
 
         <div className="flex items-center gap-3 flex-wrap">
