@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Ticket, Download, ArrowLeft, CheckCircle2, Clock, Upload, AlertCircle, FileText } from 'lucide-react';
+import { Loader2, Ticket, Download, ArrowLeft, CheckCircle2, Clock, Upload, AlertCircle, FileText, Trash2 } from 'lucide-react';
 
 // Proper RFC 4180 CSV parser — handles commas inside quoted fields, international characters
 function parseCSVLine(line) {
