@@ -27,6 +27,8 @@ const waypointIcons = {
   water: { icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-100' },
   rest_area: { icon: TreePine, color: 'text-emerald-600', bg: 'bg-emerald-100' },
   landmark: { icon: MapPin, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  kafeneon: { icon: TreePine, color: 'text-amber-600', bg: 'bg-amber-100' },
+  wildlife_spot: { icon: Eye, color: 'text-green-600', bg: 'bg-green-100' },
 };
 
 export default function WalkDetail({ walk, onClose }) {

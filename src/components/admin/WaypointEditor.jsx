@@ -16,6 +16,8 @@ const WAYPOINT_TYPES = [
   { value: 'water', label: '💧 Water Source', color: 'text-blue-400' },
   { value: 'rest_area', label: '🪑 Rest Area', color: 'text-emerald-400' },
   { value: 'landmark', label: '📍 Landmark', color: 'text-indigo-400' },
+  { value: 'kafeneon', label: '☕ Kafeneon', color: 'text-amber-300' },
+  { value: 'wildlife_spot', label: '🦋 Wildlife Spot', color: 'text-green-300' },
 ];
 
 const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', description: '', image_url: '' };

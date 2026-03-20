@@ -14,6 +14,8 @@ const waypointConfig = {
   water: { color: '#3b82f6', icon: '💧', label: 'Water' },
   rest_area: { color: '#10b981', icon: '🪑', label: 'Rest' },
   landmark: { color: '#6366f1', icon: '📍', label: 'Landmark' },
+  kafeneon: { color: '#d97706', icon: '☕', label: 'Kafeneon' },
+  wildlife_spot: { color: '#16a34a', icon: '🦋', label: 'Wildlife' },
 };
 
 const createWaypointIcon = (type) => {
