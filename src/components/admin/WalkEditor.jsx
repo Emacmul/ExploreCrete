@@ -182,25 +182,25 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         {activeTab === 'details' && (
           <div className="space-y-5">
 
-            {/* GPX Import skeleton */}
+            {/* GPX Import */}
             <div className="flex items-center gap-3 bg-blue-900/20 border border-blue-700/40 rounded-xl px-4 py-3">
-                <FileUp className="w-5 h-5 text-blue-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-blue-200 text-sm font-medium">Import from GPX</p>
-                  <p className="text-blue-400 text-xs">Pre-fills start point, trail path, waypoints, distance & elevation from your eTrex file</p>
-                </div>
-                {gpxImportDone ? (
-                  <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium shrink-0">
-                    <CheckCircle2 className="w-4 h-4" /> Imported!
-                  </span>
-                ) : (
-                  <label className={`flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
-                    {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {gpxImporting ? 'Reading…' : 'Choose GPX'}
-                    <input type="file" accept=".gpx,application/gpx+xml" className="hidden" onChange={handleGpxImport} />
-                  </label>
-                )}
+              <FileUp className="w-5 h-5 text-blue-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-blue-200 text-sm font-medium">Import from GPX</p>
+                <p className="text-blue-400 text-xs">Pre-fills start point, trail path, waypoints, distance & elevation from your eTrex file</p>
               </div>
+              {gpxImportDone ? (
+                <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium shrink-0">
+                  <CheckCircle2 className="w-4 h-4" /> Imported!
+                </span>
+              ) : (
+                <label className={`flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {gpxImporting ? 'Reading…' : 'Choose GPX'}
+                  <input type="file" accept=".gpx,application/gpx+xml" className="hidden" onChange={handleGpxImport} />
+                </label>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
