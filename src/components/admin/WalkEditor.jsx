@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2, Pencil, Check, X, Upload, FileCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Pencil, Check, X, Upload, FileCheck, Trash2, FileUp, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import WaypointEditor from './WaypointEditor';
 import TrailPathEditor from './TrailPathEditor';
