@@ -31,6 +31,7 @@ const EMPTY_WALK = {
 export default function WalkEditor({ walk, onSave, onCancel }) {
   const [form, setForm] = useState({ ...EMPTY_WALK, ...walk });
   const [saving, setSaving] = useState(false);
+  const [gpxUploading, setGpxUploading] = useState(false);
   const [activeTab, setActiveTab] = useState(walk?.id ? 'waypoints' : 'details');
   const [interests, setInterests] = useState(DEFAULT_INTERESTS);
   const [editingInterests, setEditingInterests] = useState(false);
@@ -295,18 +296,46 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               </div>
             </div>
 
-            {/* GPX URL */}
+            {/* GPX File — private upload */}
             <div>
-              <Label className="text-slate-300 mb-1.5 block">GPX File URL</Label>
-              <Input
-                value={form.gpx_url || ''}
-                onChange={e => set('gpx_url', e.target.value)}
-                placeholder="https://yourwebsite.com/gpx/walk-name.gpx"
-                className="bg-slate-700 border-slate-600 text-white font-mono text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Link to the GPX file hosted on your website. Customers download this after redeeming their voucher code.
-              </p>
+              <Label className="text-slate-300 mb-1.5 block">GPX File</Label>
+              {form.gpx_file_uri ? (
+                <div className="flex items-center gap-3 bg-green-900/30 border border-green-700/50 rounded-lg px-4 py-3">
+                  <FileCheck className="w-5 h-5 text-green-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-green-300 text-sm font-medium">{form.gpx_filename || 'GPX file uploaded'}</p>
+                    <p className="text-green-600 text-xs">Stored securely — customers receive a temporary download link on redemption</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { set('gpx_file_uri', ''); set('gpx_filename', ''); }}
+                    className="text-slate-500 hover:text-red-400 transition-colors"
+                    title="Remove file"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className={`flex items-center gap-2 cursor-pointer bg-slate-700 border border-dashed border-slate-500 rounded-lg px-4 py-3 text-slate-400 hover:text-white hover:border-amber-500/50 transition-colors text-sm w-full ${gpxUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {gpxUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {gpxUploading ? 'Uploading securely…' : 'Upload GPX file (stored privately)'}
+                  <input
+                    type="file"
+                    accept=".gpx,application/gpx+xml"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      setGpxUploading(true);
+                      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+                      set('gpx_file_uri', file_uri);
+                      set('gpx_filename', file.name);
+                      setGpxUploading(false);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              )}
             </div>
 
             <div className="border-t border-slate-700 pt-5">
