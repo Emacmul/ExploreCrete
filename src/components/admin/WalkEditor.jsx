@@ -53,6 +53,74 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const [gpxImporting, setGpxImporting] = useState(false);
+  const [gpxImportDone, setGpxImportDone] = useState(false);
+
+  const handleGpxImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setGpxImporting(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(ev.target.result, 'application/xml');
+
+      // Trail path from track points
+      const trkpts = Array.from(doc.querySelectorAll('trkpt'));
+      const trailPath = trkpts.map(pt => ({
+        lat: parseFloat(pt.getAttribute('lat')),
+        lng: parseFloat(pt.getAttribute('lon')),
+      })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+
+      // Waypoints
+      const wpts = Array.from(doc.querySelectorAll('wpt'));
+      const waypoints = wpts.map(wpt => ({
+        lat: parseFloat(wpt.getAttribute('lat')),
+        lng: parseFloat(wpt.getAttribute('lon')),
+        name: wpt.querySelector('name')?.textContent?.trim() || 'Unnamed',
+        description: wpt.querySelector('desc')?.textContent?.trim() || '',
+        type: 'landmark',
+        image_url: '',
+      })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+
+      // Start point — first track point, or first waypoint
+      const startPt = trailPath[0] || waypoints[0];
+
+      // Calculate distance (km) from track points using Haversine
+      let distanceKm = 0;
+      for (let i = 1; i < trailPath.length; i++) {
+        const R = 6371;
+        const dLat = (trailPath[i].lat - trailPath[i-1].lat) * Math.PI / 180;
+        const dLon = (trailPath[i].lng - trailPath[i-1].lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(trailPath[i-1].lat * Math.PI/180) * Math.cos(trailPath[i].lat * Math.PI/180) * Math.sin(dLon/2)**2;
+        distanceKm += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      }
+
+      // Elevation gain from track points
+      const elevations = trkpts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
+      let elevGain = 0;
+      for (let i = 1; i < elevations.length; i++) {
+        if (elevations[i] > elevations[i-1]) elevGain += elevations[i] - elevations[i-1];
+      }
+
+      setForm(prev => ({
+        ...prev,
+        trail_path: trailPath,
+        waypoints: waypoints.length > 0 ? waypoints : prev.waypoints,
+        start_lat: startPt ? startPt.lat : prev.start_lat,
+        start_lng: startPt ? startPt.lng : prev.start_lng,
+        distance_km: distanceKm > 0 ? Math.round(distanceKm * 10) / 10 : prev.distance_km,
+        elevation_gain_m: elevGain > 0 ? Math.round(elevGain) : prev.elevation_gain_m,
+      }));
+
+      setGpxImporting(false);
+      setGpxImportDone(true);
+      setTimeout(() => setGpxImportDone(false), 4000);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const data = {
