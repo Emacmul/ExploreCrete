@@ -146,6 +146,20 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               />
             </div>
 
+            <div>
+              <Label className="text-slate-300 mb-1.5 block">
+                ⚠️ Safety Notes
+                <span className="ml-2 text-xs text-slate-500 font-normal">Shown prominently to users before they set off</span>
+              </Label>
+              <Textarea
+                value={form.safety_notes || ''}
+                onChange={e => set('safety_notes', e.target.value)}
+                placeholder={`e.g. This route passes through unmarked terrain and maquis. You must download the GPX file and load it into a navigation app before departure.\n\nEssential equipment: sun hat, sturdy walking shoes or boots, walking poles, and a minimum of 2 litres of water per person. Mobile signal is unreliable on this route.\n\nNote: Under Greek law, the cost of any search and rescue operation is charged to the individual. Do not attempt this walk unprepared.`}
+                rows={6}
+                className="bg-slate-700 border-slate-600 text-white resize-none text-sm"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-slate-300 mb-1.5 block">Region</Label>

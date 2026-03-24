@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   X, Clock, Route, TrendingUp, MapPin, AlertTriangle, 
-  Eye, Droplets, TreePine, Navigation, Crosshair
+  Eye, Droplets, TreePine, Navigation, Crosshair, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
