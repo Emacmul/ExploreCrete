@@ -100,8 +100,7 @@ export default function VoucherManager({ walk, onBack }) {
     const batch = newRows.map(r => ({
       code: r.code,
       walk_id: walk.id,
-      walk_name: r.walk_name || walk.name,
-      gpx_url: r.gpx_url,
+      walk_name: walk.name,
       used: false,
     }));
 
@@ -174,8 +173,7 @@ export default function VoucherManager({ walk, onBack }) {
           <Upload className="w-4 h-4 text-amber-400" /> Import Codes from CSV
         </h3>
         <p className="text-slate-400 text-xs mb-4">
-          Your CSV must have: <span className="font-mono text-amber-300">code</span>, <span className="font-mono text-amber-300">walk_name</span>, and <span className="font-mono text-amber-300">gpx_url</span> columns.
-          The <span className="font-mono text-amber-300">walk_name</span> column is optional — it falls back to the walk's name if omitted. The GPX URL can be the same for all rows.
+          Your CSV only needs one column: <span className="font-mono text-amber-300">code</span>. The GPX file is stored securely in the walk itself — no URLs needed.
         </p>
 
         <div className="flex items-center gap-3 flex-wrap">
@@ -218,10 +216,10 @@ export default function VoucherManager({ walk, onBack }) {
         <div className="mt-4 bg-slate-900 rounded-lg p-3">
           <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Example CSV format:</p>
           <pre className="text-xs text-amber-300 font-mono">
-{`code,walk_name,gpx_url
-WALK-A1B2-C3D4,Balos Lagoon Trail,https://yoursite.com/gpx/balos.gpx
-WALK-E5F6-G7H8,Balos Lagoon Trail,https://yoursite.com/gpx/balos.gpx
-WALK-J9K0-L1M2,Balos Lagoon Trail,https://yoursite.com/gpx/balos.gpx`}
+{`code
+WALK-A1B2-C3D4
+WALK-E5F6-G7H8
+WALK-J9K0-L1M2`}
           </pre>
         </div>
       </div>
