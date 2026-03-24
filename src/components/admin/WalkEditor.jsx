@@ -72,13 +72,13 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         lng: parseFloat(pt.getAttribute('lon')),
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      // Waypoints
+      // Waypoints — eTrex names are useless, just grab coords and number them
       const wpts = Array.from(doc.querySelectorAll('wpt'));
-      const waypoints = wpts.map(wpt => ({
+      const waypoints = wpts.map((wpt, i) => ({
         lat: parseFloat(wpt.getAttribute('lat')),
         lng: parseFloat(wpt.getAttribute('lon')),
-        name: wpt.querySelector('name')?.textContent?.trim() || 'Unnamed',
-        description: wpt.querySelector('desc')?.textContent?.trim() || '',
+        name: `Waypoint ${i + 1}`,
+        description: '',
         type: 'landmark',
         image_url: '',
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
