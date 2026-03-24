@@ -126,6 +126,18 @@ export default function WalkDetail({ walk, onClose }) {
               <WalkDetailMap walk={walk} followGps={followGps} />
             </div>
 
+            {/* Safety Notes */}
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+                <h3 className="font-bold text-red-700">Before You Set Off</h3>
+              </div>
+              <p className="text-red-700 text-sm leading-relaxed whitespace-pre-line">
+                {walk.safety_notes ||
+                  `Essential equipment: sun hat, sturdy walking shoes or boots, walking poles, and a minimum of 2 litres of water per person.\n\nMobile signal may be unreliable. Download the GPX file and load it into a navigation app before departure.\n\nUnder Greek law, the cost of any search and rescue operation is charged to the individual. Do not attempt any walk unprepared.`}
+              </p>
+            </div>
+
             {/* Description */}
             {walk.description && (
               <div>
