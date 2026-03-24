@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Loader2, LogOut, MapPin, User, ShieldCheck, WifiOff } from 'lucide-react';
+import { Loader2, LogOut, MapPin, User, ShieldCheck, WifiOff, Footprints } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useOfflineWalks } from '../components/offline/useOfflineWalks';
