@@ -201,7 +201,6 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   </label>
                 )}
               </div>
-            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
