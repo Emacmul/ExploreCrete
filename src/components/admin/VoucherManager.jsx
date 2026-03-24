@@ -34,19 +34,14 @@ function parseCSV(text) {
 
   const header = parseCSVLine(lines[0]).map(h => h.toLowerCase());
   const codeIdx = header.findIndex(h => h === 'code');
-  const gpxIdx = header.findIndex(h => ['gpx_url', 'gpx url', 'url', 'gpx'].includes(h));
-  const nameIdx = header.findIndex(h => ['walk_name', 'walk name', 'name'].includes(h));
 
   if (codeIdx === -1) return { error: 'CSV must have a "code" column.' };
-  if (gpxIdx === -1) return { error: 'CSV must have a "gpx_url" column.' };
 
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
     const code = cols[codeIdx]?.toUpperCase();
-    const gpx_url = cols[gpxIdx];
-    const walk_name = nameIdx !== -1 ? cols[nameIdx] : null;
-    if (code && gpx_url) rows.push({ code, gpx_url, walk_name });
+    if (code) rows.push({ code });
   }
 
   if (rows.length === 0) return { error: 'No valid rows found in CSV.' };
