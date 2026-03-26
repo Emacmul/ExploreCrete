@@ -63,8 +63,8 @@ export default function CreteMap({ walks, selectedWalk, onWalkSelect, onMapClick
       style={{ minHeight: '400px' }}
     >
       <OfflineTileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://tile.openstreetmap.de/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       <MapBoundsController />
       <MapClickHandler onMapClick={onMapClick} />
