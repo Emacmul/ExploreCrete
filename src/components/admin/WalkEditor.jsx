@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Save, Loader2, Pencil, Check, X, Upload, FileCheck, Trash2, FileUp, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import FitParser from 'fit-file-parser';
 import WaypointEditor from './WaypointEditor';
 import TrailPathEditor from './TrailPathEditor';
 import AdminPreviewMap from './AdminPreviewMap';
@@ -56,6 +57,40 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   const [gpxImporting, setGpxImporting] = useState(false);
   const [gpxImportDone, setGpxImportDone] = useState(false);
 
+  // Shared helper: compute distance + elevation from a trailPath array + elevations array
+  const computeStats = (trailPath, elevations) => {
+    let distanceKm = 0;
+    for (let i = 1; i < trailPath.length; i++) {
+      const R = 6371;
+      const dLat = (trailPath[i].lat - trailPath[i-1].lat) * Math.PI / 180;
+      const dLon = (trailPath[i].lng - trailPath[i-1].lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(trailPath[i-1].lat * Math.PI/180) * Math.cos(trailPath[i].lat * Math.PI/180) * Math.sin(dLon/2)**2;
+      distanceKm += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    let elevGain = 0;
+    for (let i = 1; i < elevations.length; i++) {
+      if (elevations[i] > elevations[i-1]) elevGain += elevations[i] - elevations[i-1];
+    }
+    return { distanceKm, elevGain };
+  };
+
+  const applyImportedData = (trailPath, waypoints, elevations) => {
+    const startPt = trailPath[0] || waypoints[0];
+    const { distanceKm, elevGain } = computeStats(trailPath, elevations);
+    setForm(prev => ({
+      ...prev,
+      trail_path: trailPath,
+      waypoints: waypoints.length > 0 ? waypoints : prev.waypoints,
+      start_lat: startPt ? startPt.lat : prev.start_lat,
+      start_lng: startPt ? startPt.lng : prev.start_lng,
+      distance_km: distanceKm > 0 ? Math.round(distanceKm * 10) / 10 : prev.distance_km,
+      elevation_gain_m: elevGain > 0 ? Math.round(elevGain) : prev.elevation_gain_m,
+    }));
+    setGpxImporting(false);
+    setGpxImportDone(true);
+    setTimeout(() => setGpxImportDone(false), 4000);
+  };
+
   const handleGpxImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -65,14 +100,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(ev.target.result, 'application/xml');
 
-      // Trail path from track points
       const trkpts = Array.from(doc.querySelectorAll('trkpt'));
       const trailPath = trkpts.map(pt => ({
         lat: parseFloat(pt.getAttribute('lat')),
         lng: parseFloat(pt.getAttribute('lon')),
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      // Waypoints — eTrex names are useless, just grab coords and number them
       const wpts = Array.from(doc.querySelectorAll('wpt'));
       const waypoints = wpts.map((wpt, i) => ({
         lat: parseFloat(wpt.getAttribute('lat')),
@@ -83,42 +116,59 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         image_url: '',
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      // Start point — first track point, or first waypoint
-      const startPt = trailPath[0] || waypoints[0];
-
-      // Calculate distance (km) from track points using Haversine
-      let distanceKm = 0;
-      for (let i = 1; i < trailPath.length; i++) {
-        const R = 6371;
-        const dLat = (trailPath[i].lat - trailPath[i-1].lat) * Math.PI / 180;
-        const dLon = (trailPath[i].lng - trailPath[i-1].lng) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(trailPath[i-1].lat * Math.PI/180) * Math.cos(trailPath[i].lat * Math.PI/180) * Math.sin(dLon/2)**2;
-        distanceKm += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      }
-
-      // Elevation gain from track points
       const elevations = trkpts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
-      let elevGain = 0;
-      for (let i = 1; i < elevations.length; i++) {
-        if (elevations[i] > elevations[i-1]) elevGain += elevations[i] - elevations[i-1];
-      }
-
-      setForm(prev => ({
-        ...prev,
-        trail_path: trailPath,
-        waypoints: waypoints.length > 0 ? waypoints : prev.waypoints,
-        start_lat: startPt ? startPt.lat : prev.start_lat,
-        start_lng: startPt ? startPt.lng : prev.start_lng,
-        distance_km: distanceKm > 0 ? Math.round(distanceKm * 10) / 10 : prev.distance_km,
-        elevation_gain_m: elevGain > 0 ? Math.round(elevGain) : prev.elevation_gain_m,
-      }));
-
-      setGpxImporting(false);
-      setGpxImportDone(true);
-      setTimeout(() => setGpxImportDone(false), 4000);
+      applyImportedData(trailPath, waypoints, elevations);
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleFitImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setGpxImporting(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const fitParser = new FitParser({ force: true, speedUnit: 'km/h', lengthUnit: 'km', elapsedRecordField: true });
+      fitParser.parse(ev.target.result, (error, data) => {
+        if (error) { setGpxImporting(false); alert('Could not read FIT file: ' + error); return; }
+
+        const records = data?.activity?.sessions?.flatMap(s => s.laps?.flatMap(l => l.records || []) || []) || data?.records || [];
+
+        const trailPath = records
+          .filter(r => r.position_lat != null && r.position_long != null)
+          .map(r => ({ lat: r.position_lat, lng: r.position_long }));
+
+        const elevations = records
+          .filter(r => r.altitude != null)
+          .map(r => r.altitude);
+
+        // FIT waypoints (course points if present)
+        const coursePoints = data?.activity?.sessions?.flatMap(s => s.course_points || []) || [];
+        const waypoints = coursePoints.map((cp, i) => ({
+          lat: cp.position_lat,
+          lng: cp.position_long,
+          name: cp.name || `Waypoint ${i + 1}`,
+          description: '',
+          type: 'landmark',
+          image_url: '',
+        })).filter(p => p.lat != null && p.lng != null);
+
+        applyImportedData(trailPath, waypoints, elevations);
+      });
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  };
+
+  const handleFileImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.name.toLowerCase().endsWith('.fit')) {
+      handleFitImport(e);
+    } else {
+      handleGpxImport(e);
+    }
   };
 
   const handleSave = async () => {
@@ -186,8 +236,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
             <div className="flex items-center gap-3 bg-blue-900/20 border border-blue-700/40 rounded-xl px-4 py-3">
               <FileUp className="w-5 h-5 text-blue-400 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-blue-200 text-sm font-medium">Import from GPX</p>
-                <p className="text-blue-400 text-xs">Pre-fills start point, trail path, waypoints, distance & elevation from your eTrex file</p>
+                <p className="text-blue-200 text-sm font-medium">Import from GPX or FIT</p>
+                <p className="text-blue-400 text-xs">Pre-fills start point, trail path, waypoints, distance & elevation from your eTrex GPX or FIT file</p>
               </div>
               {gpxImportDone ? (
                 <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium shrink-0">
@@ -196,8 +246,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               ) : (
                 <label className={`flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
                   {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  {gpxImporting ? 'Reading…' : 'Choose GPX'}
-                  <input type="file" accept=".gpx,application/gpx+xml" className="hidden" onChange={handleGpxImport} />
+                  {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
+                  <input type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={handleFileImport} />
                 </label>
               )}
             </div>
