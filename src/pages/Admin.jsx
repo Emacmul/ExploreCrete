@@ -74,6 +74,29 @@ export default function Admin() {
     URL.revokeObjectURL(url);
   };
 
+  // Detect if running inside an iframe (builder preview)
+  const isInIframe = window.self !== window.top;
+
+  if (isInIframe) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8">
+        <div className="text-center max-w-sm">
+          <ShieldCheck className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+          <h2 className="text-white text-xl font-bold mb-2">Open Admin Panel</h2>
+          <p className="text-slate-400 text-sm mb-6">The admin panel requires a full browser tab to work properly (auth sessions don't carry into the preview iframe).</p>
+          <a
+            href={window.location.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+          >
+            Open in New Tab →
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
