@@ -133,8 +133,18 @@ export default function Home() {
     return <RegistrationForm user={user} onComplete={() => setRegistrationComplete(true)} />;
   }
 
+  // Floating admin button always on top (for builder preview & easy access)
+  const isInIframe = window.self !== window.top;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
+      {isInIframe && (
+        <Link to={createPageUrl('Admin')} style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 99999 }}>
+          <button style={{ background: '#f59e0b', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 16px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🛡 Admin
+          </button>
+        </Link>
+      )}
       {showSplash && <SplashScreen onDone={() => { sessionStorage.setItem('splash_seen', '1'); setShowSplash(false); }} />}
       <UpdateInProgressModal walkName={updatingWalkName} />
       {/* Header */}
