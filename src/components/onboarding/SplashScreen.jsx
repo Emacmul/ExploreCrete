@@ -7,11 +7,14 @@ const SPLASH_IMAGE = 'https://media.base44.com/images/public/69a7d073cd7cd9b51cf
 export default function SplashScreen({ onDone }) {
   const [visible, setVisible] = useState(true);
 
-  const handleEnter = () => {
+  const handleEnter = async () => {
     setVisible(false);
-    setTimeout(() => {
+    setTimeout(async () => {
       onDone();
-      base44.auth.redirectToLogin();
+      const isAuth = await base44.auth.isAuthenticated();
+      if (!isAuth) {
+        base44.auth.redirectToLogin();
+      }
     }, 400);
   };
 
