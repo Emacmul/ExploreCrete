@@ -10,6 +10,7 @@ export default function SplashScreen({ onDone }) {
   const handleEnter = () => {
     setVisible(false);
     setTimeout(() => {
+      onDone();
       base44.auth.redirectToLogin();
     }, 400);
   };

@@ -25,7 +25,7 @@ export default function Home() {
   const [tapLocation, setTapLocation] = useState(null);
   const [updatingWalkName, setUpdatingWalkName] = useState(null);
   const [pendingWalkToOpen, setPendingWalkToOpen] = useState(null);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splash_seen'));
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const { getAllOfflineWalks } = useOfflineWalks();
   const offlineCount = getAllOfflineWalks().length;
@@ -135,7 +135,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
-      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onDone={() => { sessionStorage.setItem('splash_seen', '1'); setShowSplash(false); }} />}
       <UpdateInProgressModal walkName={updatingWalkName} />
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
