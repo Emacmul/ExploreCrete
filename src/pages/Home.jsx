@@ -172,14 +172,12 @@ export default function Home() {
                 <span className="hidden sm:inline">Recorded Walks</span>
               </Button>
             </Link>
-            {user?.role === 'admin' && (
-              <Link to={createPageUrl('Admin')}>
-                <Button variant="outline" size="sm" className="gap-2 border-amber-300 text-amber-600 hover:bg-amber-50">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span className="hidden sm:inline">Admin</span>
-                </Button>
-              </Link>
-            )}
+            <Link to={createPageUrl('Admin')}>
+              <Button variant="outline" size="sm" className="gap-2 border-amber-300 text-amber-600 hover:bg-amber-50">
+                <ShieldCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Button>
+            </Link>
             <Button
               variant="outline"
               size="sm"
