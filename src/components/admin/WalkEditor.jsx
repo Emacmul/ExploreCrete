@@ -29,6 +29,17 @@ const EMPTY_WALK = {
   waypoints: [],
 };
 
+function SaveButton({ onSave, saving }) {
+  return (
+    <div className="border-t border-slate-700 pt-4 flex justify-end">
+      <Button onClick={onSave} disabled={saving} className="bg-amber-500 hover:bg-amber-600 gap-2">
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        Save Walk
+      </Button>
+    </div>
+  );
+}
+
 export default function WalkEditor({ walk, onSave, onCancel }) {
   const [form, setForm] = useState({ ...EMPTY_WALK, ...walk });
   const [saving, setSaving] = useState(false);
@@ -513,25 +524,36 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 💡 Tip: Right-click any location on Google Maps and click the coordinates to copy them.
               </p>
             </div>
+
+            <SaveButton onSave={handleSave} saving={saving} />
           </div>
         )}
 
         {activeTab === 'trail' && (
-          <TrailPathEditor
-            trailPath={form.trail_path}
-            onChange={path => set('trail_path', path)}
-          />
+          <div className="space-y-4">
+            <TrailPathEditor
+              trailPath={form.trail_path}
+              onChange={path => set('trail_path', path)}
+            />
+            <SaveButton onSave={handleSave} saving={saving} />
+          </div>
         )}
 
         {activeTab === 'waypoints' && (
-          <WaypointEditor
-            waypoints={form.waypoints}
-            onChange={wps => set('waypoints', wps)}
-          />
+          <div className="space-y-4">
+            <WaypointEditor
+              waypoints={form.waypoints}
+              onChange={wps => set('waypoints', wps)}
+            />
+            <SaveButton onSave={handleSave} saving={saving} />
+          </div>
         )}
 
         {activeTab === 'preview' && (
-          <AdminPreviewMap walk={form} />
+          <div className="space-y-4">
+            <AdminPreviewMap walk={form} />
+            <SaveButton onSave={handleSave} saving={saving} />
+          </div>
         )}
       </div>
     </div>
