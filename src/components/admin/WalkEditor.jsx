@@ -171,8 +171,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           []
         );
 
-        console.log('FIT data keys:', Object.keys(data || {}));
-        console.log('FIT course points found:', coursePoints.length);
+        alert('FIT data keys: ' + Object.keys(data || {}).join(', ') + '\n\nCourse points found: ' + coursePoints.length);
 
         const waypoints = coursePoints.map((cp, i) => ({
           lat: cp.position_lat,
