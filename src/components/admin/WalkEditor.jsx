@@ -171,6 +171,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           []
         );
 
+        console.log('Course points found:', coursePoints.length);
+        if (coursePoints.length > 0) {
+          console.log('First course point:', coursePoints[0]);
+          console.log('Its keys:', Object.keys(coursePoints[0]));
+        }
+
         const waypoints = coursePoints.map((cp, i) => ({
           lat: cp.position_lat || cp.positionLat,
           lng: cp.position_long || cp.positionLong,
