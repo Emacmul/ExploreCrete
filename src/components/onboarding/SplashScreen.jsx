@@ -8,13 +8,14 @@ export default function SplashScreen({ onDone }) {
   const [visible, setVisible] = useState(true);
 
   const handleEnter = async () => {
+    const isAuth = await base44.auth.isAuthenticated();
+    if (!isAuth) {
+      base44.auth.redirectToLogin();
+      return;
+    }
     setVisible(false);
-    setTimeout(async () => {
+    setTimeout(() => {
       onDone();
-      const isAuth = await base44.auth.isAuthenticated();
-      if (!isAuth) {
-        base44.auth.redirectToLogin();
-      }
     }, 400);
   };
 
