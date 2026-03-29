@@ -313,11 +313,13 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   <CheckCircle2 className="w-4 h-4" /> Imported!
                 </span>
               ) : (
-                <label className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
-                   {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                   {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
-                   <input type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('File input change:', e.target.files); handleFileImport(e); }} disabled={gpxImporting} />
-                 </label>
+                <>
+                  <input type="file" id="gpx-import-input" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('File input change:', e.target.files); handleFileImport(e); }} disabled={gpxImporting} />
+                  <label htmlFor="gpx-import-input" className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
+                     {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                     {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
+                   </label>
+                </>
               )}
             </div>
 
