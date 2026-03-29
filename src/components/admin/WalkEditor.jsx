@@ -308,21 +308,16 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 <p className="text-blue-200 text-sm font-medium">Import from GPX or FIT</p>
                 <p className="text-blue-400 text-xs">Pre-fills start point, trail path, waypoints, distance & elevation from your eTrex GPX or FIT file</p>
               </div>
-              <input ref={fileInputRef} type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={handleFileImport} />
               {gpxImportDone ? (
                 <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium shrink-0">
                   <CheckCircle2 className="w-4 h-4" /> Imported!
                 </span>
               ) : (
-                <button
-                   type="button"
-                   onClick={() => fileInputRef.current?.click()}
-                   className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}
-                   disabled={gpxImporting}
-                 >
+                <label className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
                    {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                    {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
-                 </button>
+                   <input type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={handleFileImport} disabled={gpxImporting} />
+                 </label>
               )}
             </div>
 
