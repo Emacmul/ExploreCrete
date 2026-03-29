@@ -171,16 +171,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           []
         );
 
-        const session0 = data?.activity?.sessions?.[0];
-        const lap0 = session0?.laps?.[0];
         alert(
-          'sessions count: ' + (data?.activity?.sessions?.length ?? 'n/a') +
-          '\nlaps in session0: ' + (session0?.laps?.length ?? 'n/a') +
-          '\nrecords in lap0: ' + (lap0?.records?.length ?? 'n/a') +
-          '\ncourse_points top: ' + (data?.course_points?.length ?? 'n/a') +
-          '\nsession0 keys: ' + Object.keys(session0 || {}).join(', ') +
-          '\nlap0 keys: ' + Object.keys(lap0 || {}).join(', ') +
-          '\nrecord0 sample: ' + JSON.stringify(lap0?.records?.[0], null, 2)
+          'records length: ' + (data?.records?.length ?? 'n/a') +
+          '\nrecord[0] keys: ' + Object.keys(data?.records?.[0] || {}).join(', ') +
+          '\nrecord[0] sample: ' + JSON.stringify(data?.records?.[0], null, 2) +
+          '\n\nevents length: ' + (data?.events?.length ?? 'n/a') +
+          '\nevent[0] sample: ' + JSON.stringify(data?.events?.[0], null, 2)
         );
 
         const waypoints = coursePoints.map((cp, i) => ({
