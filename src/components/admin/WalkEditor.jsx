@@ -142,10 +142,18 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     if (!file) return;
     setGpxImporting(true);
     const reader = new FileReader();
+    reader.onerror = (err) => {
+      console.error('FileReader error:', err);
+      setGpxImporting(false);
+      alert('Error reading file: ' + err.message);
+    };
     reader.onload = (ev) => {
       try {
+        const arrayBuffer = ev.target.result;
+        console.log('File loaded, size:', arrayBuffer.byteLength);
+        
         const fitParser = new FitParser({ force: true, speedUnit: 'km/h', lengthUnit: 'km', elapsedRecordField: true });
-        fitParser.parse(ev.target.result, (error, data) => {
+        fitParser.parse(arrayBuffer, (error, data) => {
           if (error) { 
             console.error('FIT parse error:', error);
             setGpxImporting(false); 
