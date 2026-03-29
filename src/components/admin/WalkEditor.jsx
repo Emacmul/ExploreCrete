@@ -94,7 +94,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     setForm(prev => ({
       ...prev,
       trail_path: trailPath,
-      waypoints: waypoints.length > 0 ? waypoints : prev.waypoints,
+      // Never overwrite manually added waypoints — only use imported ones if none exist yet
+      waypoints: prev.waypoints.length > 0 ? prev.waypoints : waypoints,
       start_lat: startPt ? startPt.lat : prev.start_lat,
       start_lng: startPt ? startPt.lng : prev.start_lng,
       distance_km: distanceKm > 0 ? Math.round(distanceKm * 10) / 10 : prev.distance_km,
