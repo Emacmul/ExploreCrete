@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,6 +51,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   const [interests, setInterests] = useState(DEFAULT_INTERESTS);
   const [editingInterests, setEditingInterests] = useState(false);
   const [newInterest, setNewInterest] = useState('');
+  const fileInputRef = useRef(null);
 
   // helpers for multi-select interests (stored as comma-separated string)
   const selectedInterests = form.main_interest
@@ -312,11 +313,18 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   <CheckCircle2 className="w-4 h-4" /> Imported!
                 </span>
               ) : (
-               <label className={`flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
-                  {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
-                  <input type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('INPUT onChange fired, handleFileImport =', typeof handleFileImport); handleFileImport(e); }} />
-                </label>
+               <>
+                 <button
+                   type="button"
+                   onClick={() => fileInputRef.current?.click()}
+                   className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}
+                   disabled={gpxImporting}
+                 >
+                   {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                   {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
+                 </button>
+                 <input ref={fileInputRef} type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={handleFileImport} />
+               </>
               )}
             </div>
 
