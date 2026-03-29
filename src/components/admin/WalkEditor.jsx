@@ -147,6 +147,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       fitParser.parse(ev.target.result, (error, data) => {
         if (error) { setGpxImporting(false); alert('Could not read FIT file: ' + error); return; }
 
+        console.log('Full FIT data keys:', Object.keys(data || {}));
+        console.log('Full data:', data);
+
         // Try multiple locations where records can live in FIT structure
         const records = (
           data?.activity?.sessions?.flatMap(s => s.laps?.flatMap(l => l.records || []) || []) ||
@@ -163,19 +166,22 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           .map(r => r.altitude);
 
         // FIT course points — Garmin saves named waypoints here
-        // They can live at top-level, under course, or under activity sessions
-        const coursePoints = (
-          data?.course_points ||
-          data?.course?.course_points ||
-          data?.activity?.sessions?.flatMap(s => s.course_points || []) ||
-          []
-        );
+        // Try all possible locations
+        let coursePoints = [];
+        if (data?.course_points?.length > 0) coursePoints = data.course_points;
+        else if (data?.course?.course_points?.length > 0) coursePoints = data.course.course_points;
+        else if (data?.activity?.course_points?.length > 0) coursePoints = data.activity.course_points;
+        else if (data?.activity?.sessions?.length > 0) {
+          for (const session of data.activity.sessions) {
+            if (session.course_points?.length > 0) {
+              coursePoints = session.course_points;
+              break;
+            }
+          }
+        }
 
         console.log('Course points found:', coursePoints.length);
-        if (coursePoints.length > 0) {
-          console.log('First course point:', coursePoints[0]);
-          console.log('Its keys:', Object.keys(coursePoints[0]));
-        }
+        if (coursePoints.length > 0) console.log('First course point:', coursePoints[0]);
 
         const waypoints = coursePoints.map((cp, i) => ({
           lat: cp.position_lat || cp.positionLat,
