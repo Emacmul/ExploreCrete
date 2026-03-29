@@ -18,6 +18,8 @@ const EMPTY_WALK = {
   name: '',
   description: '',
   difficulty: 'moderate',
+  walk_type: 'B',
+  is_free_preview: false,
   distance_km: '',
   duration_hours: '',
   elevation_gain_m: '',
@@ -336,6 +338,42 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Lego system type */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-slate-300 mb-1.5 block">
+                  Walk Type
+                  <span className="ml-2 text-xs text-slate-500 font-normal">Lego system tier</span>
+                </Label>
+                <Select value={form.walk_type || 'B'} onValueChange={v => set('walk_type', v)}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="B">B — Base (all members)</SelectItem>
+                    <SelectItem value="C1">C1 — Explorer+</SelectItem>
+                    <SelectItem value="C2">C2 — Pathfinder+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-slate-300 mb-1.5 block">
+                  Free Preview
+                  <span className="ml-2 text-xs text-slate-500 font-normal">Visible to Wanderers</span>
+                </Label>
+                <div className="flex items-center gap-3 h-9 bg-slate-700 border border-slate-600 rounded-md px-3">
+                  <button
+                    type="button"
+                    onClick={() => set('is_free_preview', !form.is_free_preview)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_free_preview ? 'bg-amber-500' : 'bg-slate-500'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_free_preview ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                  <span className="text-slate-300 text-sm">{form.is_free_preview ? 'Yes' : 'No'}</span>
+                </div>
               </div>
             </div>
 

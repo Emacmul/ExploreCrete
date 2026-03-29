@@ -15,6 +15,8 @@ import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../component
 import SplashScreen from '../components/onboarding/SplashScreen';
 import RegistrationForm from '../components/onboarding/RegistrationForm';
 import RedeemCode from '../components/walks/RedeemCode';
+import WandererUpsellSplash, { shouldShowUpsell } from '../components/membership/WandererUpsellSplash';
+import NewWalkAnnouncementModal, { getUnseenAnnouncement } from '../components/walks/NewWalkAnnouncementModal';
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -27,6 +29,9 @@ export default function Home() {
   const [pendingWalkToOpen, setPendingWalkToOpen] = useState(null);
   const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splash_seen'));
   const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [appUser, setAppUser] = useState(null);
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [newWalkAnnouncement, setNewWalkAnnouncement] = useState(null);
   const { getAllOfflineWalks } = useOfflineWalks();
   const offlineCount = getAllOfflineWalks().length;
   const updatingRef = useRef(false);
@@ -46,6 +51,12 @@ export default function Home() {
         const appUsers = await base44.entities.AppUser.filter({ user_id: userData.id });
         if (appUsers.length > 0 && appUsers[0].registration_complete) {
           setRegistrationComplete(true);
+          setAppUser(appUsers[0]);
+          // Show upsell for wanderers, but only once per 3 days
+          const tier = appUsers[0].membership_tier || 'wanderer';
+          if (tier === 'wanderer' && shouldShowUpsell()) {
+            setTimeout(() => setShowUpsell(true), 2000);
+          }
         }
       } catch (error) {
         base44.auth.redirectToLogin();
@@ -62,6 +73,17 @@ export default function Home() {
     queryFn: () => base44.entities.Walk.list(),
     enabled: !!user,
   });
+
+  // Check for new walk announcements once walks load
+  useEffect(() => {
+    if (!walks.length || !registrationComplete) return;
+    const unseen = getUnseenAnnouncement(walks);
+    if (unseen) {
+      setNewWalkAnnouncement(unseen);
+      // If upsell was going to show, cancel it — announcement takes priority
+      setShowUpsell(false);
+    }
+  }, [walks, registrationComplete]);
 
   // Auto-update downloaded walks when server version is newer
   useEffect(() => {
@@ -136,6 +158,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
       {showSplash && <SplashScreen onDone={() => { sessionStorage.setItem('splash_seen', '1'); setShowSplash(false); }} />}
+      {showUpsell && !showSplash && (
+        <WandererUpsellSplash onDismiss={() => setShowUpsell(false)} />
+      )}
+      {newWalkAnnouncement && !showSplash && (
+        <NewWalkAnnouncementModal
+          walk={newWalkAnnouncement}
+          memberTier={appUser?.membership_tier || 'wanderer'}
+          onDismiss={() => setNewWalkAnnouncement(null)}
+        />
+      )}
       <UpdateInProgressModal walkName={updatingWalkName} />
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">

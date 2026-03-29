@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Mountain, Loader2, Ticket, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mountain, Loader2, Ticket, MapPin, Mail, CheckCircle2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 const difficultyColors = {
   easy: 'bg-green-900 text-green-300',
@@ -12,6 +13,15 @@ const difficultyColors = {
 
 export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelete, onVouchers }) {
   const [confirmDelete, setConfirmDelete] = React.useState(null);
+  const [sendingEmail, setSendingEmail] = React.useState(null);
+  const [emailSent, setEmailSent] = React.useState({});
+
+  const handleSendEmail = async (walk) => {
+    setSendingEmail(walk.id);
+    const res = await base44.functions.invoke('sendNewWalkEmail', { walkId: walk.id });
+    setSendingEmail(null);
+    setEmailSent(prev => ({ ...prev, [walk.id]: res.data?.sent || 0 }));
+  };
 
   const handleDelete = (walk) => {
     if (confirmDelete === walk.id) {
@@ -97,6 +107,26 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                 >
                   <Ticket className="w-3 h-3" /> Vouchers
                 </Button>
+                {emailSent[walk.id] != null ? (
+                  <span className="flex items-center gap-1 text-xs text-green-400 px-2">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Sent to {emailSent[walk.id]} members
+                  </span>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSendEmail(walk)}
+                    disabled={sendingEmail === walk.id}
+                    className="text-blue-400 hover:text-blue-300 hover:bg-slate-700 gap-1.5 text-xs h-7"
+                  >
+                    {sendingEmail === walk.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Mail className="w-3 h-3" />
+                    )}
+                    {sendingEmail === walk.id ? 'Sending…' : 'Email all members'}
+                  </Button>
+                )}
                 <div className="flex-1" />
                 <Button
                   variant="ghost"

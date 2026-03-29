@@ -1,0 +1,152 @@
+{
+  "name": "Walk",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Unique identifying code for the walk (e.g., CRE-001)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the walk"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the walk"
+    },
+    "safety_notes": {
+      "type": "string",
+      "description": "Safety information and required equipment for this walk"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "moderate",
+        "challenging",
+        "difficult"
+      ],
+      "description": "Difficulty level"
+    },
+    "walk_type": {
+      "type": "string",
+      "enum": [
+        "B",
+        "C1",
+        "C2"
+      ],
+      "default": "B",
+      "description": "Walk tier in the Lego system: B = Base (all members), C1 = Explorer+, C2 = Pathfinder+"
+    },
+    "is_free_preview": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this walk is visible/accessible to Wanderer (free) members as a preview"
+    },
+    "distance_km": {
+      "type": "number",
+      "description": "Total distance in kilometers"
+    },
+    "duration_hours": {
+      "type": "number",
+      "description": "Estimated duration in hours"
+    },
+    "elevation_gain_m": {
+      "type": "number",
+      "description": "Total elevation gain in meters"
+    },
+    "start_lat": {
+      "type": "number",
+      "description": "Starting point latitude"
+    },
+    "start_lng": {
+      "type": "number",
+      "description": "Starting point longitude"
+    },
+    "region": {
+      "type": "string",
+      "description": "Region of Crete (e.g., Chania, Rethymno, Heraklion, Lasithi)"
+    },
+    "main_interest": {
+      "type": "string",
+      "description": "The main interest / theme of the walk"
+    },
+    "gpx_file_uri": {
+      "type": "string",
+      "description": "Private storage URI for the GPX file (used to generate signed download URLs)"
+    },
+    "gpx_filename": {
+      "type": "string",
+      "description": "Original filename of the uploaded GPX file"
+    },
+    "trail_path": {
+      "type": "array",
+      "description": "Array of lat/lng coordinates forming the trail",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "waypoints": {
+      "type": "array",
+      "description": "Important points along the trail",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "start",
+              "end",
+              "turnoff",
+              "danger",
+              "viewpoint",
+              "water",
+              "rest_area",
+              "landmark",
+              "kafeneon",
+              "wildlife_spot",
+              "church",
+              "ruins",
+              "abandoned_settlement"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Main image URL for the walk"
+    },
+    "announced_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this walk was announced to members (set by admin when sending notification)"
+    }
+  },
+  "required": [
+    "code",
+    "name",
+    "start_lat",
+    "start_lng"
+  ]
+}
