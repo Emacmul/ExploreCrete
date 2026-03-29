@@ -24,12 +24,14 @@ export const AuthProvider = ({ children }) => {
       
       // First, check app public settings (with token if available)
       // This will tell us if auth is required, user not registered, etc.
+      // Always read token fresh from localStorage (appParams.token is stale after login redirect)
+      const liveToken = localStorage.getItem('base44_access_token') || appParams.token;
       const appClient = createAxiosClient({
         baseURL: `/api/apps/public`,
         headers: {
           'X-App-Id': appParams.appId
         },
-        token: appParams.token, // Include token if available
+        token: liveToken,
         interceptResponses: true
       });
       
@@ -38,8 +40,6 @@ export const AuthProvider = ({ children }) => {
         setAppPublicSettings(publicSettings);
         
         // If we got the app public settings successfully, check if user is authenticated
-        // Re-read token dynamically (appParams is stale after login redirect)
-        const liveToken = localStorage.getItem('base44_access_token') || appParams.token;
         if (liveToken) {
           await checkUserAuth();
         } else {
