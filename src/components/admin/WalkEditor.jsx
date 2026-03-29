@@ -317,7 +317,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               ) : (
                 <>
                   <input ref={gpxInputRef} type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('File input change:', e.target.files); handleFileImport(e); }} disabled={gpxImporting} />
-                  <button type="button" onClick={() => gpxInputRef.current?.click()} disabled={gpxImporting} className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <button type="button" onClick={() => { console.log('Button clicked'); console.log('gpxInputRef.current:', gpxInputRef.current); gpxInputRef.current?.click(); }} disabled={gpxImporting} className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
                      {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                      {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
                    </button>
