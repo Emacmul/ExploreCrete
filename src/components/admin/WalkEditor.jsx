@@ -308,6 +308,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 <p className="text-blue-200 text-sm font-medium">Import from GPX or FIT</p>
                 <p className="text-blue-400 text-xs">Pre-fills start point, trail path, waypoints, distance & elevation from your eTrex GPX or FIT file</p>
               </div>
+              <input ref={fileInputRef} type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={handleFileImport} />
               {gpxImportDone ? (
                 <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium shrink-0">
                   <CheckCircle2 className="w-4 h-4" /> Imported!
@@ -321,7 +322,6 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                  >
                    {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                    {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
-                   <input ref={fileInputRef} type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={handleFileImport} />
                  </button>
               )}
             </div>
