@@ -152,8 +152,11 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         const arrayBuffer = ev.target.result;
         console.log('File loaded, size:', arrayBuffer.byteLength);
         
+        console.log('FitParser:', FitParser);
         const fitParser = new FitParser({ force: true, speedUnit: 'km/h', lengthUnit: 'km', elapsedRecordField: true });
+        console.log('Parser created, about to parse...');
         fitParser.parse(arrayBuffer, (error, data) => {
+          console.log('Parse callback fired!');
           if (error) { 
             console.error('FIT parse error:', error);
             setGpxImporting(false); 
