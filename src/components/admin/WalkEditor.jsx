@@ -44,6 +44,7 @@ function SaveButton({ onSave, saving }) {
 }
 
 export default function WalkEditor({ walk, onSave, onCancel }) {
+  console.log('WalkEditor mounted/rendering');
   const [form, setForm] = useState({ ...EMPTY_WALK, ...walk });
   const [saving, setSaving] = useState(false);
   const [gpxUploading, setGpxUploading] = useState(false);
