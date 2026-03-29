@@ -143,12 +143,18 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     setGpxImporting(true);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const fitParser = new FitParser({ force: true, speedUnit: 'km/h', lengthUnit: 'km', elapsedRecordField: true });
-      fitParser.parse(ev.target.result, (error, data) => {
-        if (error) { setGpxImporting(false); alert('Could not read FIT file: ' + error); return; }
+      try {
+        const fitParser = new FitParser({ force: true, speedUnit: 'km/h', lengthUnit: 'km', elapsedRecordField: true });
+        fitParser.parse(ev.target.result, (error, data) => {
+          if (error) { 
+            console.error('FIT parse error:', error);
+            setGpxImporting(false); 
+            alert('Could not read FIT file: ' + error); 
+            return; 
+          }
 
-        console.log('Full FIT data keys:', Object.keys(data || {}));
-        console.log('Full data:', data);
+          console.log('Full FIT data keys:', Object.keys(data || {}));
+          console.log('Full data:', data);
 
         // Try multiple locations where records can live in FIT structure
         const records = (
@@ -193,7 +199,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         })).filter(p => p.lat != null && p.lng != null);
 
         applyImportedData(trailPath, waypoints, elevations);
-      });
+        });
+      } catch (err) {
+        console.error('FIT import exception:', err);
+        setGpxImporting(false);
+        alert('Error parsing FIT file: ' + err.message);
+      }
     };
     reader.readAsArrayBuffer(file);
     e.target.value = '';
