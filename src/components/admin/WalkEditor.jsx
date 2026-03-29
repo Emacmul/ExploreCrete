@@ -91,13 +91,50 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     return { distanceKm, elevGain };
   };
 
+  const generateIntermediateWaypoints = (trailPath) => {
+    // If no waypoints from file, auto-generate start, end, and ~5 intermediate points
+    if (trailPath.length < 3) return [];
+    
+    const wps = [];
+    wps.push({
+      lat: trailPath[0].lat,
+      lng: trailPath[0].lng,
+      name: 'Start',
+      description: '',
+      type: 'start',
+    });
+
+    // Add intermediate waypoints every ~100 points or fewer if trail is short
+    const step = Math.max(1, Math.floor(trailPath.length / 6));
+    for (let i = step; i < trailPath.length - step; i += step) {
+      wps.push({
+        lat: trailPath[i].lat,
+        lng: trailPath[i].lng,
+        name: `Waypoint ${wps.length}`,
+        description: '',
+        type: 'landmark',
+      });
+    }
+
+    wps.push({
+      lat: trailPath[trailPath.length - 1].lat,
+      lng: trailPath[trailPath.length - 1].lng,
+      name: 'End',
+      description: '',
+      type: 'end',
+    });
+
+    return wps;
+  };
+
   const applyImportedData = (trailPath, waypoints, elevations) => {
     const startPt = trailPath[0] || waypoints[0];
     const { distanceKm, elevGain } = computeStats(trailPath, elevations);
+    const finalWaypoints = waypoints.length > 0 ? waypoints : generateIntermediateWaypoints(trailPath);
     setForm(prev => ({
       ...prev,
       trail_path: trailPath,
-      waypoints: waypoints.length > 0 ? waypoints : prev.waypoints,
+      waypoints: finalWaypoints.length > 0 ? finalWaypoints : prev.waypoints,
       start_lat: startPt ? startPt.lat : prev.start_lat,
       start_lng: startPt ? startPt.lng : prev.start_lng,
       distance_km: distanceKm > 0 ? Math.round(distanceKm * 10) / 10 : prev.distance_km,
