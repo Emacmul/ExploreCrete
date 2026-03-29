@@ -71,6 +71,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
 
   const [gpxImporting, setGpxImporting] = useState(false);
   const [gpxImportDone, setGpxImportDone] = useState(false);
+  const gpxInputRef = useRef(null);
 
   // Shared helper: compute distance + elevation from a trailPath array + elevations array
   const computeStats = (trailPath, elevations) => {
@@ -314,11 +315,11 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 </span>
               ) : (
                 <>
-                  <input type="file" id="gpx-import-input" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('File input change:', e.target.files); handleFileImport(e); }} disabled={gpxImporting} />
-                  <label htmlFor="gpx-import-input" className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
+                  <input ref={gpxInputRef} type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('File input change:', e.target.files); handleFileImport(e); }} disabled={gpxImporting} />
+                  <button type="button" onClick={() => gpxInputRef.current?.click()} disabled={gpxImporting} className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
                      {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                      {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
-                   </label>
+                   </button>
                 </>
               )}
             </div>
