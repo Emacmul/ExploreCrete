@@ -171,17 +171,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           []
         );
 
-        alert(
-          'ALL top-level keys: ' + Object.keys(data || {}).join(', ') +
-          '\n\nlaps length: ' + (data?.laps?.length ?? 'n/a') +
-          '\nlap[0] keys: ' + Object.keys(data?.laps?.[0] || {}).join(', ') +
-          '\n\nsports: ' + JSON.stringify(data?.sports?.[0], null, 2) +
-          '\n\ndevice_infos[0]: ' + JSON.stringify(data?.device_infos?.[0], null, 2)
-        );
-
         const waypoints = coursePoints.map((cp, i) => ({
-          lat: cp.position_lat,
-          lng: cp.position_long,
+          lat: cp.position_lat || cp.positionLat,
+          lng: cp.position_long || cp.positionLong,
           name: cp.name || `Waypoint ${i + 1}`,
           description: cp.type ? `Type: ${cp.type}` : '',
           type: 'landmark',
