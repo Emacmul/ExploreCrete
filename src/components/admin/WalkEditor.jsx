@@ -225,11 +225,16 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   };
 
   const handleFileImport = (e) => {
+    console.log('handleFileImport called, files:', e.target.files);
     const file = e.target.files[0];
+    console.log('File:', file?.name);
     if (!file) return;
+    console.log('File extension check:', file.name.toLowerCase());
     if (file.name.toLowerCase().endsWith('.fit')) {
+      console.log('→ Routing to FIT handler');
       handleFitImport(e);
     } else {
+      console.log('→ Routing to GPX handler');
       handleGpxImport(e);
     }
   };
