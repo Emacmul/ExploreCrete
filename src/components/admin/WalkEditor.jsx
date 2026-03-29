@@ -94,8 +94,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     setForm(prev => ({
       ...prev,
       trail_path: trailPath,
-      // Never overwrite manually added waypoints — only use imported ones if none exist yet
-      waypoints: prev.waypoints.length > 0 ? prev.waypoints : waypoints,
+      waypoints: waypoints.length > 0 ? waypoints : prev.waypoints,
       start_lat: startPt ? startPt.lat : prev.start_lat,
       start_lng: startPt ? startPt.lng : prev.start_lng,
       distance_km: distanceKm > 0 ? Math.round(distanceKm * 10) / 10 : prev.distance_km,
@@ -148,7 +147,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       fitParser.parse(ev.target.result, (error, data) => {
         if (error) { setGpxImporting(false); alert('Could not read FIT file: ' + error); return; }
 
-        const records = data?.activity?.sessions?.flatMap(s => s.laps?.flatMap(l => l.records || []) || []) || data?.records || [];
+        // Try multiple locations where records can live in FIT structure
+        const records = (
+          data?.activity?.sessions?.flatMap(s => s.laps?.flatMap(l => l.records || []) || []) ||
+          data?.records ||
+          []
+        );
 
         const trailPath = records
           .filter(r => r.position_lat != null && r.position_long != null)
@@ -158,13 +162,23 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           .filter(r => r.altitude != null)
           .map(r => r.altitude);
 
-        // FIT waypoints (course points if present)
-        const coursePoints = data?.activity?.sessions?.flatMap(s => s.course_points || []) || [];
+        // FIT course points — Garmin saves named waypoints here
+        // They can live at top-level, under course, or under activity sessions
+        const coursePoints = (
+          data?.course_points ||
+          data?.course?.course_points ||
+          data?.activity?.sessions?.flatMap(s => s.course_points || []) ||
+          []
+        );
+
+        console.log('FIT data keys:', Object.keys(data || {}));
+        console.log('FIT course points found:', coursePoints.length);
+
         const waypoints = coursePoints.map((cp, i) => ({
           lat: cp.position_lat,
           lng: cp.position_long,
           name: cp.name || `Waypoint ${i + 1}`,
-          description: '',
+          description: cp.type ? `Type: ${cp.type}` : '',
           type: 'landmark',
           image_url: '',
         })).filter(p => p.lat != null && p.lng != null);
