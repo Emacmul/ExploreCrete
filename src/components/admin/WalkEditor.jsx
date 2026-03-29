@@ -312,11 +312,14 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   <CheckCircle2 className="w-4 h-4" /> Imported!
                 </span>
               ) : (
-                <label className={`flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
+               <>
+                 <button type="button" onClick={() => console.log('Test button clicked')} className="bg-red-600 text-white px-2 py-1 text-xs rounded">TEST</button>
+                 <label className={`flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 ${gpxImporting ? 'opacity-60 pointer-events-none' : ''}`}>
                   {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                   {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
                   <input type="file" accept=".gpx,.fit,application/gpx+xml" className="hidden" onChange={(e) => { console.log('INPUT onChange fired'); handleFileImport(e); }} />
                 </label>
+               </>
               )}
             </div>
 
