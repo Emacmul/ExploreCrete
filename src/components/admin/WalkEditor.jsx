@@ -138,9 +138,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   };
 
   const handleFitImport = (e) => {
+    console.log('handleFitImport called');
     const file = e.target.files[0];
+    console.log('File selected:', file?.name);
     if (!file) return;
     setGpxImporting(true);
+    console.log('Starting FIT import...');
     const reader = new FileReader();
     reader.onerror = (err) => {
       console.error('FileReader error:', err);
