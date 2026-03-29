@@ -4,7 +4,11 @@
   "properties": {
     "code": {
       "type": "string",
-      "description": "Unique identifying code for the walk (e.g., CRE-001)"
+      "description": "Unique identifying code for the walk. B walks: B[SKU]########, C1 bolt-ons: C1[SKU]########, C2 bolt-ons: C2[SKU]########"
+    },
+    "parent_code": {
+      "type": "string",
+      "description": "For C1/C2 bolt-on walks, the code of the parent B walk they extend. Leave blank for B walks."
     },
     "name": {
       "type": "string",
@@ -36,7 +40,7 @@
         "C2"
       ],
       "default": "B",
-      "description": "Walk tier in the Lego system: B = Base (all members), C1 = Explorer+, C2 = Pathfinder+"
+      "description": "Walk tier: B = Base (Explorer+), C1 = Pathfinder+, C2 = Wayfinder+"
     },
     "is_free_preview": {
       "type": "boolean",

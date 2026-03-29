@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   X, Clock, Route, TrendingUp, MapPin, AlertTriangle, 
-  Eye, Droplets, TreePine, Navigation, Crosshair, ShieldAlert
+  Eye, Droplets, TreePine, Navigation, Crosshair, ShieldAlert, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
 import DownloadWalkButton from '../offline/DownloadWalkButton';
+import { getExtensionsForWalk, hasTier } from '@/lib/membership';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700',
@@ -34,11 +35,22 @@ const waypointIcons = {
   abandoned_settlement: { icon: MapPin, color: 'text-slate-600', bg: 'bg-slate-100' },
 };
 
-export default function WalkDetail({ walk, onClose }) {
+export default function WalkDetail({ walk, onClose, allWalks = [], userTier = 'wanderer' }) {
   const [followGps, setFollowGps] = React.useState(false);
+  const [activeExtensions, setActiveExtensions] = React.useState([]);
   if (!walk) return null;
 
   const waypoints = walk.waypoints || [];
+  const { accessible: accessibleExts, locked: lockedExts } = walk.walk_type === 'B'
+    ? getExtensionsForWalk(walk, allWalks, userTier)
+    : { accessible: [], locked: [] };
+  const hasLockedExtensions = lockedExts.length > 0;
+
+  const toggleExtension = (extId) => {
+    setActiveExtensions(prev =>
+      prev.includes(extId) ? prev.filter(id => id !== extId) : [...prev, extId]
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -121,10 +133,62 @@ export default function WalkDetail({ walk, onClose }) {
               )}
             </div>
 
+            {/* Extension toggles (Pathfinder/Wayfinder) */}
+            {accessibleExts.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {accessibleExts.map(ext => {
+                  const isActive = activeExtensions.includes(ext.id);
+                  const color = ext.walk_type === 'C1' ? 'amber' : 'purple';
+                  return (
+                    <button
+                      key={ext.id}
+                      onClick={() => toggleExtension(ext.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                        isActive
+                          ? color === 'amber'
+                            ? 'bg-amber-500 border-amber-500 text-white'
+                            : 'bg-purple-500 border-purple-500 text-white'
+                          : color === 'amber'
+                            ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                            : 'bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100'
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : color === 'amber' ? 'bg-amber-400' : 'bg-purple-400'}`} />
+                      {ext.walk_type} extension{ext.name ? `: ${ext.name}` : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Map */}
             <div className="h-64 rounded-xl overflow-hidden border">
-              <WalkDetailMap walk={walk} followGps={followGps} />
+              <WalkDetailMap
+                walk={walk}
+                followGps={followGps}
+                extensions={accessibleExts}
+                activeExtensions={activeExtensions}
+              />
             </div>
+
+            {/* Teaser banner for locked extensions */}
+            {hasLockedExtensions && (
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                <p className="text-sm text-amber-800">
+                  This walk has {lockedExts.length > 1 ? `${lockedExts.length} extensions` : 'an extension'} available.{' '}
+                  <a
+                    href="https://magicalcrete.com/home-v2/memberships/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline hover:text-amber-900"
+                  >
+                    Upgrade your membership
+                  </a>{' '}
+                  to unlock {lockedExts.map(e => e.walk_type).join(' & ')} routes.
+                </p>
+              </div>
+            )}
 
             {/* Safety Notes */}
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">

@@ -255,7 +255,9 @@ export default function Home() {
                 >
                   <WalkDetail 
                     walk={selectedWalk} 
-                    onClose={() => setShowDetail(false)} 
+                    onClose={() => setShowDetail(false)}
+                    allWalks={walks}
+                    userTier={appUser?.membership_tier || 'wanderer'}
                   />
                 </motion.div>
               ) : (

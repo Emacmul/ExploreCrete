@@ -42,7 +42,12 @@ function FitBoundsToTrail({ trailPath, waypoints }) {
   return null;
 }
 
-export default function WalkDetailMap({ walk, followGps = false }) {
+const EXTENSION_COLORS = {
+  C1: '#f59e0b', // amber
+  C2: '#8b5cf6', // purple
+};
+
+export default function WalkDetailMap({ walk, followGps = false, extensions = [], activeExtensions = [] }) {
   const trailPath = walk.trail_path || [];
   const waypoints = walk.waypoints || [];
   const center = trailPath.length > 0
@@ -57,12 +62,30 @@ export default function WalkDetailMap({ walk, followGps = false }) {
       />
       <FitBoundsToTrail trailPath={trailPath} waypoints={waypoints} />
 
+      {/* Base trail */}
       {trailPath.length > 1 && (
         <Polyline
           positions={trailPath.map(p => [p.lat, p.lng])}
           pathOptions={{ color: '#3b82f6', weight: 4, opacity: 0.85, dashArray: '10, 5' }}
         />
       )}
+
+      {/* Extension overlays */}
+      {extensions
+        .filter(ext => activeExtensions.includes(ext.id))
+        .map(ext => (ext.trail_path || []).length > 1 && (
+          <Polyline
+            key={ext.id}
+            positions={ext.trail_path.map(p => [p.lat, p.lng])}
+            pathOptions={{
+              color: EXTENSION_COLORS[ext.walk_type] || '#f59e0b',
+              weight: 4,
+              opacity: 0.9,
+              dashArray: '8, 4',
+            }}
+          />
+        ))
+      }
 
       {waypoints.map((wp, i) => (
         <Marker key={i} position={[wp.lat, wp.lng]} icon={createWaypointIcon(wp.type)}>

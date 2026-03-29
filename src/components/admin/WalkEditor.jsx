@@ -15,6 +15,7 @@ const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology'
 
 const EMPTY_WALK = {
   code: '',
+  parent_code: '',
   name: '',
   description: '',
   difficulty: 'moderate',
@@ -348,14 +349,14 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   Walk Type
                   <span className="ml-2 text-xs text-slate-500 font-normal">Lego system tier</span>
                 </Label>
-                <Select value={form.walk_type || 'B'} onValueChange={v => set('walk_type', v)}>
+                <Select value={form.walk_type || 'B'} onValueChange={v => { set('walk_type', v); if (v === 'B') set('parent_code', ''); }}>
                   <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="B">B — Base (all members)</SelectItem>
-                    <SelectItem value="C1">C1 — Explorer+</SelectItem>
-                    <SelectItem value="C2">C2 — Pathfinder+</SelectItem>
+                    <SelectItem value="B">B — Base (Explorer+)</SelectItem>
+                    <SelectItem value="C1">C1 — Pathfinder+</SelectItem>
+                    <SelectItem value="C2">C2 — Wayfinder+</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -376,6 +377,22 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 </div>
               </div>
             </div>
+
+            {/* Parent code — only for C1/C2 */}
+            {(form.walk_type === 'C1' || form.walk_type === 'C2') && (
+              <div>
+                <Label className="text-slate-300 mb-1.5 block">
+                  Parent B Walk Code *
+                  <span className="ml-2 text-xs text-slate-500 font-normal">The B walk this bolt-on extends</span>
+                </Label>
+                <Input
+                  value={form.parent_code || ''}
+                  onChange={e => set('parent_code', e.target.value)}
+                  placeholder="e.g. BCRE00000001"
+                  className="bg-slate-700 border-slate-600 text-white font-mono"
+                />
+              </div>
+            )}
 
             {/* Main Interests */}
             <div>
