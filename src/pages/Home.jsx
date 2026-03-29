@@ -59,7 +59,11 @@ export default function Home() {
           }
         }
       } catch (error) {
-        base44.auth.redirectToLogin();
+        console.error('Auth check error:', error);
+        // Only redirect if it's truly an auth error, not a network/other error
+        if (error?.status === 401 || error?.status === 403) {
+          base44.auth.redirectToLogin();
+        }
       } finally {
         setIsLoading(false);
       }
