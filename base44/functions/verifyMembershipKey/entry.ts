@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-// WC Key Manager stores keys as order line item meta.
-// We search for the key across orders using the WooCommerce REST API.
+// Uses WC Key Manager's Software API (?wckm-api=validate) to verify a membership key.
+// Invalid keys return "-1" with status 400. Valid keys return JSON with product info.
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
@@ -18,69 +18,45 @@ Deno.serve(async (req) => {
   const consumerKey = Deno.env.get('WC_CONSUMER_KEY');
   const consumerSecret = Deno.env.get('WC_CONSUMER_SECRET');
 
-  const credentials = btoa(`${consumerKey}:${consumerSecret}`);
   const normalizedKey = membershipKey.trim().toUpperCase();
 
-  // WC Key Manager exposes a dedicated endpoint to validate a key
-  // Try the wcfm/wc-key-manager style endpoint first, then fall back to order meta search
-  
-  // Approach: search orders where meta key _wc_key_manager_key = the provided key
-  // WC REST API v3 supports meta_query via: /orders?meta_key=_wc_key_manager_key&meta_value=KEY
-  const searchUrl = `${siteUrl}/wp-json/wc/v3/orders?meta_key=_wc_key_manager_key&meta_value=${encodeURIComponent(normalizedKey)}&per_page=5`;
+  const validateUrl = `${siteUrl}/?wckm-api=validate&key=${encodeURIComponent(normalizedKey)}`;
 
-  const response = await fetch(searchUrl, {
+  const response = await fetch(validateUrl, {
     headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json',
+      'Authorization': `Basic ${btoa(`${consumerKey}:${consumerSecret}`)}`,
     },
   });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error('WooCommerce API error:', response.status, errText);
-    return Response.json({ valid: false, error: 'Failed to reach WooCommerce API' }, { status: 502 });
-  }
+  const text = await response.text();
+  console.log('WCKM API status:', response.status, '| response:', text);
 
-  const orders = await response.json();
-
-  if (!Array.isArray(orders) || orders.length === 0) {
+  // Invalid key returns "-1" or non-200 status
+  if (!response.ok || text.trim() === '-1') {
     return Response.json({ valid: false, tier: null });
   }
 
-  // Found at least one order containing this key — now determine the tier from the product
-  // We look at line items for a product name that maps to a membership tier
-  const order = orders[0];
-  const lineItems = order.line_items || [];
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.log('Could not parse JSON, raw:', text);
+    return Response.json({ valid: false, error: 'Unexpected response from server' }, { status: 502 });
+  }
 
+  // Key is valid — determine tier from product name
+  const productName = (data.product_name || data.product || data.name || '').toLowerCase();
   let tier = null;
+  if (productName.includes('wayfinder')) tier = 'wayfinder';
+  else if (productName.includes('pathfinder')) tier = 'pathfinder';
+  else if (productName.includes('explorer')) tier = 'explorer';
+  else if (productName.includes('wanderer')) tier = 'wanderer';
 
-  for (const item of lineItems) {
-    const productName = (item.name || '').toLowerCase();
-    // Map product names to tiers — adjust these strings to match your actual product names
-    if (productName.includes('wayfinder')) {
-      tier = 'wayfinder';
-    } else if (productName.includes('pathfinder')) {
-      tier = 'pathfinder';
-    } else if (productName.includes('explorer')) {
-      tier = 'explorer';
-    } else if (productName.includes('wanderer')) {
-      tier = 'wanderer';
-    }
-    if (tier) break;
-  }
+  // Also check a dedicated tier field if present
+  if (!tier && data.tier) tier = data.tier.toLowerCase();
 
-  // If we found the key in an order but couldn't determine tier from product name,
-  // also check order meta directly
-  if (!tier) {
-    const allMeta = order.meta_data || [];
-    const tierMeta = allMeta.find(m => m.key === '_membership_tier' || m.key === 'membership_tier');
-    if (tierMeta) {
-      tier = tierMeta.value.toLowerCase();
-    }
-  }
-
-  // Default to 'explorer' if key is valid but tier is unresolvable
+  // Default to explorer if key valid but tier unresolvable
   if (!tier) tier = 'explorer';
 
-  return Response.json({ valid: true, tier });
+  return Response.json({ valid: true, tier, productName, rawData: data });
 });
