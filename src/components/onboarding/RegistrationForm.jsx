@@ -15,6 +15,7 @@ export default function RegistrationForm({ user, onComplete }) {
     newsletter_opted_in: true,
     password: '',
     confirm_password: '',
+    membership_code: '',
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -53,6 +54,22 @@ export default function RegistrationForm({ user, onComplete }) {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     setSaving(true);
+
+    // If a membership code was provided, verify it
+    let membership_tier = null;
+    let membership_code = null;
+    if (form.membership_code.trim()) {
+      const res = await base44.functions.invoke('verifyMembershipKey', { membershipKey: form.membership_code.trim() });
+      if (res.data?.valid && res.data?.tier) {
+        membership_tier = res.data.tier;
+        membership_code = form.membership_code.trim().toUpperCase();
+      } else {
+        setErrors(prev => ({ ...prev, membership_code: 'Invalid membership code — please check and try again' }));
+        setSaving(false);
+        return;
+      }
+    }
+
     // Check if an AppUser record already exists for this user
     const existing = await base44.entities.AppUser.filter({ user_id: user.id });
     const payload = {
@@ -65,6 +82,7 @@ export default function RegistrationForm({ user, onComplete }) {
       newsletter_opted_in: form.newsletter_opted_in,
       password: form.password,
       registration_complete: true,
+      ...(membership_tier && { membership_tier, membership_code }),
     };
 
     if (existing.length > 0) {
@@ -206,6 +224,21 @@ export default function RegistrationForm({ user, onComplete }) {
               </button>
             </div>
             {errors.confirm_password && <p className="text-red-400 text-xs mt-1">{errors.confirm_password}</p>}
+          </div>
+
+          {/* Membership code (optional) */}
+          <div>
+            <Label className="text-blue-100 text-sm mb-1.5 block">
+              Membership Code <span className="text-blue-400 font-normal">(optional)</span>
+            </Label>
+            <Input
+              value={form.membership_code}
+              onChange={e => set('membership_code', e.target.value)}
+              placeholder="e.g. WAYF123456789"
+              className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 font-mono uppercase"
+            />
+            {errors.membership_code && <p className="text-red-400 text-xs mt-1">{errors.membership_code}</p>}
+            <p className="text-blue-400 text-xs mt-1">Enter the key from your WooCommerce order to activate your membership.</p>
           </div>
 
           {/* Divider */}

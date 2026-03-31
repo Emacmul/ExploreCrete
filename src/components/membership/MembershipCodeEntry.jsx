@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { parseMembershipCode, TIER_LABELS, TIER_COLORS, TIER_BG } from '@/lib/membership';
+import { TIER_LABELS, TIER_COLORS, TIER_BG } from '@/lib/membership';
 import { CheckCircle2, AlertCircle, Loader2, Star } from 'lucide-react';
 
 /**
@@ -21,12 +21,14 @@ export default function MembershipCodeEntry({ appUser, onTierChanged }) {
     e.preventDefault();
     setError('');
     setSuccess('');
-    const tier = parseMembershipCode(code);
-    if (!tier) {
-      setError('Code not recognised. Please check it and try again.');
+    setSaving(true);
+    const res = await base44.functions.invoke('verifyMembershipKey', { membershipKey: code.trim() });
+    const { valid, tier } = res.data;
+    if (!valid || !tier) {
+      setError('Code not recognised or invalid. Please check it and try again.');
+      setSaving(false);
       return;
     }
-    setSaving(true);
     await base44.entities.AppUser.update(appUser.id, {
       membership_code: code.trim().toUpperCase(),
       membership_tier: tier,
