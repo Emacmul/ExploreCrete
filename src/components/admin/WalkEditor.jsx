@@ -145,17 +145,32 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     setTimeout(() => setGpxImportDone(false), 4000);
   };
 
+  const fetchElevations = async (points) => {
+    // Sample down to max 100 points for the API
+    const step = Math.max(1, Math.floor(points.length / 100));
+    const sampled = points.filter((_, i) => i % step === 0);
+    const locations = sampled.map(p => `${p.lat},${p.lng}`).join('|');
+    const res = await fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${locations}`);
+    const data = await res.json();
+    if (data.status !== 'OK') return [];
+    return data.results.map(r => r.elevation ?? 0);
+  };
+
   const handleGpxImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setGpxImporting(true);
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(ev.target.result, 'application/xml');
 
+      // Support both track points (recorded) and route points (Garmin Explore planned routes)
       const trkpts = Array.from(doc.querySelectorAll('trkpt'));
-      const trailPath = trkpts.map(pt => ({
+      const rtepts = Array.from(doc.querySelectorAll('rtept'));
+      const pts = trkpts.length > 0 ? trkpts : rtepts;
+
+      const trailPath = pts.map(pt => ({
         lat: parseFloat(pt.getAttribute('lat')),
         lng: parseFloat(pt.getAttribute('lon')),
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
@@ -170,7 +185,16 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         image_url: '',
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      const elevations = trkpts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
+      // Try embedded elevations first, otherwise fetch from Open Topo Data
+      let elevations = pts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
+      if (elevations.length < 2 && trailPath.length > 0) {
+        try {
+          elevations = await fetchElevations(trailPath);
+        } catch (err) {
+          console.warn('Elevation fetch failed:', err);
+        }
+      }
+
       applyImportedData(trailPath, waypoints, elevations);
     };
     reader.readAsText(file);
