@@ -72,6 +72,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
 
   const [gpxImporting, setGpxImporting] = useState(false);
   const [gpxImportDone, setGpxImportDone] = useState(false);
+  const [elevFetching, setElevFetching] = useState(false);
   const gpxInputRef = useRef(null);
 
   // Shared helper: compute distance + elevation from a trailPath array + elevations array
@@ -150,9 +151,10 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     const step = Math.max(1, Math.floor(points.length / 100));
     const sampled = points.filter((_, i) => i % step === 0);
     const locations = sampled.map(p => `${p.lat},${p.lng}`).join('|');
-    const res = await fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${locations}`);
+    const res = await fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${encodeURIComponent(locations)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (data.status !== 'OK') return [];
+    if (data.status !== 'OK') throw new Error(data.error || 'API error');
     return data.results.map(r => r.elevation ?? 0);
   };
 
@@ -188,11 +190,14 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       // Try embedded elevations first, otherwise fetch from Open Topo Data
       let elevations = pts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
       if (elevations.length < 2 && trailPath.length > 0) {
+        setGpxImporting(false);
+        setElevFetching(true);
         try {
           elevations = await fetchElevations(trailPath);
         } catch (err) {
           console.warn('Elevation fetch failed:', err);
         }
+        setElevFetching(false);
       }
 
       applyImportedData(trailPath, waypoints, elevations);
@@ -379,8 +384,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 <>
                   <input ref={gpxInputRef} id="gpx-input" type="file" accept=".gpx,.fit,application/gpx+xml" className="sr-only" onChange={(e) => { console.log('File input change:', e.target.files); handleFileImport(e); }} />
                   <label htmlFor="gpx-input" className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer`}>
-                     {gpxImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                     {gpxImporting ? 'Reading…' : 'Choose GPX / FIT'}
+                     {(gpxImporting || elevFetching) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                     {gpxImporting ? 'Reading…' : elevFetching ? 'Fetching elevation…' : 'Choose GPX / FIT'}
                    </label>
                 </>
               )}
