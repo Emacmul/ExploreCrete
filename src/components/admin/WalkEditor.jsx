@@ -173,7 +173,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
 
       const waypoints = wpts.map((wpt, i) => {
         const eleTxt = wpt.querySelector('ele')?.textContent;
-        const ele = eleTxt ? parseFloat(eleTxt) : null;
+        const ele = (eleTxt && parseFloat(eleTxt) > 0) ? parseFloat(eleTxt) : null;
         const nameTxt = wpt.querySelector('name')?.textContent || `Waypoint ${i + 1}`;
         const descTxt = wpt.querySelector('desc')?.textContent || '';
         return {
@@ -192,8 +192,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       // Treat all-zero elevations (Garmin Explore placeholder) as missing
       const hasRealElevation = elevations.length >= 2 && elevations.some(e => e > 1);
 
-      // Check which waypoints are missing elevation
-      const waypointsMissingEle = waypoints.filter(wp => wp.elevation == null);
+      // Check which waypoints are missing elevation (null or 0 = Garmin placeholder)
+      const waypointsMissingEle = waypoints.filter(wp => wp.elevation == null || wp.elevation === 0);
 
       if ((!hasRealElevation && trailPath.length > 0) || waypointsMissingEle.length > 0) {
         setGpxImporting(false);
