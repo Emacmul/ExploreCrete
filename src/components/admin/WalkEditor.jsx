@@ -167,17 +167,17 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(ev.target.result, 'application/xml');
 
-      // Support both track points (recorded) and route points (Garmin Explore planned routes)
+      // Support track points, route points (Garmin Explore), or fall back to waypoints
       const trkpts = Array.from(doc.querySelectorAll('trkpt'));
       const rtepts = Array.from(doc.querySelectorAll('rtept'));
-      const pts = trkpts.length > 0 ? trkpts : rtepts;
+      const wpts = Array.from(doc.querySelectorAll('wpt'));
+      const pts = trkpts.length > 0 ? trkpts : rtepts.length > 0 ? rtepts : wpts;
 
       const trailPath = pts.map(pt => ({
         lat: parseFloat(pt.getAttribute('lat')),
         lng: parseFloat(pt.getAttribute('lon')),
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      const wpts = Array.from(doc.querySelectorAll('wpt'));
       const waypoints = wpts.map((wpt, i) => ({
         lat: parseFloat(wpt.getAttribute('lat')),
         lng: parseFloat(wpt.getAttribute('lon')),
