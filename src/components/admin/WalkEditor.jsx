@@ -147,15 +147,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   };
 
   const fetchElevations = async (points) => {
-    // Sample down to max 100 points for the API
-    const step = Math.max(1, Math.floor(points.length / 100));
-    const sampled = points.filter((_, i) => i % step === 0);
-    const locations = sampled.map(p => `${p.lat},${p.lng}`).join('|');
-    const res = await fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${encodeURIComponent(locations)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data.status !== 'OK') throw new Error(data.error || 'API error');
-    return data.results.map(r => r.elevation ?? 0);
+    const res = await base44.functions.invoke('fetchElevations', { points });
+    return res.data.elevations;
   };
 
   const handleGpxImport = (e) => {
