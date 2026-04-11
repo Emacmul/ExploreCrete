@@ -307,6 +307,9 @@ export default function WaypointEditor({ waypoints, onChange }) {
                     <span className={`ml-2 text-xs ${typeInfo?.color}`}>
                       {typeInfo?.label.split(' ').slice(1).join(' ')}
                     </span>
+                    {wp.elevation != null && wp.elevation !== '' && (
+                      <span className="ml-2 text-xs text-slate-400">{wp.elevation}m</span>
+                    )}
                   </div>
                   {expanded === index ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                   <Button
@@ -353,7 +356,7 @@ export default function WaypointEditor({ waypoints, onChange }) {
                       <Label className="text-slate-400 text-xs mb-1 block">Elevation (m)</Label>
                       <Input
                         type="number"
-                        value={wp.elevation || ''}
+                        value={wp.elevation != null ? wp.elevation : ''}
                         onChange={e => updateWaypoint(index, 'elevation', e.target.value)}
                         placeholder="e.g. 450"
                         className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
