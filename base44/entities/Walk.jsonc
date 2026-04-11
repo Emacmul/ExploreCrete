@@ -110,6 +110,10 @@
           "lng": {
             "type": "number"
           },
+          "elevation": {
+            "type": "number",
+            "description": "Elevation in metres"
+          },
           "type": {
             "type": "string",
             "enum": [
@@ -132,6 +136,9 @@
             "type": "string"
           },
           "description": {
+            "type": "string"
+          },
+          "image_url": {
             "type": "string"
           }
         }
