@@ -748,6 +748,36 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               waypoints={form.waypoints}
               onChange={wps => set('waypoints', wps)}
             />
+            {form.waypoints.some(wp => !wp.elevation) && (
+              <div className="flex items-center gap-3 bg-blue-900/20 border border-blue-700/40 rounded-xl px-4 py-3">
+                <span className="text-blue-200 text-sm flex-1">Some waypoints are missing elevation data.</span>
+                <Button
+                  size="sm"
+                  disabled={elevFetching}
+                  onClick={async () => {
+                    const missing = form.waypoints.filter(wp => !wp.elevation);
+                    if (!missing.length) return;
+                    setElevFetching(true);
+                    try {
+                      const elevs = await fetchElevations(missing);
+                      const updated = form.waypoints.map(wp => {
+                        if (wp.elevation) return wp;
+                        const idx = missing.indexOf(wp);
+                        return { ...wp, elevation: Math.round(elevs[idx] ?? 0) };
+                      });
+                      set('waypoints', updated);
+                    } catch (err) {
+                      console.warn('Elevation fetch failed:', err);
+                    }
+                    setElevFetching(false);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shrink-0"
+                >
+                  {elevFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {elevFetching ? 'Fetching…' : 'Fetch Elevations'}
+                </Button>
+              </div>
+            )}
             <SaveButton onSave={handleSave} saving={saving} />
           </div>
         )}
