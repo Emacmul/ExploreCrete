@@ -207,7 +207,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           if (waypointsMissingEle.length > 0) {
             const wpElevs = await fetchElevations(waypointsMissingEle);
             waypointsMissingEle.forEach((wp, i) => {
-              if (wpElevs[i] != null) wp.elevation = Math.round(wpElevs[i]);
+              if (wpElevs[i] != null && wpElevs[i] !== 0) wp.elevation = Math.round(wpElevs[i]);
             });
           }
         } catch (err) {
@@ -751,7 +751,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                     setElevFetching(true);
                     try {
                       const elevs = await fetchElevations(form.waypoints);
-                      const updated = form.waypoints.map((wp, i) => ({ ...wp, elevation: Math.round(elevs[i] ?? 0) }));
+                      const updated = form.waypoints.map((wp, i) => ({ ...wp, ...(elevs[i] != null ? { elevation: Math.round(elevs[i]) } : {}) }));
                       set('waypoints', updated);
                     } catch (err) {
                       console.warn('Elevation fetch failed:', err);

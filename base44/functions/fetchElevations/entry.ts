@@ -19,5 +19,5 @@ Deno.serve(async (req) => {
   const data = await res.json();
   if (data.status !== 'OK') return Response.json({ error: data.error || 'API error' }, { status: 502 });
 
-  return Response.json({ elevations: data.results.map(r => r.elevation ?? 0) });
+  return Response.json({ elevations: data.results.map(r => r.elevation) });
 });
