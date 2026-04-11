@@ -191,11 +191,14 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       let elevations = pts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
       // Treat all-zero elevations (Garmin Explore placeholder) as missing
       const hasRealElevation = elevations.length >= 2 && elevations.some(e => e > 1);
+      console.log('GPX import: pts=', pts.length, 'trailPath=', trailPath.length, 'elevations parsed=', elevations.length, 'hasRealElevation=', hasRealElevation, 'sample ele values=', elevations.slice(0,5));
       if (!hasRealElevation && trailPath.length > 0) {
         setGpxImporting(false);
         setElevFetching(true);
+        console.log('Fetching elevation from Open Topo Data...');
         try {
           elevations = await fetchElevations(trailPath);
+          console.log('Elevation fetch result: count=', elevations.length, 'sample=', elevations.slice(0,5));
         } catch (err) {
           console.warn('Elevation fetch failed:', err);
         }
