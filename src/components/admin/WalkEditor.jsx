@@ -189,7 +189,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
 
       // Try embedded elevations first, otherwise fetch from Open Topo Data
       let elevations = pts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
-      if (elevations.length < 2 && trailPath.length > 0) {
+      // Treat all-zero elevations (Garmin Explore placeholder) as missing
+      const hasRealElevation = elevations.length >= 2 && elevations.some(e => e > 1);
+      if (!hasRealElevation && trailPath.length > 0) {
         setGpxImporting(false);
         setElevFetching(true);
         try {
