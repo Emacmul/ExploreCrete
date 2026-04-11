@@ -178,14 +178,21 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         lng: parseFloat(pt.getAttribute('lon')),
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      const waypoints = wpts.map((wpt, i) => ({
-        lat: parseFloat(wpt.getAttribute('lat')),
-        lng: parseFloat(wpt.getAttribute('lon')),
-        name: `Waypoint ${i + 1}`,
-        description: '',
-        type: 'landmark',
-        image_url: '',
-      })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+      const waypoints = wpts.map((wpt, i) => {
+        const eleTxt = wpt.querySelector('ele')?.textContent;
+        const ele = eleTxt ? parseFloat(eleTxt) : null;
+        const nameTxt = wpt.querySelector('name')?.textContent || `Waypoint ${i + 1}`;
+        const descTxt = wpt.querySelector('desc')?.textContent || '';
+        return {
+          lat: parseFloat(wpt.getAttribute('lat')),
+          lng: parseFloat(wpt.getAttribute('lon')),
+          name: nameTxt,
+          description: descTxt,
+          type: 'landmark',
+          image_url: '',
+          ...(ele !== null && !isNaN(ele) ? { elevation: Math.round(ele) } : {}),
+        };
+      }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
       // Try embedded elevations first, otherwise fetch from Open Topo Data
       let elevations = pts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
