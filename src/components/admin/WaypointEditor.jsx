@@ -25,6 +25,25 @@ const WAYPOINT_TYPES = [
 
 const EMPTY_WAYPOINT = { lat: '', lng: '', type: 'landmark', name: '', description: '', image_url: '' };
 
+// Compress image to max 1200px wide, JPEG 85% quality
+const compressImage = (file) => new Promise((resolve) => {
+  const MAX = 1200;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
 function parseGpxWaypoints(xmlText) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlText, 'application/xml');
@@ -93,7 +112,8 @@ export default function WaypointEditor({ waypoints, onChange }) {
 
   const handleImageUpload = async (file, index) => {
     setUploadingIndex(index ?? 'new');
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const compressed = await compressImage(file);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file: compressed });
     if (index === undefined) {
       setNewWp(p => ({ ...p, image_url: file_url }));
     } else {
