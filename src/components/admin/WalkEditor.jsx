@@ -198,14 +198,25 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       let elevations = pts.map(pt => parseFloat(pt.querySelector('ele')?.textContent || 'NaN')).filter(e => !isNaN(e));
       // Treat all-zero elevations (Garmin Explore placeholder) as missing
       const hasRealElevation = elevations.length >= 2 && elevations.some(e => e > 1);
-      console.log('GPX import: pts=', pts.length, 'trailPath=', trailPath.length, 'elevations parsed=', elevations.length, 'hasRealElevation=', hasRealElevation, 'sample ele values=', elevations.slice(0,5));
-      if (!hasRealElevation && trailPath.length > 0) {
+
+      // Check which waypoints are missing elevation
+      const waypointsMissingEle = waypoints.filter(wp => wp.elevation == null);
+
+      if ((!hasRealElevation && trailPath.length > 0) || waypointsMissingEle.length > 0) {
         setGpxImporting(false);
         setElevFetching(true);
-        console.log('Fetching elevation from Open Topo Data...');
         try {
-          elevations = await fetchElevations(trailPath);
-          console.log('Elevation fetch result: count=', elevations.length, 'sample=', elevations.slice(0,5));
+          // Fetch trail elevations if needed
+          if (!hasRealElevation && trailPath.length > 0) {
+            elevations = await fetchElevations(trailPath);
+          }
+          // Fetch waypoint elevations if any are missing
+          if (waypointsMissingEle.length > 0) {
+            const wpElevs = await fetchElevations(waypointsMissingEle);
+            waypointsMissingEle.forEach((wp, i) => {
+              if (wpElevs[i] != null) wp.elevation = Math.round(wpElevs[i]);
+            });
+          }
         } catch (err) {
           console.warn('Elevation fetch failed:', err);
         }
