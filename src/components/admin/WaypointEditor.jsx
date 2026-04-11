@@ -32,12 +32,10 @@ function parseGpxWaypoints(xmlText) {
   return wpts.map(wpt => ({
     lat: parseFloat(wpt.getAttribute('lat')),
     lng: parseFloat(wpt.getAttribute('lon')),
-    elevation: parseFloat(wpt.querySelector('ele')?.textContent || '0'),
+    elevation: wpt.querySelector('ele') ? parseFloat(wpt.querySelector('ele').textContent) : null,
     name: wpt.querySelector('name')?.textContent?.trim() || 'Unnamed',
     type: 'landmark',
-    description: wpt.querySelector('ele')?.textContent
-      ? `Elevation: ${parseFloat(wpt.querySelector('ele').textContent).toFixed(1)}m`
-      : '',
+    description: '',
     image_url: '',
   })).filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
 }
