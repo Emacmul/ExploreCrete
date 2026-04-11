@@ -350,6 +350,16 @@ export default function WaypointEditor({ waypoints, onChange }) {
                       />
                     </div>
                     <div>
+                      <Label className="text-slate-400 text-xs mb-1 block">Elevation (m)</Label>
+                      <Input
+                        type="number"
+                        value={wp.elevation || ''}
+                        onChange={e => updateWaypoint(index, 'elevation', e.target.value)}
+                        placeholder="e.g. 450"
+                        className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                      />
+                    </div>
+                    <div>
                       <Label className="text-slate-400 text-xs mb-1 block">Description</Label>
                       <Textarea
                         value={wp.description}
