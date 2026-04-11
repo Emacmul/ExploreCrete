@@ -3,13 +3,17 @@ import WalkDetailMap from '../map/WalkDetailMap';
 import { MapPin } from 'lucide-react';
 
 export default function AdminPreviewMap({ walk }) {
-  const hasStart = walk.start_lat && walk.start_lng && 
-    !isNaN(Number(walk.start_lat)) && !isNaN(Number(walk.start_lng));
+  // Fall back to first waypoint coords if start_lat/start_lng not explicitly set
+  const firstWaypoint = (walk.waypoints || [])[0];
+  const startLat = walk.start_lat || firstWaypoint?.lat;
+  const startLng = walk.start_lng || firstWaypoint?.lng;
+  const hasStart = startLat && startLng &&
+    !isNaN(Number(startLat)) && !isNaN(Number(startLng));
 
   const previewWalk = {
     ...walk,
-    start_lat: Number(walk.start_lat),
-    start_lng: Number(walk.start_lng),
+    start_lat: Number(startLat),
+    start_lng: Number(startLng),
     trail_path: walk.trail_path || [],
     waypoints: walk.waypoints || [],
   };
