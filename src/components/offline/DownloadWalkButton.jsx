@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, CheckCircle, Loader2, FileQuestion } from 'lucide-react';
 import VoucherGate from '../walks/VoucherGate';
+import { base44 } from '@/api/base44Client';
 
 const VOUCHER_KEY = 'crete_walks_voucher_unlocked';
 
@@ -28,17 +29,25 @@ export default function DownloadWalkButton({ walk }) {
   }, [walk.id]);
 
   const handleDownloadGpx = async () => {
-    if (!walk.gpx_url) return;
     setDownloading(true);
     try {
-      const response = await fetch(walk.gpx_url);
+      let url;
+      if (walk.gpx_file_uri) {
+        const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: walk.gpx_file_uri });
+        url = signed_url;
+      } else if (walk.gpx_url) {
+        url = walk.gpx_url;
+      } else {
+        return;
+      }
+      const response = await fetch(url);
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = objectUrl;
       a.download = `${walk.code || walk.name}.gpx`;
       a.click();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(objectUrl);
       setDownloaded(true);
     } finally {
       setDownloading(false);
@@ -52,8 +61,11 @@ export default function DownloadWalkButton({ walk }) {
     handleDownloadGpx();
   };
 
-  // No GPX URL configured
-  if (!walk.gpx_url) {
+  // Free preview — no voucher needed
+  const isFreePreview = !!walk.is_free_preview;
+
+  // No GPX configured
+  if (!walk.gpx_file_uri && !walk.gpx_url) {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm">
         <FileQuestion className="w-4 h-4" />
@@ -66,7 +78,7 @@ export default function DownloadWalkButton({ walk }) {
     return <VoucherGate walk={walk} onSuccess={handleVoucherSuccess} onCancel={() => setShowVoucher(false)} />;
   }
 
-  if (voucherUnlocked) {
+  if (voucherUnlocked || isFreePreview) {
     return (
       <div className="flex items-center gap-2">
         {downloaded && (
@@ -100,4 +112,5 @@ export default function DownloadWalkButton({ walk }) {
       Enter code to download GPX
     </Button>
   );
+
 }
