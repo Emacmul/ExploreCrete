@@ -29,8 +29,9 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
   };
 
   const confirmDeleteWalk = () => {
-    onDelete(confirmDelete.id);
+    const id = confirmDelete?.id;
     setConfirmDelete(null);
+    if (id) onDelete(id);
   };
 
   return (
