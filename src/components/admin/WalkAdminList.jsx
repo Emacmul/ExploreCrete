@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Pencil, Trash2, Mountain, Loader2, Ticket, MapPin, Mail, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -12,7 +13,7 @@ const difficultyColors = {
 };
 
 export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelete, onVouchers }) {
-  const [confirmDelete, setConfirmDelete] = React.useState(null);
+  const [confirmDelete, setConfirmDelete] = React.useState(null); // holds the walk object
   const [sendingEmail, setSendingEmail] = React.useState(null);
   const [emailSent, setEmailSent] = React.useState({});
 
@@ -24,12 +25,12 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
   };
 
   const handleDelete = (walk) => {
-    if (confirmDelete === walk.id) {
-      onDelete(walk.id);
-      setConfirmDelete(null);
-    } else {
-      setConfirmDelete(walk.id);
-    }
+    setConfirmDelete(walk);
+  };
+
+  const confirmDeleteWalk = () => {
+    onDelete(confirmDelete.id);
+    setConfirmDelete(null);
   };
 
   return (
@@ -132,18 +133,33 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDelete(walk)}
-                  className={`h-7 text-xs gap-1 ${confirmDelete === walk.id
-                    ? 'text-white bg-red-600 hover:bg-red-700'
-                    : 'text-slate-500 hover:text-red-400 hover:bg-slate-700'}`}
+                  className="h-7 text-xs gap-1 text-slate-500 hover:text-red-400 hover:bg-slate-700"
                 >
                   <Trash2 className="w-3 h-3" />
-                  {confirmDelete === walk.id ? 'Confirm delete?' : 'Delete'}
+                  Delete
                 </Button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={open => !open && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this tour?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action is irreversible and all tour details for <strong>{confirmDelete?.name}</strong> will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteWalk} className="bg-red-600 hover:bg-red-700 text-white">
+              Yes, delete tour
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
