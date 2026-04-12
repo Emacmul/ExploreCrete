@@ -92,7 +92,7 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
               </button>
 
               {/* Action strip */}
-              <div className="flex items-center gap-1 px-4 py-2 border-t border-slate-700 bg-slate-900/30">
+              <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-t border-slate-700 bg-slate-900/30">
                 <Button
                   size="sm"
                   onClick={() => onEdit(walk)}
@@ -120,11 +120,7 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                     disabled={sendingEmail === walk.id}
                     className="text-blue-400 hover:text-blue-300 hover:bg-slate-700 gap-1.5 text-xs h-7"
                   >
-                    {sendingEmail === walk.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Mail className="w-3 h-3" />
-                    )}
+                    {sendingEmail === walk.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Mail className="w-3 h-3" />}
                     {sendingEmail === walk.id ? 'Sending…' : 'Email all members'}
                   </Button>
                 )}
@@ -135,8 +131,7 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                   onClick={() => handleDelete(walk)}
                   className="h-7 text-xs gap-1.5 text-red-400 border border-red-700/50 hover:bg-red-900/40"
                 >
-                  <Trash2 className="w-3 h-3" />
-                  Delete
+                  <Trash2 className="w-3 h-3" /> Delete Tour
                 </Button>
               </div>
             </div>
