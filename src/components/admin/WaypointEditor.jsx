@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, ChevronDown, ChevronUp, Info, ImagePlus, Loader2, X, ArrowUp, ArrowDown, Upload, FileCheck } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Info, ImagePlus, Loader2, X, ArrowUp, ArrowDown, Upload, FileCheck, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const WAYPOINT_TYPES = [
@@ -59,7 +59,7 @@ function parseGpxWaypoints(xmlText) {
   })).filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
 }
 
-export default function WaypointEditor({ waypoints, onChange }) {
+export default function WaypointEditor({ waypoints, onChange, onSave, saving }) {
   const [expanded, setExpanded] = useState(null);
   const [newWp, setNewWp] = useState(EMPTY_WAYPOINT);
   const [showAddForm, setShowAddForm] = useState(true);
@@ -423,11 +423,23 @@ export default function WaypointEditor({ waypoints, onChange }) {
                       ) : (
                         <label className="flex items-center gap-2 cursor-pointer bg-slate-700 border border-dashed border-slate-500 rounded-lg px-3 py-2 text-slate-400 hover:text-white hover:border-slate-400 transition-colors text-sm w-full">
                           {uploadingIndex === index ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-                          {uploadingIndex === index ? 'Uploading…' : 'Upload photo'}
+                          {uploadingIndex === index ? 'Uploading\u2026' : 'Upload photo'}
                           <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files[0] && handleImageUpload(e.target.files[0], index)} disabled={uploadingIndex !== null} />
                         </label>
                       )}
                     </div>
+                    {onSave && (
+                      <div className="pt-2 border-t border-slate-600">
+                        <Button
+                          onClick={onSave}
+                          disabled={saving}
+                          className="w-full bg-amber-500 hover:bg-amber-600 gap-2"
+                        >
+                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          Save Walk
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

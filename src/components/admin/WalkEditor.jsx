@@ -740,6 +740,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
             <WaypointEditor
               waypoints={form.waypoints}
               onChange={wps => set('waypoints', wps)}
+              onSave={handleSave}
+              saving={saving}
             />
             {form.waypoints.length > 0 && (
               <div className="flex items-center gap-3 bg-blue-900/20 border border-blue-700/40 rounded-xl px-4 py-3">
