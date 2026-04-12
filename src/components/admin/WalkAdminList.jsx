@@ -133,7 +133,7 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDelete(walk)}
-                  className="h-7 text-xs gap-1 text-slate-500 hover:text-red-400 hover:bg-slate-700"
+                  className="h-7 text-xs gap-1.5 text-red-400 border border-red-700/50 hover:bg-red-900/40"
                 >
                   <Trash2 className="w-3 h-3" />
                   Delete
