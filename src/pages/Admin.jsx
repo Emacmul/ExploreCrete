@@ -2,18 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Users, Download } from 'lucide-react';
+import { Loader2, LogOut, ShieldCheck, ArrowLeft, Download, LayoutDashboard, List } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import WalkEditor from '../components/admin/WalkEditor';
 import WalkAdminList from '../components/admin/WalkAdminList';
 import VoucherManager from '../components/admin/VoucherManager';
+import WalksDashboard from '../components/admin/WalksDashboard';
 
 export default function Admin() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingWalk, setEditingWalk] = useState(null); // null = list view, {} = new, {...} = edit
   const [voucherWalk, setVoucherWalk] = useState(null); // walk to manage vouchers for
+  const [view, setView] = useState('dashboard'); // 'dashboard' | 'walks'
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -97,6 +99,21 @@ export default function Admin() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* View toggle */}
+            <div className="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700 mr-2">
+              <button
+                onClick={() => { setView('dashboard'); setEditingWalk(null); setVoucherWalk(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${view === 'dashboard' ? 'bg-amber-500 text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+              </button>
+              <button
+                onClick={() => { setView('walks'); setEditingWalk(null); setVoucherWalk(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${view === 'walks' ? 'bg-amber-500 text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                <List className="w-3.5 h-3.5" /> Manage Walks
+              </button>
+            </div>
             <Button variant="ghost" size="sm" onClick={handleExportUsers} className="text-green-300 hover:text-white gap-2 border border-green-700/50 hover:bg-green-800/30">
               <Download className="w-4 h-4" /> Export Users CSV
             </Button>
@@ -113,7 +130,9 @@ export default function Admin() {
       </header>
 
       <main className="max-w-6xl mx-auto p-4">
-        {editingWalk !== null ? (
+        {view === 'dashboard' && !editingWalk && !voucherWalk ? (
+          <WalksDashboard walks={walks} />
+        ) : editingWalk !== null ? (
           <WalkEditor
             walk={editingWalk}
             onSave={handleSave}
