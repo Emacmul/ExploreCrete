@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Route, TrendingUp, ChevronRight } from 'lucide-react';
+import { Clock, Route, TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useOfflineWalks } from '../offline/useOfflineWalks';
 import OfflineBadge from './OfflineBadge';
@@ -42,6 +42,11 @@ export default function WalkCard({ walk, onClick, isSelected }) {
               {walk.difficulty && (
                 <Badge variant="outline" className={`text-xs ${difficultyColors[walk.difficulty]}`}>
                   {walk.difficulty}
+                </Badge>
+              )}
+              {walk.is_free_preview && (
+                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Free Preview
                 </Badge>
               )}
             </div>

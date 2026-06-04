@@ -1,0 +1,40 @@
+{
+  "name": "VoucherCode",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "The unique voucher code string"
+    },
+    "walk_id": {
+      "type": "string",
+      "description": "ID of the walk this voucher is for"
+    },
+    "walk_name": {
+      "type": "string",
+      "description": "Name of the walk (denormalised for display)"
+    },
+    "gpx_url": {
+      "type": "string",
+      "description": "Direct URL to the GPX file for this walk"
+    },
+    "used": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the code has been redeemed"
+    },
+    "used_by": {
+      "type": "string",
+      "description": "Email of the user who redeemed the code"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the code was redeemed"
+    }
+  },
+  "required": [
+    "code",
+    "walk_id"
+  ]
+}

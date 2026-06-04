@@ -9,6 +9,7 @@ import { useOfflineWalks } from '../components/offline/useOfflineWalks';
 import { motion, AnimatePresence } from 'framer-motion';
 import CreteMap from '../components/map/CreteMap';
 import WalkList from '../components/walks/WalkList';
+import { getAccessibleWalks } from '../lib/membership';
 import WalkDetail from '../components/walks/WalkDetail';
 import UpdateInProgressModal from '../components/offline/UpdateInProgressModal';
 import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../components/offline/offlineStorage';
@@ -238,7 +239,7 @@ export default function Home() {
           {/* Walk list */}
           <div className="lg:col-span-1 h-full">
             <WalkList
-              walks={walks}
+              walks={getAccessibleWalks(walks, appUser?.membership_tier || 'wanderer')}
               selectedWalk={selectedWalk}
               onWalkSelect={handleWalkSelect}
               searchQuery={searchQuery}
@@ -279,7 +280,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <CreteMap
-                        walks={walks}
+                        walks={getAccessibleWalks(walks, appUser?.membership_tier || 'wanderer')}
                         selectedWalk={selectedWalk}
                         onWalkSelect={handleWalkSelect}
                         onMapClick={handleMapClick}
