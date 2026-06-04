@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
 import DownloadWalkButton from '../offline/DownloadWalkButton';
+import WalkProgressBar from './WalkProgressBar';
 import { getExtensionsForWalk, hasTier } from '@/lib/membership';
 
 const difficultyColors = {
@@ -132,6 +133,9 @@ export default function WalkDetail({ walk, onClose, allWalks = [], userTier = 'w
                 </span>
               )}
             </div>
+
+            {/* GPS progress bar */}
+            <WalkProgressBar walk={walk} />
 
             {/* Extension toggles (Pathfinder/Wayfinder) */}
             {accessibleExts.length > 0 && (
