@@ -15,12 +15,13 @@ const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology'
 
 const EMPTY_WALK = {
   code: '',
-  parent_code: '',
   name: '',
   description: '',
   difficulty: 'moderate',
-  walk_type: 'B',
-  is_free_preview: false,
+  walk_category: 'official',
+  is_sample_walk: false,
+  is_member_included: false,
+  contributor_name: '',
   distance_km: '',
   duration_hours: '',
   elevation_gain_m: '',
@@ -483,54 +484,57 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               </div>
             </div>
 
-            {/* Lego system type */}
+            {/* Walk access and category */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-slate-300 mb-1.5 block">
-                  Walk Type
-                  <span className="ml-2 text-xs text-slate-500 font-normal">Lego system tier</span>
-                </Label>
-                <Select value={form.walk_type || 'B'} onValueChange={v => { set('walk_type', v); if (v === 'B') set('parent_code', ''); }}>
+                <Label className="text-slate-300 mb-1.5 block">Walk Category</Label>
+                <Select value={form.walk_category || 'official'} onValueChange={v => set('walk_category', v)}>
                   <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="B">B — Base (Explorer+)</SelectItem>
-                    <SelectItem value="C1">C1 — Pathfinder+</SelectItem>
-                    <SelectItem value="C2">C2 — Wayfinder+</SelectItem>
+                    <SelectItem value="official">Official Magical Crete Walk</SelectItem>
+                    <SelectItem value="community">Community Contribution</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-slate-300 mb-1.5 block">
-                  Free Preview
-                  <span className="ml-2 text-xs text-slate-500 font-normal">Visible to Wanderers</span>
-                </Label>
+                <Label className="text-slate-300 mb-1.5 block">Free Sample Walk</Label>
                 <div className="flex items-center gap-3 h-9 bg-slate-700 border border-slate-600 rounded-md px-3">
                   <button
                     type="button"
-                    onClick={() => set('is_free_preview', !form.is_free_preview)}
-                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_free_preview ? 'bg-amber-500' : 'bg-slate-500'}`}
+                    onClick={() => set('is_sample_walk', !form.is_sample_walk)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_sample_walk ? 'bg-amber-500' : 'bg-slate-500'}`}
                   >
-                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_free_preview ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_sample_walk ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </button>
-                  <span className="text-slate-300 text-sm">{form.is_free_preview ? 'Yes' : 'No'}</span>
+                  <span className="text-slate-300 text-sm">{form.is_sample_walk ? 'Yes' : 'No'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Parent code — only for C1/C2 */}
-            {(form.walk_type === 'C1' || form.walk_type === 'C2') && (
+            <div>
+              <Label className="text-slate-300 mb-1.5 block">Included In Membership</Label>
+              <div className="flex items-center gap-3 h-9 bg-slate-700 border border-slate-600 rounded-md px-3">
+                <button
+                  type="button"
+                  onClick={() => set('is_member_included', !form.is_member_included)}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${form.is_member_included ? 'bg-green-500' : 'bg-slate-500'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_member_included ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+                <span className="text-slate-300 text-sm">{form.is_member_included ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+
+            {form.walk_category === 'community' && (
               <div>
-                <Label className="text-slate-300 mb-1.5 block">
-                  Parent B Walk Code *
-                  <span className="ml-2 text-xs text-slate-500 font-normal">The B walk this bolt-on extends</span>
-                </Label>
+                <Label className="text-slate-300 mb-1.5 block">Contributor Name</Label>
                 <Input
-                  value={form.parent_code || ''}
-                  onChange={e => set('parent_code', e.target.value)}
-                  placeholder="e.g. BCRE00000001"
-                  className="bg-slate-700 border-slate-600 text-white font-mono"
+                  value={form.contributor_name || ''}
+                  onChange={e => set('contributor_name', e.target.value)}
+                  placeholder="Name shown in the app"
+                  className="bg-slate-700 border-slate-600 text-white"
                 />
               </div>
             )}
