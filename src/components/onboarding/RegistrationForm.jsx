@@ -56,12 +56,12 @@ export default function RegistrationForm({ user, onComplete }) {
     setSaving(true);
 
     // If a membership code was provided, verify it
-    let membership_tier = null;
+    let is_member = false;
     let membership_code = null;
     if (form.membership_code.trim()) {
       const res = await base44.functions.invoke('verifyMembershipKey', { membershipKey: form.membership_code.trim() });
-      if (res.data?.valid && res.data?.tier) {
-        membership_tier = res.data.tier;
+      if (res.data?.valid) {
+        is_member = true;
         membership_code = form.membership_code.trim().toUpperCase();
       } else {
         setErrors(prev => ({ ...prev, membership_code: 'Invalid membership code — please check and try again' }));
@@ -82,7 +82,8 @@ export default function RegistrationForm({ user, onComplete }) {
       newsletter_opted_in: form.newsletter_opted_in,
       password: form.password,
       registration_complete: true,
-      ...(membership_tier && { membership_tier, membership_code }),
+      is_member,
+      membership_code,
     };
 
     if (existing.length > 0) {
@@ -234,7 +235,7 @@ export default function RegistrationForm({ user, onComplete }) {
             <Input
               value={form.membership_code}
               onChange={e => set('membership_code', e.target.value)}
-              placeholder="e.g. WAYF123456789"
+              placeholder="Enter your membership key"
               className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 font-mono uppercase"
             />
             {errors.membership_code && <p className="text-red-400 text-xs mt-1">{errors.membership_code}</p>}
