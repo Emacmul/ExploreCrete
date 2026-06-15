@@ -16,7 +16,6 @@ import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../component
 import SplashScreen from '../components/onboarding/SplashScreen';
 import RegistrationForm from '../components/onboarding/RegistrationForm';
 import RedeemCode from '../components/walks/RedeemCode';
-import WandererUpsellSplash, { shouldShowUpsell } from '../components/membership/WandererUpsellSplash';
 import NewWalkAnnouncementModal, { getUnseenAnnouncement } from '../components/walks/NewWalkAnnouncementModal';
 
 export default function Home() {
@@ -31,7 +30,6 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splash_seen'));
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [appUser, setAppUser] = useState(null);
-  const [showUpsell, setShowUpsell] = useState(false);
   const [newWalkAnnouncement, setNewWalkAnnouncement] = useState(null);
   const { getAllOfflineWalks } = useOfflineWalks();
   const offlineCount = getAllOfflineWalks().length;
@@ -54,10 +52,6 @@ export default function Home() {
           setRegistrationComplete(true);
           setAppUser(appUsers[0]);
           // Show upsell for wanderers, but only once per 3 days
-          const tier = appUsers[0].membership_tier || 'wanderer';
-          if (tier === 'wanderer' && shouldShowUpsell()) {
-            setTimeout(() => setShowUpsell(true), 2000);
-          }
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -163,13 +157,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
       {showSplash && <SplashScreen onDone={() => { sessionStorage.setItem('splash_seen', '1'); setShowSplash(false); }} />}
-      {showUpsell && !showSplash && (
-        <WandererUpsellSplash onDismiss={() => setShowUpsell(false)} />
       )}
       {newWalkAnnouncement && !showSplash && (
         <NewWalkAnnouncementModal
           walk={newWalkAnnouncement}
-          memberTier={appUser?.membership_tier || 'wanderer'}
           onDismiss={() => setNewWalkAnnouncement(null)}
         />
       )}
@@ -239,7 +230,7 @@ export default function Home() {
           {/* Walk list */}
           <div className="lg:col-span-1 h-full">
             <WalkList
-              walks={getAccessibleWalks(walks, appUser?.membership_tier || 'wanderer')}
+              walks={getAccessibleWalks(walks)}
               selectedWalk={selectedWalk}
               onWalkSelect={handleWalkSelect}
               searchQuery={searchQuery}
@@ -261,8 +252,7 @@ export default function Home() {
                   <WalkDetail 
                     walk={selectedWalk} 
                     onClose={() => setShowDetail(false)}
-                    allWalks={walks}
-                    userTier={appUser?.membership_tier || 'wanderer'}
+                    
                   />
                 </motion.div>
               ) : (
@@ -280,7 +270,6 @@ export default function Home() {
                       </div>
                     ) : (
                       <CreteMap
-                        walks={getAccessibleWalks(walks, appUser?.membership_tier || 'wanderer')}
                         selectedWalk={selectedWalk}
                         onWalkSelect={handleWalkSelect}
                         onMapClick={handleMapClick}
