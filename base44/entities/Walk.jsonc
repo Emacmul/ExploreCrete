@@ -4,11 +4,7 @@
   "properties": {
     "code": {
       "type": "string",
-      "description": "Unique identifying code for the walk. B walks: B[SKU]########, C1 bolt-ons: C1[SKU]########, C2 bolt-ons: C2[SKU]########"
-    },
-    "parent_code": {
-      "type": "string",
-      "description": "For C1/C2 bolt-on walks, the code of the parent B walk they extend. Leave blank for B walks."
+      "description": "Unique identifying code for the walk"
     },
     "name": {
       "type": "string",
@@ -32,24 +28,9 @@
       ],
       "description": "Difficulty level"
     },
-    "walk_type": {
-      "type": "string",
-      "enum": [
-        "B",
-        "C1",
-        "C2"
-      ],
-      "default": "B",
-      "description": "Walk tier: B = Base (Explorer+), C1 = Pathfinder+, C2 = Wayfinder+"
-    },
-    "is_free_preview": {
-      "type": "boolean",
-      "default": false,
-      "description": "If true, this walk is visible/accessible to Wanderer (free) members as a preview"
-    },
     "distance_km": {
       "type": "number",
-      "description": "Total distance in kilometers"
+      "description": "Total distance in kilometres"
     },
     "duration_hours": {
       "type": "number",
@@ -57,7 +38,7 @@
     },
     "elevation_gain_m": {
       "type": "number",
-      "description": "Total elevation gain in meters"
+      "description": "Total elevation gain in metres"
     },
     "start_lat": {
       "type": "number",
@@ -69,23 +50,61 @@
     },
     "region": {
       "type": "string",
-      "description": "Region of Crete (e.g., Chania, Rethymno, Heraklion, Lasithi)"
+      "description": "Region of Crete"
     },
     "main_interest": {
       "type": "string",
-      "description": "The main interest / theme of the walk"
+      "description": "Main interest or theme"
+    },
+    "walk_category": {
+      "type": "string",
+      "enum": [
+        "official",
+        "community"
+      ],
+      "default": "official",
+      "description": "Official Magical Crete walk or community-contributed walk"
+    },
+    "is_sample_walk": {
+      "type": "boolean",
+      "default": false,
+      "description": "One of the free sample walks available to all users"
+    },
+    "is_member_included": {
+      "type": "boolean",
+      "default": false,
+      "description": "Included as part of the yearly member allocation"
+    },
+    "price_eur": {
+      "type": "number",
+      "default": 10,
+      "description": "Purchase price for non-members"
+    },
+    "contributor_name": {
+      "type": "string",
+      "description": "Name of community contributor if applicable"
+    },
+    "requires_review": {
+      "type": "boolean",
+      "default": false,
+      "description": "Community walk awaiting approval"
+    },
+    "approved": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the walk is publicly visible"
     },
     "gpx_file_uri": {
       "type": "string",
-      "description": "Private storage URI for the GPX file (used to generate signed download URLs)"
+      "description": "Private storage URI for GPX file"
     },
     "gpx_filename": {
       "type": "string",
-      "description": "Original filename of the uploaded GPX file"
+      "description": "Original GPX filename"
     },
     "trail_path": {
       "type": "array",
-      "description": "Array of lat/lng coordinates forming the trail",
+      "description": "Array of coordinates forming the trail",
       "items": {
         "type": "object",
         "properties": {
@@ -111,26 +130,10 @@
             "type": "number"
           },
           "elevation": {
-            "type": "number",
-            "description": "Elevation in metres"
+            "type": "number"
           },
           "type": {
-            "type": "string",
-            "enum": [
-              "start",
-              "end",
-              "turnoff",
-              "danger",
-              "viewpoint",
-              "water",
-              "rest_area",
-              "landmark",
-              "kafeneon",
-              "wildlife_spot",
-              "church",
-              "ruins",
-              "abandoned_settlement"
-            ]
+            "type": "string"
           },
           "name": {
             "type": "string"
@@ -146,12 +149,12 @@
     },
     "image_url": {
       "type": "string",
-      "description": "Main image URL for the walk"
+      "description": "Main walk image"
     },
     "announced_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When this walk was announced to members (set by admin when sending notification)"
+      "description": "When members were notified"
     }
   },
   "required": [
