@@ -17,6 +17,7 @@ export default function RegistrationForm({ user, onComplete }) {
     confirm_password: '',
     membership_code: '',
   });
+
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -31,47 +32,62 @@ export default function RegistrationForm({ user, onComplete }) {
 
   const validate = () => {
     const errs = {};
+
     if (!form.first_name.trim()) errs.first_name = 'Required';
     if (!form.last_name.trim()) errs.last_name = 'Required';
     if (!form.date_of_birth) errs.date_of_birth = 'Required';
     if (!form.gender) errs.gender = 'Please select one';
+
     if (!form.password) {
       errs.password = 'Required';
     } else if (!PASSWORD_REGEX.test(form.password)) {
       errs.password = 'Must be 8+ chars with uppercase, lowercase, number, and a special character (! @ # $ % ^ & * - _ +)';
     }
+
     if (!form.confirm_password) {
       errs.confirm_password = 'Required';
     } else if (form.password !== form.confirm_password) {
       errs.confirm_password = 'Passwords do not match';
     }
+
     return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
 
     setSaving(true);
 
-    // If a membership code was provided, verify it
-    let membership_tier = null;
+    let is_member = false;
     let membership_code = null;
+
     if (form.membership_code.trim()) {
-      const res = await base44.functions.invoke('verifyMembershipKey', { membershipKey: form.membership_code.trim() });
-      if (res.data?.valid && res.data?.tier) {
-        membership_tier = res.data.tier;
+      const res = await base44.functions.invoke('verifyMembershipKey', {
+        membershipKey: form.membership_code.trim(),
+      });
+
+      if (res.data?.valid) {
+        is_member = true;
         membership_code = form.membership_code.trim().toUpperCase();
       } else {
-        setErrors(prev => ({ ...prev, membership_code: 'Invalid membership code — please check and try again' }));
+        setErrors(prev => ({
+          ...prev,
+          membership_code: 'Invalid membership code — please check and try again',
+        }));
         setSaving(false);
         return;
       }
     }
 
-    // Check if an AppUser record already exists for this user
     const existing = await base44.entities.AppUser.filter({ user_id: user.id });
+
     const payload = {
       user_id: user.id,
       email: user.email,
@@ -82,7 +98,8 @@ export default function RegistrationForm({ user, onComplete }) {
       newsletter_opted_in: form.newsletter_opted_in,
       password: form.password,
       registration_complete: true,
-      ...(membership_tier && { membership_tier, membership_code }),
+      is_member,
+      membership_code,
     };
 
     if (existing.length > 0) {
@@ -90,6 +107,7 @@ export default function RegistrationForm({ user, onComplete }) {
     } else {
       await base44.entities.AppUser.create(payload);
     }
+
     setSaving(false);
     onComplete();
   };
@@ -102,44 +120,69 @@ export default function RegistrationForm({ user, onComplete }) {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
             <MapPin className="w-8 h-8 text-amber-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-1">Welcome to Crete Walking Trails</h1>
-          <p className="text-blue-300 text-sm">Create your account to get started</p>
+
+          <h1 className="text-2xl font-bold text-white mb-1">
+            Welcome to Crete Walking Trails
+          </h1>
+
+          <p className="text-blue-300 text-sm">
+            Create your account to get started
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 space-y-5">
-
-          {/* Name row */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 space-y-5"
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-blue-100 text-sm mb-1.5 block">First Name *</Label>
+              <Label className="text-blue-100 text-sm mb-1.5 block">
+                First Name *
+              </Label>
+
               <Input
                 value={form.first_name}
                 onChange={e => set('first_name', e.target.value)}
                 placeholder="Anna"
                 className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60"
               />
-              {errors.first_name && <p className="text-red-400 text-xs mt-1">{errors.first_name}</p>}
+
+              {errors.first_name && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.first_name}
+                </p>
+              )}
             </div>
+
             <div>
-              <Label className="text-blue-100 text-sm mb-1.5 block">Last Name *</Label>
+              <Label className="text-blue-100 text-sm mb-1.5 block">
+                Last Name *
+              </Label>
+
               <Input
                 value={form.last_name}
                 onChange={e => set('last_name', e.target.value)}
                 placeholder="Papadaki"
                 className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60"
               />
-              {errors.last_name && <p className="text-red-400 text-xs mt-1">{errors.last_name}</p>}
+
+              {errors.last_name && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.last_name}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Email (read-only, from auth) */}
           <div>
-            <Label className="text-blue-100 text-sm mb-1.5 block">Email Address</Label>
+            <Label className="text-blue-100 text-sm mb-1.5 block">
+              Email Address
+            </Label>
+
             <Input
               value={user?.email || ''}
               readOnly
@@ -147,9 +190,11 @@ export default function RegistrationForm({ user, onComplete }) {
             />
           </div>
 
-          {/* Date of birth */}
           <div>
-            <Label className="text-blue-100 text-sm mb-1.5 block">Date of Birth *</Label>
+            <Label className="text-blue-100 text-sm mb-1.5 block">
+              Date of Birth *
+            </Label>
+
             <Input
               type="date"
               value={form.date_of_birth}
@@ -157,14 +202,25 @@ export default function RegistrationForm({ user, onComplete }) {
               max={new Date().toISOString().split('T')[0]}
               className="bg-white/10 border-white/20 text-white [color-scheme:dark]"
             />
-            {errors.date_of_birth && <p className="text-red-400 text-xs mt-1">{errors.date_of_birth}</p>}
+
+            {errors.date_of_birth && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.date_of_birth}
+              </p>
+            )}
           </div>
 
-          {/* Gender */}
           <div>
-            <Label className="text-blue-100 text-sm mb-2 block">Gender *</Label>
+            <Label className="text-blue-100 text-sm mb-2 block">
+              Gender *
+            </Label>
+
             <div className="flex gap-3">
-              {[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }].map(opt => (
+              {[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+              ].map(opt => (
                 <button
                   key={opt.value}
                   type="button"
@@ -179,12 +235,19 @@ export default function RegistrationForm({ user, onComplete }) {
                 </button>
               ))}
             </div>
-            {errors.gender && <p className="text-red-400 text-xs mt-1">{errors.gender}</p>}
+
+            {errors.gender && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.gender}
+              </p>
+            )}
           </div>
 
-          {/* Password */}
           <div>
-            <Label className="text-blue-100 text-sm mb-1.5 block">Password *</Label>
+            <Label className="text-blue-100 text-sm mb-1.5 block">
+              Password *
+            </Label>
+
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
@@ -193,20 +256,32 @@ export default function RegistrationForm({ user, onComplete }) {
                 placeholder="••••••••"
                 className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 pr-10"
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 hover:text-white"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
-            {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+
+            {errors.password && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.password}
+              </p>
+            )}
           </div>
 
-          {/* Confirm Password */}
           <div>
-            <Label className="text-blue-100 text-sm mb-1.5 block">Confirm Password *</Label>
+            <Label className="text-blue-100 text-sm mb-1.5 block">
+              Confirm Password *
+            </Label>
+
             <div className="relative">
               <Input
                 type={showConfirm ? 'text' : 'password'}
@@ -215,36 +290,52 @@ export default function RegistrationForm({ user, onComplete }) {
                 placeholder="••••••••"
                 className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 pr-10"
               />
+
               <button
                 type="button"
                 onClick={() => setShowConfirm(v => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 hover:text-white"
               >
-                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirm ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
-            {errors.confirm_password && <p className="text-red-400 text-xs mt-1">{errors.confirm_password}</p>}
+
+            {errors.confirm_password && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.confirm_password}
+              </p>
+            )}
           </div>
 
-          {/* Membership code (optional) */}
           <div>
             <Label className="text-blue-100 text-sm mb-1.5 block">
               Membership Code <span className="text-blue-400 font-normal">(optional)</span>
             </Label>
+
             <Input
               value={form.membership_code}
               onChange={e => set('membership_code', e.target.value)}
-              placeholder="e.g. WAYF123456789"
+              placeholder="Enter your membership key"
               className="bg-white/10 border-white/20 text-white placeholder:text-blue-300/60 font-mono uppercase"
             />
-            {errors.membership_code && <p className="text-red-400 text-xs mt-1">{errors.membership_code}</p>}
-            <p className="text-blue-400 text-xs mt-1">Enter the key from your WooCommerce order to activate your membership.</p>
+
+            {errors.membership_code && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.membership_code}
+              </p>
+            )}
+
+            <p className="text-blue-400 text-xs mt-1">
+              Enter the key from your order to activate your Magical Crete membership.
+            </p>
           </div>
 
-          {/* Divider */}
           <div className="border-t border-white/10 pt-1" />
 
-          {/* Newsletter opt-in */}
           <div className="flex gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
             <div className="shrink-0 mt-0.5">
               <button
@@ -256,14 +347,20 @@ export default function RegistrationForm({ user, onComplete }) {
                     : 'bg-white/10 border-white/30'
                 }`}
               >
-                {form.newsletter_opted_in && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                {form.newsletter_opted_in && (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                )}
               </button>
             </div>
+
             <div>
               <div className="flex items-center gap-1.5 mb-0.5">
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-white text-xs font-semibold">Newsletter</span>
+                <span className="text-white text-xs font-semibold">
+                  Newsletter
+                </span>
               </div>
+
               <p className="text-blue-200 text-xs leading-relaxed">
                 Receive emails about new walks, routes, and app updates. You can unsubscribe at any time.
               </p>
@@ -275,7 +372,10 @@ export default function RegistrationForm({ user, onComplete }) {
             disabled={saving}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold h-11 text-base gap-2"
           >
-            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+            {saving ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : null}
+
             {saving ? 'Saving...' : 'Complete Registration'}
           </Button>
         </form>
