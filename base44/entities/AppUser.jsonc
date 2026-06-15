@@ -46,19 +46,29 @@
       "default": false,
       "description": "Whether profile setup is complete"
     },
-    "membership_code": {
-      "type": "string",
-      "description": "The membership code entered by the user (e.g. PATH-XXXXX)"
+    "is_member": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has an active Magical Crete membership"
     },
-    "membership_tier": {
+    "membership_started_at": {
       "type": "string",
-      "enum": [
-        "wanderer",
-        "explorer",
-        "pathfinder",
-        "wayfinder"
-      ],
-      "description": "Resolved membership tier based on the code prefix"
+      "format": "date",
+      "description": "Date the current membership started"
+    },
+    "membership_expires_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the current membership expires"
+    },
+    "included_walks_remaining": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of included member walks still available in the current membership year"
+    },
+    "included_walks_year": {
+      "type": "string",
+      "description": "Membership year this included-walk allowance belongs to"
     }
   },
   "required": [
