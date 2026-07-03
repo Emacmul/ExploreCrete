@@ -14,6 +14,7 @@ import AdminPreviewMap from './AdminPreviewMap';
 const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology', 'Photography', 'Routes of Faith'];
 
 const EMPTY_WALK = {
+  route_type: 'walk', // 'walk' | 'driving_audio_tour'
   code: '',
   name: '',
   description: '',
@@ -38,7 +39,7 @@ function SaveButton({ onSave, saving }) {
     <div className="border-t border-slate-700 pt-4 flex justify-end">
       <Button onClick={onSave} disabled={saving} className="bg-amber-500 hover:bg-amber-600 gap-2">
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        Save Walk
+        Save Route
       </Button>
     </div>
   );
@@ -70,6 +71,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   };
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const isDrivingAudioTour = form.route_type === 'driving_audio_tour';
 
   const [gpxImporting, setGpxImporting] = useState(false);
   const [gpxImportDone, setGpxImportDone] = useState(false);
@@ -332,6 +334,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
       distance_km: form.distance_km ? Number(form.distance_km) : undefined,
       duration_hours: form.duration_hours ? Number(form.duration_hours) : undefined,
       elevation_gain_m: form.elevation_gain_m ? Number(form.elevation_gain_m) : undefined,
+      default_driving_speed_kmh: form.default_driving_speed_kmh ? Number(form.default_driving_speed_kmh) : undefined,
       start_lat: Number(form.start_lat),
       start_lng: Number(form.start_lng),
     };
@@ -340,9 +343,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   };
 
   const tabs = [
-    { id: 'details', label: 'Basic Details' },
-    { id: 'trail', label: 'Trail Path (GPS)' },
-    { id: 'waypoints', label: `Key Points${form.waypoints.length ? ` (${form.waypoints.length})` : ''}` },
+    { id: 'details', label: 'General' },
+    { id: 'trail', label: 'Route Path (GPS)' },
+    { id: 'waypoints', label: `Waypoints${form.waypoints.length ? ` (${form.waypoints.length})` : ''}` },
     { id: 'preview', label: 'Preview' },
   ];
 
@@ -355,12 +358,12 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
             <ArrowLeft className="w-4 h-4" /> Back
           </Button>
           <h2 className="text-xl font-bold text-white">
-            {walk?.id ? `Editing: ${walk.code || walk.name}` : 'New Walk'}
+            {walk?.id ? `Editing: ${walk.code || walk.name}` : 'New Route'}
           </h2>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-amber-500 hover:bg-amber-600 gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Save Walk
+          Save Route
         </Button>
       </div>
 
@@ -408,39 +411,65 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               )}
             </div>
 
+            <div>
+              <Label className="text-slate-300 mb-1.5 block">Route Type</Label>
+              <Select value={form.route_type || 'walk'} onValueChange={v => set('route_type', v)}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="walk">Walking Route</SelectItem>
+                  <SelectItem value="driving_audio_tour">Driving Audio Tour</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500 mt-1">
+                Walking routes use the existing walking-app workflow. Driving audio tours prepare GPX data for the Speech/Speed Route Checker.
+              </p>
+            </div>
+
+            {isDrivingAudioTour && (
+              <div className="bg-purple-900/20 border border-purple-700/40 rounded-xl px-4 py-3">
+                <p className="text-purple-200 text-sm font-medium">Driving Audio Tour mode</p>
+                <p className="text-purple-300 text-xs mt-1">
+                  Use the Waypoints tab to define Primary-Start, Primary-Stop, Secondary points, segment IDs, titles, colours and average segment speeds once the waypoint editor has been updated for driving-tour fields.
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-slate-300 mb-1.5 block">Walk Code *</Label>
+                <Label className="text-slate-300 mb-1.5 block">{isDrivingAudioTour ? "Tour Code *" : "Route Code *"}</Label>
                 <Input
                   value={form.code}
                   onChange={e => set('code', e.target.value)}
-                  placeholder="e.g. CRE-007"
+                  placeholder={isDrivingAudioTour ? "e.g. BOR" : "e.g. CRE-007"}
                   className="bg-slate-700 border-slate-600 text-white font-mono"
                 />
-                <p className="text-xs text-slate-500 mt-1">Unique identifier shown to users</p>
+                <p className="text-xs text-slate-500 mt-1">{isDrivingAudioTour ? "Three-letter tour code, e.g. BOR" : "Unique identifier shown to users"}</p>
               </div>
               <div>
-                <Label className="text-slate-300 mb-1.5 block">Walk Name *</Label>
+                <Label className="text-slate-300 mb-1.5 block">{isDrivingAudioTour ? "Tour Name *" : "Route Name *"}</Label>
                 <Input
                   value={form.name}
                   onChange={e => set('name', e.target.value)}
-                  placeholder="e.g. Balos Lagoon Trail"
+                  placeholder={isDrivingAudioTour ? "e.g. Battle of the Rivers" : "e.g. Balos Lagoon Trail"}
                   className="bg-slate-700 border-slate-600 text-white"
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-slate-300 mb-1.5 block">About This Walk</Label>
+              <Label className="text-slate-300 mb-1.5 block">Description</Label>
               <Textarea
                 value={form.description}
                 onChange={e => set('description', e.target.value)}
-                placeholder="Describe the walk — landscape, experience, highlights, what to expect..."
+                placeholder="Describe the route, experience, highlights, and what to expect..."
                 rows={5}
                 className="bg-slate-700 border-slate-600 text-white resize-none"
               />
             </div>
 
+            {!isDrivingAudioTour && (
             <div>
               <Label className="text-slate-300 mb-1.5 block">
                 ⚠️ Safety Notes
@@ -455,9 +484,11 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               />
             </div>
 
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-slate-300 mb-1.5 block">Region</Label>
+                <Label className="text-slate-300 mb-1.5 block">{isDrivingAudioTour ? 'Province' : 'Region'}</Label>
                 <Select value={form.region} onValueChange={v => set('region', v)}>
                   <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                     <SelectValue placeholder="Select region" />
@@ -469,6 +500,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   </SelectContent>
                 </Select>
               </div>
+              {!isDrivingAudioTour && (
               <div>
                 <Label className="text-slate-300 mb-1.5 block">Difficulty</Label>
                 <Select value={form.difficulty} onValueChange={v => set('difficulty', v)}>
@@ -482,18 +514,21 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   </SelectContent>
                 </Select>
               </div>
+              )}
             </div>
 
+            {!isDrivingAudioTour && (
+            <>
             {/* Walk access and category */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-slate-300 mb-1.5 block">Walk Category</Label>
+                <Label className="text-slate-300 mb-1.5 block">Route Category</Label>
                 <Select value={form.walk_category || 'official'} onValueChange={v => set('walk_category', v)}>
                   <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="official">Official Magical Crete Walk</SelectItem>
+                    <SelectItem value="official">Official Magical Crete Route</SelectItem>
                     <SelectItem value="community">Community Contribution</SelectItem>
                   </SelectContent>
                 </Select>
@@ -642,6 +677,10 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               )}
             </div>
 
+            </>
+            )}
+
+            {!isDrivingAudioTour && (
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label className="text-slate-300 mb-1.5 block">Distance (km)</Label>
@@ -659,6 +698,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                   placeholder="e.g. 450" className="bg-slate-700 border-slate-600 text-white" />
               </div>
             </div>
+
+            </div>
+            )}
 
             {/* GPX File — private upload */}
             <div>
@@ -702,6 +744,22 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               )}
             </div>
 
+            {isDrivingAudioTour && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-slate-300 mb-1.5 block">Default Average Driving Speed (km/h)</Label>
+                  <Input
+                    type="number"
+                    value={form.default_driving_speed_kmh || ''}
+                    onChange={e => set('default_driving_speed_kmh', e.target.value)}
+                    placeholder="e.g. 45"
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Used only as a helper value until each segment has its own speed in the waypoint editor.</p>
+                </div>
+              </div>
+            )}
+
             <div className="border-t border-slate-700 pt-5">
               <Label className="text-slate-300 mb-3 block font-semibold">Starting Point (GPS)</Label>
               <div className="grid grid-cols-2 gap-4">
@@ -744,6 +802,8 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
             <WaypointEditor
               waypoints={form.waypoints}
               onChange={wps => set('waypoints', wps)}
+              routeType={form.route_type || 'walk'}
+              tourCode={form.code}
               onSave={handleSave}
               saving={saving}
             />
