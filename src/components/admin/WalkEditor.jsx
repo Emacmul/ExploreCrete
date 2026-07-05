@@ -4,12 +4,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2, Pencil, Check, X, Upload, FileCheck, Trash2, FileUp, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Pencil, Check, X, Upload, FileCheck, Trash2, FileUp, CheckCircle2, Download, AlertTriangle, FileDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import FitParser from 'fit-file-parser';
 import WaypointEditor from './WaypointEditor';
+import DrivingTourWaypointEditor from './DrivingTourWaypointEditor';
+import DrivingTourExportPanel from './DrivingTourExportPanel';
 import TrailPathEditor from './TrailPathEditor';
 import AdminPreviewMap from './AdminPreviewMap';
+import { validateDrivingTour, generateGpx, generateKml, downloadTextFile } from '@/lib/routeExport';
 
 const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology', 'Photography', 'Routes of Faith'];
 
@@ -699,7 +702,6 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
               </div>
             </div>
 
-            </div>
             )}
 
             {/* GPX File — private upload */}
@@ -799,14 +801,22 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
 
         {activeTab === 'waypoints' && (
           <div className="space-y-4">
-            <WaypointEditor
-              waypoints={form.waypoints}
-              onChange={wps => set('waypoints', wps)}
-              routeType={form.route_type || 'walk'}
-              tourCode={form.code}
-              onSave={handleSave}
-              saving={saving}
-            />
+            {isDrivingAudioTour ? (
+              <DrivingTourWaypointEditor
+                waypoints={form.waypoints}
+                onChange={wps => set('waypoints', wps)}
+                tourCode={form.code}
+                onSave={handleSave}
+                saving={saving}
+              />
+            ) : (
+              <WaypointEditor
+                waypoints={form.waypoints}
+                onChange={wps => set('waypoints', wps)}
+                onSave={handleSave}
+                saving={saving}
+              />
+            )}
             {form.waypoints.length > 0 && (
               <div className="flex items-center gap-3 bg-blue-900/20 border border-blue-700/40 rounded-xl px-4 py-3">
                 <span className="text-blue-200 text-sm flex-1">Fetch elevation from GPS coordinates for all waypoints.</span>
@@ -838,6 +848,9 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         {activeTab === 'preview' && (
           <div className="space-y-4">
             <AdminPreviewMap walk={form} />
+            {isDrivingAudioTour && (
+              <DrivingTourExportPanel form={form} />
+            )}
             <SaveButton onSave={handleSave} saving={saving} />
           </div>
         )}

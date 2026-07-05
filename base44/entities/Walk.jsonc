@@ -2,17 +2,26 @@
   "name": "Walk",
   "type": "object",
   "properties": {
+    "route_type": {
+      "type": "string",
+      "enum": [
+        "walk",
+        "driving_audio_tour"
+      ],
+      "default": "walk",
+      "description": "Walking Route or Driving Audio Tour"
+    },
     "code": {
       "type": "string",
-      "description": "Unique identifying code for the walk"
+      "description": "Unique identifying code for the walk or 3-letter tour code"
     },
     "name": {
       "type": "string",
-      "description": "Name of the walk"
+      "description": "Name of the walk or tour"
     },
     "description": {
       "type": "string",
-      "description": "Detailed description of the walk"
+      "description": "Detailed description of the walk or tour"
     },
     "safety_notes": {
       "type": "string",
@@ -26,7 +35,7 @@
         "challenging",
         "difficult"
       ],
-      "description": "Difficulty level"
+      "description": "Difficulty level (walking routes only)"
     },
     "distance_km": {
       "type": "number",
@@ -50,7 +59,7 @@
     },
     "region": {
       "type": "string",
-      "description": "Region of Crete"
+      "description": "Region or province of Crete"
     },
     "main_interest": {
       "type": "string",
@@ -93,6 +102,10 @@
       "type": "boolean",
       "default": true,
       "description": "Whether the walk is publicly visible"
+    },
+    "default_driving_speed_kmh": {
+      "type": "number",
+      "description": "Default average driving speed for audio tours (helper only)"
     },
     "gpx_file_uri": {
       "type": "string",
@@ -143,6 +156,31 @@
           },
           "image_url": {
             "type": "string"
+          },
+          "waypoint_role": {
+            "type": "string",
+            "enum": [
+              "primary_start",
+              "primary_stop",
+              "secondary"
+            ],
+            "description": "Driving tour waypoint role"
+          },
+          "segment_id": {
+            "type": "string",
+            "description": "Driving tour segment ID e.g. BOR03"
+          },
+          "segment_title": {
+            "type": "string",
+            "description": "Driving tour segment title"
+          },
+          "avg_segment_speed_kmh": {
+            "type": "number",
+            "description": "Average segment speed in km/h (required on Primary-Start)"
+          },
+          "waypoint_colour": {
+            "type": "string",
+            "description": "Auto-assigned marker colour for driving tour waypoints"
           }
         }
       }
