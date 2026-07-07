@@ -12,6 +12,7 @@ import WalkDetailMap from '../map/WalkDetailMap';
 import DownloadWalkButton from '../offline/DownloadWalkButton';
 import WalkProgressBar from './WalkProgressBar';
 import DrivingModeNotice from './DrivingModeNotice';
+import DrivingTourPlayer from './DrivingTourPlayer';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700',
@@ -119,6 +120,10 @@ export default function WalkDetail({ walk, onClose }) {
           <div className="p-4 space-y-4">
             {walk.route_type === 'driving_audio_tour' && (
               <DrivingModeNotice />
+            )}
+
+            {walk.route_type === 'driving_audio_tour' && (
+              <DrivingTourPlayer walk={walk} />
             )}
 
             <div className="flex items-center justify-between">
