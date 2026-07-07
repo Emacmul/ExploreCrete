@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { MapContainer, Polyline, useMap } from 'react-leaflet';
 import OfflineTileLayer from '@/components/map/OfflineTileLayer';
 import { Play, Pause, Square, Save, X, Loader2, Navigation } from 'lucide-react';
+import * as gpsService from '@/lib/gpsService';
 
 // Haversine distance between two coords in km
 function haversine(a, b) {
@@ -72,7 +73,7 @@ export default function WalkRecorder({ user, appUser, onSaved, onCancel }) {
   // GPS
   useEffect(() => {
     if (status === 'recording') {
-      watchIdRef.current = navigator.geolocation.watchPosition(
+      watchIdRef.current = gpsService.watchPosition(
         (pos) => {
           const point = {
             lat: pos.coords.latitude,
@@ -95,12 +96,12 @@ export default function WalkRecorder({ user, appUser, onSaved, onCancel }) {
       );
     } else {
       if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
+        gpsService.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
     }
     return () => {
-      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current !== null) gpsService.clearWatch(watchIdRef.current);
     };
   }, [status]);
 

@@ -17,6 +17,7 @@ import {
   ChevronDown, ChevronUp, Gauge, Clock, MapPin, Volume2,
   CheckCircle2, AlertTriangle, AlertCircle, Pause,
 } from 'lucide-react';
+import AudioPlayer from '@/components/ui/AudioPlayer';
 
 const R_EARTH = 6371000;
 
@@ -270,7 +271,7 @@ export default function ScriptTimingPanel({ trailPath, waypoints }) {
             <span className="text-white text-sm font-medium">{activeNarrator.words_per_minute} WPM</span>
           </div>
           {activeNarrator.sample_audio_url && (
-            <audio controls src={activeNarrator.sample_audio_url} className="h-8 flex-1 min-w-[200px]" />
+            <AudioPlayer src={activeNarrator.sample_audio_url} className="h-8 flex-1 min-w-[200px]" />
           )}
         </div>
       )}

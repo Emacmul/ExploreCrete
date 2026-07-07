@@ -1,106 +1,21 @@
 /**
- * Offline storage for walks using IndexedDB.
- * Saves full walk data + map tiles so the walk is usable without any connection.
+ * Offline storage for walks.
+ *
+ * Platform-specific storage operations are delegated to offlineStorageService.
+ * This module preserves the original API names as a thin facade so existing
+ * consumers do not need to change their imports.
  */
 
-const DB_NAME = 'creteWalksOffline';
-const DB_VERSION = 1;
-const STORE_WALKS = 'walks';
-const STORE_TILES = 'tiles';
+import * as offlineStorageService from '@/lib/offlineStorageService';
 
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_WALKS)) {
-        db.createObjectStore(STORE_WALKS, { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains(STORE_TILES)) {
-        db.createObjectStore(STORE_TILES, { keyPath: 'url' });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-export async function saveWalkOffline(walk) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_WALKS, 'readwrite');
-    tx.objectStore(STORE_WALKS).put({ ...walk, _savedAt: Date.now() });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function getOfflineWalk(walkId) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_WALKS, 'readonly');
-    const req = tx.objectStore(STORE_WALKS).get(walkId);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-export async function getAllOfflineWalks() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_WALKS, 'readonly');
-    const req = tx.objectStore(STORE_WALKS).getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-export async function removeOfflineWalk(walkId) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_WALKS, 'readwrite');
-    tx.objectStore(STORE_WALKS).delete(walkId);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function isWalkSavedOffline(walkId) {
-  const walk = await getOfflineWalk(walkId);
-  return !!walk;
-}
-
-/**
- * Returns true if the server walk's updated_date is newer than what we have stored.
- */
-export async function isWalkOutdated(serverWalk) {
-  const stored = await getOfflineWalk(serverWalk.id);
-  if (!stored) return false;
-  if (!serverWalk.updated_date) return false;
-  const serverTime = new Date(serverWalk.updated_date).getTime();
-  const storedTime = stored._savedAt || 0;
-  return serverTime > storedTime;
-}
-
-export async function cacheTile(url, blob) {
-  const db = await openDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_TILES, 'readwrite');
-    tx.objectStore(STORE_TILES).put({ url, blob, cachedAt: Date.now() });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => resolve();
-  });
-}
-
-export async function getCachedTile(url) {
-  const db = await openDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_TILES, 'readonly');
-    const req = tx.objectStore(STORE_TILES).get(url);
-    req.onsuccess = () => resolve(req.result?.blob || null);
-    req.onerror = () => resolve(null);
-  });
-}
+export const saveWalkOffline = offlineStorageService.saveWalkData;
+export const getOfflineWalk = offlineStorageService.getWalkData;
+export const getAllOfflineWalks = offlineStorageService.getAllWalkData;
+export const removeOfflineWalk = offlineStorageService.removeWalkData;
+export const isWalkSavedOffline = offlineStorageService.isWalkDataSaved;
+export const isWalkOutdated = offlineStorageService.isWalkDataOutdated;
+export const cacheTile = offlineStorageService.cacheTile;
+export const getCachedTile = offlineStorageService.getCachedTile;
 
 /**
  * Pre-cache all map tiles for a given trail bounding box at zoom levels 12–16.
@@ -157,7 +72,7 @@ export async function preCacheWalkTiles(walk, onProgress) {
         const res = await fetch(url);
         if (res.ok) {
           const blob = await res.blob();
-          await cacheTile(url, blob);
+          await offlineStorageService.cacheTile(url, blob);
           cached++;
         }
       } catch { /* skip on error */ }

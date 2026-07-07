@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Marker, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import * as gpsService from '@/lib/gpsService';
 
 const gpsIcon = L.divIcon({
   className: '',
@@ -21,9 +22,9 @@ export default function LiveGpsMarker({ followUser }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!gpsService.isSupported()) return;
 
-    const watcher = navigator.geolocation.watchPosition(
+    const watcher = gpsService.watchPosition(
       (pos) => {
         const latlng = [pos.coords.latitude, pos.coords.longitude];
         setPosition(latlng);
@@ -36,7 +37,7 @@ export default function LiveGpsMarker({ followUser }) {
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
 
-    return () => navigator.geolocation.clearWatch(watcher);
+    return () => gpsService.clearWatch(watcher);
   }, [map, followUser]);
 
   if (!position) return null;

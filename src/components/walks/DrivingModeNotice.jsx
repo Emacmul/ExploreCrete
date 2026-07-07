@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Smartphone, Sun, ShieldCheck } from 'lucide-react';
+import * as wakeLockService from '@/lib/wakeLockService';
 
 /**
  * Shown for driving_audio_tour routes. Warns the user that the app
@@ -9,31 +10,26 @@ import { AlertTriangle, Smartphone, Sun, ShieldCheck } from 'lucide-react';
  * Optionally activates a screen wake lock to prevent auto-lock.
  */
 export default function DrivingModeNotice() {
-  const [wakeLock, setWakeLock] = useState(null);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
 
-  // Release wake lock on unmount
+  // Listen for browser-initiated wake lock releases + release on unmount
   useEffect(() => {
+    const unsubscribe = wakeLockService.onReleased(() => {
+      setWakeLockActive(false);
+    });
     return () => {
-      if (wakeLock) wakeLock.release();
+      unsubscribe();
+      wakeLockService.release();
     };
-  }, [wakeLock]);
+  }, []);
 
   // Re-acquire wake lock if the tab becomes visible again
   useEffect(() => {
     const onVisibility = async () => {
       if (document.visibilityState === 'visible' && wakeLockActive) {
-        try {
-          const lock = await navigator.wakeLock?.request('screen');
-          if (lock) {
-            lock.addEventListener('release', () => setWakeLockActive(false));
-            setWakeLock(lock);
-            setWakeLockActive(true);
-          }
-        } catch {
-          /* wake lock may fail when battery low or not supported */
-        }
+        const ok = await wakeLockService.reacquireIfVisible();
+        setWakeLockActive(ok);
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
@@ -41,23 +37,14 @@ export default function DrivingModeNotice() {
   }, [wakeLockActive]);
 
   const toggleWakeLock = useCallback(async () => {
-    if (wakeLockActive && wakeLock) {
-      await wakeLock.release();
+    if (wakeLockActive) {
+      await wakeLockService.release();
       setWakeLockActive(false);
-      setWakeLock(null);
     } else {
-      try {
-        const lock = await navigator.wakeLock?.request('screen');
-        if (lock) {
-          lock.addEventListener('release', () => setWakeLockActive(false));
-          setWakeLock(lock);
-          setWakeLockActive(true);
-        }
-      } catch {
-        /* not supported or denied */
-      }
+      const ok = await wakeLockService.acquire();
+      setWakeLockActive(ok);
     }
-  }, [wakeLock, wakeLockActive]);
+  }, [wakeLockActive]);
 
   if (acknowledged) {
     return (

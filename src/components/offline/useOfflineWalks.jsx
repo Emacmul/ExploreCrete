@@ -1,35 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-
-const STORAGE_KEY = 'crete_walks_offline';
-
-function getStored() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
+import * as offlineStorageService from '@/lib/offlineStorageService';
 
 export function useOfflineWalks() {
-  const [offlineWalks, setOfflineWalks] = useState(getStored);
+  const [offlineWalks, setOfflineWalks] = useState(offlineStorageService.getIndex);
 
   useEffect(() => {
-    const handler = () => setOfflineWalks(getStored());
+    const handler = () => setOfflineWalks(offlineStorageService.getIndex());
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
 
   const downloadWalk = useCallback((walk) => {
-    const stored = getStored();
-    stored[walk.id] = { ...walk, downloaded_at: new Date().toISOString() };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    const stored = offlineStorageService.addToIndex(walk);
     setOfflineWalks({ ...stored });
   }, []);
 
   const removeWalk = useCallback((walkId) => {
-    const stored = getStored();
-    delete stored[walkId];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    const stored = offlineStorageService.removeFromIndex(walkId);
     setOfflineWalks({ ...stored });
   }, []);
 
