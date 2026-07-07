@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import WalkDetailMap from '../map/WalkDetailMap';
 import DownloadWalkButton from '../offline/DownloadWalkButton';
 import WalkProgressBar from './WalkProgressBar';
+import DrivingModeNotice from './DrivingModeNotice';
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-700',
@@ -116,6 +117,10 @@ export default function WalkDetail({ walk, onClose }) {
 
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
+            {walk.route_type === 'driving_audio_tour' && (
+              <DrivingModeNotice />
+            )}
+
             <div className="flex items-center justify-between">
               <DownloadWalkButton walk={walk} />
 
