@@ -182,6 +182,10 @@
             "type": "string",
             "description": "Auto-assigned marker colour for driving tour waypoints"
           },
+          "narration_script": {
+            "type": "string",
+            "description": "Narration script text for this location (may include SSML break tags)"
+          },
           "trigger_audio": {
             "type": "boolean",
             "default": false,

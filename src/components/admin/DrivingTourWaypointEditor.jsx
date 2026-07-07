@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -24,6 +25,7 @@ const EMPTY_WP = {
   segment_title: '',
   avg_segment_speed_kmh: '',
   description: '',
+  narration_script: '',
   trigger_audio: false,
   audio_clip_url: '',
   trigger_radius_m: 150,
@@ -101,6 +103,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       segment_title: newWp.segment_title.trim(),
       avg_segment_speed_kmh: newWp.avg_segment_speed_kmh ? parseFloat(newWp.avg_segment_speed_kmh) : null,
       description: newWp.description.trim(),
+      narration_script: newWp.narration_script || '',
       trigger_audio: newWp.trigger_audio || false,
       audio_clip_url: newWp.audio_clip_url || '',
       trigger_radius_m: newWp.trigger_radius_m != null ? Number(newWp.trigger_radius_m) : 150,
@@ -189,6 +192,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           segment_title: `Segment ${segNum}`,
           avg_segment_speed_kmh: null,
           description: '',
+          narration_script: '',
           trigger_audio: false,
           audio_clip_url: '',
           trigger_radius_m: 150,
@@ -336,6 +340,20 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                 onChange={e => setNewWp(p => ({ ...p, description: e.target.value }))}
                 placeholder="Notes for this waypoint"
                 className="bg-slate-700 border-slate-500 text-white"
+              />
+            </div>
+
+            <div>
+              <Label className="text-slate-400 text-xs mb-1 block">
+                Narration Script
+                <span className="ml-1 text-blue-400">(SSML break tags supported)</span>
+              </Label>
+              <Textarea
+                value={newWp.narration_script}
+                onChange={e => setNewWp(p => ({ ...p, narration_script: e.target.value }))}
+                placeholder={'Write the narration script for this location...\n\nSSML pauses: <break time="2s"/> or <break strength="medium"/>'}
+                rows={5}
+                className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
               />
             </div>
 
@@ -506,6 +524,19 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                         value={wp.description || ''}
                         onChange={e => updateWaypoint(index, 'description', e.target.value)}
                         className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-400 text-xs mb-1 block">
+                        Narration Script
+                        <span className="ml-1 text-blue-400">(SSML break tags supported)</span>
+                      </Label>
+                      <Textarea
+                        value={wp.narration_script || ''}
+                        onChange={e => updateWaypoint(index, 'narration_script', e.target.value)}
+                        placeholder={'Write the narration script for this location...\n\nSSML pauses: <break time="2s"/> or <break strength="medium"/>'}
+                        rows={5}
+                        className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
                       />
                     </div>
                     <AudioTriggerFields
