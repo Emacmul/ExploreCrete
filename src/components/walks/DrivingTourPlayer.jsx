@@ -59,12 +59,16 @@ export default function DrivingTourPlayer({ walk }) {
       const withinRadius = distance <= radius;
 
       let bearingOk = true;
-      if (wp.use_bearing && movementBearing !== null) {
-        bearingOk = isBearingInRange(
-          movementBearing,
-          wp.bearing_direction || 0,
-          wp.bearing_tolerance || 30
-        );
+      const bearingInfo = (wp.use_bearing && movementBearing !== null) ? {
+        movement: movementBearing,
+        target: wp.bearing_direction || 0,
+        tolerance: wp.bearing_tolerance || 30,
+        ok: false,
+      } : null;
+
+      if (bearingInfo) {
+        bearingOk = isBearingInRange(bearingInfo.movement, bearingInfo.target, bearingInfo.tolerance);
+        bearingInfo.ok = bearingOk;
       }
 
       const wpKey = wp.segment_id || wp.name || `${wp.lat},${wp.lng}`;
@@ -83,7 +87,7 @@ export default function DrivingTourPlayer({ walk }) {
         result = 'fire';
       }
 
-      tourLogService.logTriggerCheck(wp, distance, withinRadius, bearingOk, alreadyTriggered, result);
+      tourLogService.logTriggerCheck(wp, distance, withinRadius, bearingInfo, alreadyTriggered, result);
 
       if (result === 'fire') {
         playTriggerAudio(wp, wpKey);
@@ -109,8 +113,8 @@ export default function DrivingTourPlayer({ walk }) {
     player.play().then(() => {
       tourLogService.logAudioPlay(wp, wp.audio_clip_url);
       setLastTriggered(wp.segment_id || wp.name || wpKey);
-    }).catch(() => {
-      tourLogService.logAudioSkip(wp, 'playback_error');
+    }).catch((err) => {
+      tourLogService.logAudioSkip(wp, `playback_error: ${err?.message || 'unknown'}`);
     });
 
     if (wp.trigger_once !== false) {

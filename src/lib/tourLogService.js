@@ -69,7 +69,7 @@ export function logGpsFix(lat, lng, accuracy) {
   addEntry('gps_fix', { lat, lng, accuracy });
 }
 
-export function logTriggerCheck(waypoint, distance, withinRadius, bearingOk, alreadyTriggered, result) {
+export function logTriggerCheck(waypoint, distance, withinRadius, bearingInfo, alreadyTriggered, result) {
   addEntry('trigger_check', {
     waypointId: waypoint.segment_id || waypoint.name || 'unnamed',
     waypointRole: waypoint.waypoint_role,
@@ -77,8 +77,9 @@ export function logTriggerCheck(waypoint, distance, withinRadius, bearingOk, alr
     triggerRadius: waypoint.trigger_radius_m,
     withinRadius,
     useBearing: waypoint.use_bearing,
-    bearingOk,
+    bearingInfo, // { movement, target, tolerance, ok } or null
     alreadyTriggered,
+    hasAudio: !!waypoint.audio_clip_url,
     result, // 'fire' | 'skip_distance' | 'skip_bearing' | 'skip_already_triggered' | 'skip_no_audio'
   });
 }
@@ -135,15 +136,30 @@ function entryToText(entry) {
     case 'trigger_check': {
       const d = entry.data;
       const parts = [`WP "${d.waypointId}"`];
-      parts.push(`dist=${d.distance}m/${d.triggerRadius}m`);
-      if (d.useBearing) parts.push(`bearing=${d.bearingOk ? 'ok' : 'fail'}`);
-      parts.push(`→ ${d.result}`);
-      return `[${t}] TRIGGER CHECK — ${parts.join(' | ')}`;
+
+      if (d.result === 'fire') {
+        parts.push(`✓ TRIGGERED (dist=${d.distance}m/${d.triggerRadius}m)`);
+      } else if (d.result === 'skip_distance') {
+        parts.push(`✗ FAILED — outside radius: ${d.distance}m > ${d.triggerRadius}m`);
+      } else if (d.result === 'skip_bearing') {
+        const b = d.bearingInfo || {};
+        parts.push(`✗ FAILED — wrong bearing: moving ${Math.round(b.movement || 0)}°, required ${b.target || 0}°±${b.tolerance || 0}°`);
+      } else if (d.result === 'skip_already_triggered') {
+        parts.push(`✗ SKIPPED — already triggered (trigger_once=true)`);
+      } else if (d.result === 'skip_no_audio') {
+        parts.push(`✗ FAILED — no audio_clip_url set on this waypoint`);
+      }
+
+      if (d.useBearing && d.bearingInfo) {
+        parts.push(`[bearing check: moving ${Math.round(d.bearingInfo.movement)}° vs ${d.bearingInfo.target}°±${d.bearingInfo.tolerance}° → ${d.bearingInfo.ok ? 'PASS' : 'FAIL'}]`);
+      }
+
+      return `[${t}] TRIGGER — ${parts.join(' | ')}`;
     }
     case 'audio_play':
-      return `[${t}] AUDIO PLAY — "${entry.data.waypointId}"`;
+      return `[${t}] ✓ AUDIO PLAYED — "${entry.data.waypointId}"`;
     case 'audio_skip':
-      return `[${t}] AUDIO SKIP — "${entry.data.waypointId}" (${entry.data.reason})`;
+      return `[${t}] ✗ AUDIO SKIPPED — "${entry.data.waypointId}" (${entry.data.reason})`;
     case 'warning':
       return `[${t}] ⚠ ${entry.data.message}`;
     default:

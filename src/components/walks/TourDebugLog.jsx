@@ -35,15 +35,25 @@ function entryLabel(entry) {
     case 'gps_fix':
       return `${d.lat.toFixed(5)}, ${d.lng.toFixed(5)} (±${Math.round(d.accuracy || 0)}m)`;
     case 'trigger_check': {
-      const parts = [`${d.waypointId}`, `${d.distance}m/${d.triggerRadius}m`];
-      if (d.useBearing) parts.push(d.bearingOk ? 'bearing ✓' : 'bearing ✗');
-      parts.push(`→ ${d.result}`);
+      const parts = [`${d.waypointId}`];
+      if (d.result === 'fire') {
+        parts.push(`✓ fired (${d.distance}m/${d.triggerRadius}m)`);
+      } else if (d.result === 'skip_distance') {
+        parts.push(`✗ outside: ${d.distance}m > ${d.triggerRadius}m`);
+      } else if (d.result === 'skip_bearing') {
+        const b = d.bearingInfo || {};
+        parts.push(`✗ bearing: ${Math.round(b.movement || 0)}° vs ${b.target || 0}°±${b.tolerance || 0}°`);
+      } else if (d.result === 'skip_already_triggered') {
+        parts.push(`✗ already triggered`);
+      } else if (d.result === 'skip_no_audio') {
+        parts.push(`✗ no audio URL`);
+      }
       return parts.join(' · ');
     }
     case 'audio_play':
-      return `${d.waypointId}`;
+      return `✓ ${d.waypointId}`;
     case 'audio_skip':
-      return `${d.waypointId} (${d.reason})`;
+      return `✗ ${d.waypointId} (${d.reason})`;
     case 'warning':
       return d.message;
     default:
@@ -76,31 +86,37 @@ export default function TourDebugLog() {
           {entries.length} events · {triggerCount} checks · {fireCount} fired · {audioCount} played
         </span>
         <div className="ml-auto flex items-center gap-1">
-          {entries.length > 0 && (
-            <>
-              <Button
-                variant="ghost" size="icon"
-                onClick={(e) => { e.stopPropagation(); tourLogService.downloadLog(); }}
-                className="w-7 h-7 text-slate-400 hover:text-blue-400"
-                title="Download log"
-              >
-                <Download className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant="ghost" size="icon"
-                onClick={(e) => { e.stopPropagation(); tourLogService.clearLog(); }}
-                className="w-7 h-7 text-slate-400 hover:text-red-400"
-                title="Clear log"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          )}
           {expanded
             ? <ChevronUp className="w-4 h-4 text-slate-500" />
             : <ChevronDown className="w-4 h-4 text-slate-500" />}
         </div>
       </button>
+
+      {/* Action bar */}
+      {expanded && (
+        <div className="flex items-center gap-2 px-4 py-2 border-t border-slate-700 bg-slate-800/40">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => tourLogService.downloadLog()}
+            disabled={entries.length === 0}
+            className="gap-2 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export Debug Log
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => tourLogService.clearLog()}
+            disabled={entries.length === 0}
+            className="gap-2 text-slate-400 hover:text-red-400 hover:bg-red-900/20"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear
+          </Button>
+        </div>
+      )}
 
       {/* Log entries */}
       {expanded && (
