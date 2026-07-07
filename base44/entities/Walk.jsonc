@@ -181,6 +181,43 @@
           "waypoint_colour": {
             "type": "string",
             "description": "Auto-assigned marker colour for driving tour waypoints"
+          },
+          "trigger_audio": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this waypoint triggers an audio clip on geofence entry"
+          },
+          "audio_clip_url": {
+            "type": "string",
+            "description": "URL of the audio clip to play when triggered"
+          },
+          "trigger_radius_m": {
+            "type": "number",
+            "default": 150,
+            "description": "Geofence radius in metres around this waypoint"
+          },
+          "trigger_once": {
+            "type": "boolean",
+            "default": true,
+            "description": "If true, audio plays only once per tour; if false, replays on each re-entry"
+          },
+          "use_bearing": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, audio only triggers when the user's movement direction is within the bearing range"
+          },
+          "bearing_direction": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 359,
+            "description": "Required movement bearing in degrees (0=N, 90=E, 180=S, 270=W)"
+          },
+          "bearing_tolerance": {
+            "type": "number",
+            "default": 30,
+            "minimum": 0,
+            "maximum": 180,
+            "description": "Tolerance in degrees around bearing_direction"
           }
         }
       }

@@ -8,6 +8,7 @@ import {
   Upload, FileCheck, Save, Flag, Square, Circle,
 } from 'lucide-react';
 import { getRoleColour, getRoleLabel, buildSegmentId, WAYPOINT_ROLE_COLOURS } from '@/lib/routeExport';
+import AudioTriggerFields from './AudioTriggerFields';
 
 const ROLES = [
   { value: 'primary_start', label: 'Primary-Start', icon: Flag },
@@ -23,6 +24,13 @@ const EMPTY_WP = {
   segment_title: '',
   avg_segment_speed_kmh: '',
   description: '',
+  trigger_audio: false,
+  audio_clip_url: '',
+  trigger_radius_m: 150,
+  trigger_once: true,
+  use_bearing: false,
+  bearing_direction: 0,
+  bearing_tolerance: 30,
 };
 
 function autoColour(role) {
@@ -93,6 +101,13 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       segment_title: newWp.segment_title.trim(),
       avg_segment_speed_kmh: newWp.avg_segment_speed_kmh ? parseFloat(newWp.avg_segment_speed_kmh) : null,
       description: newWp.description.trim(),
+      trigger_audio: newWp.trigger_audio || false,
+      audio_clip_url: newWp.audio_clip_url || '',
+      trigger_radius_m: newWp.trigger_radius_m != null ? Number(newWp.trigger_radius_m) : 150,
+      trigger_once: newWp.trigger_once !== false,
+      use_bearing: newWp.use_bearing || false,
+      bearing_direction: Number(newWp.bearing_direction) || 0,
+      bearing_tolerance: Number(newWp.bearing_tolerance) || 30,
       waypoint_colour: autoColour(role),
       name: segId ? `${segId} — ${newWp.segment_title.trim()}` : newWp.segment_title.trim(),
       type: role,
@@ -174,6 +189,13 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           segment_title: `Segment ${segNum}`,
           avg_segment_speed_kmh: null,
           description: '',
+          trigger_audio: false,
+          audio_clip_url: '',
+          trigger_radius_m: 150,
+          trigger_once: true,
+          use_bearing: false,
+          bearing_direction: 0,
+          bearing_tolerance: 30,
           waypoint_colour: autoColour(i === 0 ? 'primary_start' : 'secondary'),
           name: segId ? `${segId} — Segment ${segNum}` : `Segment ${segNum}`,
           type: i === 0 ? 'primary_start' : 'secondary',
@@ -316,6 +338,12 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                 className="bg-slate-700 border-slate-500 text-white"
               />
             </div>
+
+            {/* GPS Audio Trigger fields */}
+            <AudioTriggerFields
+              wp={newWp}
+              onChange={(field, value) => setNewWp(p => ({ ...p, [field]: value }))}
+            />
 
             {/* Auto-generated Segment ID preview */}
             <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -480,6 +508,10 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                         className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
                       />
                     </div>
+                    <AudioTriggerFields
+                      wp={wp}
+                      onChange={(field, value) => updateWaypoint(index, field, value)}
+                    />
                     {onSave && (
                       <div className="pt-2 border-t border-slate-600">
                         <Button

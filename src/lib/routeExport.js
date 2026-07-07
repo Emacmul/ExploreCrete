@@ -39,6 +39,48 @@ export function buildSegmentId(tourCode, segmentNumber) {
 }
 
 /**
+ * Calculate the great-circle bearing (in degrees) from point 1 to point 2.
+ * 0° = North, 90° = East, 180° = South, 270° = West.
+ *
+ * Used at runtime to derive the user's movement direction from successive
+ * GPS fixes — NOT from the phone compass.
+ */
+export function calculateBearing(lat1, lng1, lat2, lng2) {
+  const toRad = d => (d * Math.PI) / 180;
+  const toDeg = r => (r * 180) / Math.PI;
+
+  const phi1 = toRad(lat1);
+  const phi2 = toRad(lat2);
+  const deltaLng = toRad(lng2 - lng1);
+
+  const y = Math.sin(deltaLng) * Math.cos(phi2);
+  const x =
+    Math.cos(phi1) * Math.sin(phi2) -
+    Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLng);
+
+  const bearing = (toDeg(Math.atan2(y, x)) + 360) % 360;
+  return bearing;
+}
+
+/**
+ * Check whether a movement bearing falls within the target bearing ± tolerance.
+ *
+ * Handles the 0°/360° wrap-around correctly, e.g.:
+ *   target=10, tolerance=30 → valid 340° to 40°
+ *   target=270, tolerance=30 → valid 240° to 300°
+ */
+export function isBearingInRange(movementBearing, targetBearing, tolerance) {
+  const m = ((movementBearing % 360) + 360) % 360;
+  const t = ((targetBearing % 360) + 360) % 360;
+  const tol = Math.abs(tolerance);
+
+  let diff = Math.abs(m - t);
+  if (diff > 180) diff = 360 - diff;
+
+  return diff <= tol;
+}
+
+/**
  * Validate a driving audio tour route.
  * Returns an array of error strings (empty if valid).
  */
@@ -109,6 +151,26 @@ export function validateDrivingTour(walk) {
 
     if (!wp.segment_title?.trim()) {
       errors.push(`${prefix}: Segment Title is required.`);
+    }
+
+    // Validate audio trigger configuration
+    if (wp.trigger_audio) {
+      if (!wp.audio_clip_url) {
+        errors.push(`${prefix}: Audio Clip is required when Trigger Audio is enabled.`);
+      }
+      if (wp.trigger_radius_m != null && (Number(wp.trigger_radius_m) < 10 || Number(wp.trigger_radius_m) > 2000)) {
+        errors.push(`${prefix}: Trigger Radius must be between 10 and 2000 metres.`);
+      }
+      if (wp.use_bearing) {
+        const bd = Number(wp.bearing_direction);
+        if (isNaN(bd) || bd < 0 || bd > 359) {
+          errors.push(`${prefix}: Bearing Direction must be between 0 and 359 degrees.`);
+        }
+        const bt = Number(wp.bearing_tolerance);
+        if (isNaN(bt) || bt < 0 || bt > 180) {
+          errors.push(`${prefix}: Bearing Tolerance must be between 0 and 180 degrees.`);
+        }
+      }
     }
   });
 
@@ -202,6 +264,21 @@ export function generateGpx(walk) {
     }
     if (wp.avg_segment_speed_kmh != null && !isNaN(Number(wp.avg_segment_speed_kmh))) {
       lines.push(`      <mc:avgSpeedKmh>${Number(wp.avg_segment_speed_kmh)}</mc:avgSpeedKmh>`);
+    }
+    if (wp.trigger_audio) {
+      lines.push('      <mc:triggerAudio>true</mc:triggerAudio>');
+      if (wp.audio_clip_url) {
+        lines.push(`      <mc:audioClipUrl>${xmlEscape(wp.audio_clip_url)}</mc:audioClipUrl>`);
+      }
+      if (wp.trigger_radius_m != null) {
+        lines.push(`      <mc:triggerRadiusM>${Number(wp.trigger_radius_m)}</mc:triggerRadiusM>`);
+      }
+      lines.push(`      <mc:triggerOnce>${wp.trigger_once !== false}</mc:triggerOnce>`);
+      if (wp.use_bearing) {
+        lines.push('      <mc:useBearing>true</mc:useBearing>');
+        lines.push(`      <mc:bearingDirection>${Number(wp.bearing_direction) || 0}</mc:bearingDirection>`);
+        lines.push(`      <mc:bearingTolerance>${Number(wp.bearing_tolerance) || 30}</mc:bearingTolerance>`);
+      }
     }
     lines.push('    </extensions>');
 
