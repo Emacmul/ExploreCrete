@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Play, Pause, Square, Gauge, Clock, Volume2, AlertTriangle, CheckCircle2, MapPin, Radio } from 'lucide-react';
+import { Play, Pause, Square, Gauge, Clock, Volume2, AlertTriangle, CheckCircle2, MapPin, Radio, Flag } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { calculateBearing, isBearingInRange } from '@/lib/routeExport';
 import TourSimulatorMap from './TourSimulatorMap';
 
@@ -65,6 +66,8 @@ export default function TourSimulator({ form }) {
   const [triggered, setTriggered] = useState({});
   const [triggerLog, setTriggerLog] = useState([]);
   const [tourComplete, setTourComplete] = useState(false);
+  const [autoSpeed, setAutoSpeed] = useState(true);
+  const [currentSegment, setCurrentSegment] = useState(null);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -75,11 +78,19 @@ export default function TourSimulator({ form }) {
   const speedRef = useRef(speed);
   const multRef = useRef(simMult);
   const tickRef = useRef(null);
+  const autoSpeedRef = useRef(true);
+  const passedSegmentsRef = useRef(new Set());
 
   const pathData = useMemo(() => buildPath(trailPath), [trailPath]);
+  const speedZones = useMemo(() => {
+    return waypoints
+      .map((wp, index) => ({ wp, index }))
+      .filter(({ wp }) => wp.waypoint_role === 'primary_start' && Number(wp.avg_segment_speed_kmh) > 0);
+  }, [waypoints]);
 
   useEffect(() => { speedRef.current = speed; }, [speed]);
   useEffect(() => { multRef.current = simMult; }, [simMult]);
+  useEffect(() => { autoSpeedRef.current = autoSpeed; }, [autoSpeed]);
 
   const stopSim = () => {
     setIsPlaying(false);
@@ -87,11 +98,13 @@ export default function TourSimulator({ form }) {
     distRef.current = 0;
     simTimeRef.current = 0;
     triggeredRef.current = {};
+    passedSegmentsRef.current = new Set();
     setDistTraveled(0);
     setSimTime(0);
     setTriggered({});
     setTriggerLog([]);
     setTourComplete(false);
+    setCurrentSegment(null);
     if (audioRef.current) audioRef.current.pause();
     const startPos = trailPath[0];
     if (startPos) { setCurrentPos(startPos); prevPosRef.current = startPos; }
@@ -156,6 +169,26 @@ export default function TourSimulator({ form }) {
       }]);
     });
 
+    // Check segment speed zones (auto-speed)
+    if (autoSpeedRef.current) {
+      speedZones.forEach(({ wp, index }) => {
+        if (passedSegmentsRef.current.has(index)) return;
+        const segD = haversine(newPos.lat, newPos.lng, wp.lat, wp.lng);
+        if (segD <= 150) {
+          passedSegmentsRef.current.add(index);
+          const segSpeed = Number(wp.avg_segment_speed_kmh);
+          if (segSpeed > 0) {
+            speedRef.current = segSpeed;
+            setSpeed(segSpeed);
+            setCurrentSegment({ wp, index, speed: segSpeed });
+            setTriggerLog(prev => [...prev, {
+              type: 'speed', wp, index, distance: newDist, simTime: simTimeRef.current, newSpeed: segSpeed,
+            }]);
+          }
+        }
+      });
+    }
+
     distRef.current = newDist;
     prevPosRef.current = newPos;
     simTimeRef.current += TICK_MS * multRef.current;
@@ -167,6 +200,19 @@ export default function TourSimulator({ form }) {
   const startSim = () => {
     if (pathData.total === 0 || trailPath.length < 2) return;
     setTourComplete(false);
+    if (autoSpeedRef.current && speedZones.length > 0) {
+      const firstZone = speedZones[0];
+      const firstD = haversine(trailPath[0].lat, trailPath[0].lng, firstZone.wp.lat, firstZone.wp.lng);
+      if (firstD <= 150) {
+        passedSegmentsRef.current.add(firstZone.index);
+        const segSpeed = Number(firstZone.wp.avg_segment_speed_kmh);
+        if (segSpeed > 0) {
+          speedRef.current = segSpeed;
+          setSpeed(segSpeed);
+          setCurrentSegment({ wp: firstZone.wp, index: firstZone.index, speed: segSpeed });
+        }
+      }
+    }
     setIsPlaying(true);
     intervalRef.current = setInterval(() => tickRef.current(), TICK_MS);
   };
@@ -209,15 +255,30 @@ export default function TourSimulator({ form }) {
         )}
       </div>
       <p className="text-slate-400 text-sm">
-        Drive a virtual marker along the route at the chosen speed. Audio triggers fire
-        exactly as they would on a real tour — test trigger placement from your desk.
+        Drive a virtual marker along the route. Audio triggers fire exactly as they would
+        on a real tour. Enable auto-speed to use each segment's average speed automatically.
       </p>
+
+      {/* Auto-speed toggle */}
+      <div className="flex items-center justify-between bg-slate-800/60 rounded-lg border border-slate-600 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <Flag className="w-4 h-4 text-blue-400" />
+          <div>
+            <span className="text-slate-200 text-sm font-medium">Auto-Speed (Segment Zones)</span>
+            <p className="text-slate-500 text-xs">
+              {speedZones.length} segment speed{speedZones.length !== 1 ? 's' : ''} defined on waypoints
+              {currentSegment ? ` · now: ${currentSegment.wp.segment_id || currentSegment.wp.segment_title || 'Segment ' + (currentSegment.index + 1)} → ${currentSegment.speed} km/h` : ''}
+            </p>
+          </div>
+        </div>
+        <Switch checked={autoSpeed} onCheckedChange={setAutoSpeed} />
+      </div>
 
       {/* Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label className="text-slate-400 text-xs mb-1.5 block">Driving Speed (km/h)</Label>
-          <div className="flex gap-2 items-center">
+          <Label className="text-slate-400 text-xs mb-1.5 block">Driving Speed (km/h){autoSpeed ? ' — auto from segments' : ''}</Label>
+          <div className={`flex gap-2 items-center ${autoSpeed ? 'opacity-50 pointer-events-none' : ''}`}>
             {[30, 50, 80].map(s => (
               <Button
                 key={s}
@@ -260,7 +321,7 @@ export default function TourSimulator({ form }) {
         <div className="bg-slate-800 rounded-lg p-2.5 text-center">
           <Gauge className="w-4 h-4 text-blue-400 mx-auto mb-1" />
           <div className="text-white text-sm font-semibold">{speed} km/h</div>
-          <div className="text-slate-500 text-xs">Speed</div>
+          <div className="text-slate-500 text-xs">{autoSpeed ? 'Auto' : 'Manual'}</div>
         </div>
         <div className="bg-slate-800 rounded-lg p-2.5 text-center">
           <Clock className="w-4 h-4 text-amber-400 mx-auto mb-1" />
@@ -334,31 +395,49 @@ export default function TourSimulator({ form }) {
             <span className="text-slate-300 font-medium text-sm">Trigger Log</span>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {triggerLog.map((entry, i) => (
+            {triggerLog.map((entry, i) => {
+              const isSpeed = entry.type === 'speed';
+              return (
               <div
                 key={i}
-                className={`flex items-start gap-2 text-xs rounded px-2 py-1.5 ${entry.overlap ? 'bg-red-900/30 border border-red-700/40' : 'bg-slate-700/50'}`}
+                className={`flex items-start gap-2 text-xs rounded px-2 py-1.5 ${isSpeed ? 'bg-blue-900/30 border border-blue-700/40' : entry.overlap ? 'bg-red-900/30 border border-red-700/40' : 'bg-slate-700/50'}`}
               >
                 <span className="text-slate-500 font-mono shrink-0">{fmtTime(entry.simTime)}</span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-slate-200 font-medium">
-                    {entry.wp.segment_id || entry.wp.name || `Waypoint ${entry.index + 1}`}
-                  </span>
-                  {entry.wp.segment_title && (
-                    <span className="text-slate-400"> — {entry.wp.segment_title}</span>
+                  {isSpeed ? (
+                    <>
+                      <span className="text-blue-300 font-medium flex items-center gap-1">
+                        <Flag className="w-3 h-3" /> Speed → {entry.newSpeed} km/h
+                      </span>
+                      <div className="text-slate-500 mt-0.5">
+                        {entry.wp.segment_id || entry.wp.name || `Segment ${entry.index + 1}`}
+                        {entry.wp.segment_title && ` — ${entry.wp.segment_title}`}
+                        {' · '}{fmtDist(entry.distance)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-slate-200 font-medium">
+                        {entry.wp.segment_id || entry.wp.name || `Waypoint ${entry.index + 1}`}
+                      </span>
+                      {entry.wp.segment_title && (
+                        <span className="text-slate-400"> — {entry.wp.segment_title}</span>
+                      )}
+                      <div className="text-slate-500 mt-0.5">
+                        Triggered at {fmtDist(entry.distance)} · {Math.round(entry.distFromCenter)}m from centre
+                        {entry.wp.use_bearing && ' · bearing ✓'}
+                      </div>
+                    </>
                   )}
-                  <div className="text-slate-500 mt-0.5">
-                    Triggered at {fmtDist(entry.distance)} · {Math.round(entry.distFromCenter)}m from centre
-                    {entry.wp.use_bearing && ' · bearing ✓'}
-                  </div>
                 </div>
-                {entry.overlap && (
+                {!isSpeed && entry.overlap && (
                   <span className="flex items-center gap-1 text-red-400 shrink-0" title="Audio was still playing from previous trigger">
                     <AlertTriangle className="w-3.5 h-3.5" /> Overlap
                   </span>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
