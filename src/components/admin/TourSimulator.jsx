@@ -5,6 +5,7 @@ import { Play, Pause, Square, Gauge, Clock, Volume2, AlertTriangle, CheckCircle2
 import { Switch } from '@/components/ui/switch';
 import { calculateBearing, isBearingInRange } from '@/lib/routeExport';
 import TourSimulatorMap from './TourSimulatorMap';
+import ScriptTimingPanel from './ScriptTimingPanel';
 
 const R_EARTH = 6371000;
 const TICK_MS = 100;
@@ -376,6 +377,9 @@ export default function TourSimulator({ form }) {
           </span>
         )}
       </div>
+
+      {/* Script Timing */}
+      <ScriptTimingPanel trailPath={trailPath} waypoints={waypoints} />
 
       {/* Map */}
       <div className="h-80 rounded-xl overflow-hidden border border-slate-600">
