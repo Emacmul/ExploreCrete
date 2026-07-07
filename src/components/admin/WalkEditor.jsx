@@ -10,6 +10,7 @@ import FitParser from 'fit-file-parser';
 import WaypointEditor from './WaypointEditor';
 import DrivingTourWaypointEditor from './DrivingTourWaypointEditor';
 import DrivingTourExportPanel from './DrivingTourExportPanel';
+import TourSimulator from './TourSimulator';
 import TrailPathEditor from './TrailPathEditor';
 import AdminPreviewMap from './AdminPreviewMap';
 import { validateDrivingTour, generateGpx, generateKml, downloadTextFile } from '@/lib/routeExport';
@@ -849,7 +850,10 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
           <div className="space-y-4">
             <AdminPreviewMap walk={form} />
             {isDrivingAudioTour && (
-              <DrivingTourExportPanel form={form} />
+              <>
+                <DrivingTourExportPanel form={form} />
+                <TourSimulator form={form} />
+              </>
             )}
             <SaveButton onSave={handleSave} saving={saving} />
           </div>
