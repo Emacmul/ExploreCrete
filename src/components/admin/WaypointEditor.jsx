@@ -21,6 +21,7 @@ const WAYPOINT_TYPES = [
   { value: 'wildlife_spot', label: '🦋 Wildlife Spot', color: 'text-green-300' },
   { value: 'church', label: '⛪ Byzantine Church', color: 'text-yellow-300' },
   { value: 'ruins', label: '🏛️ Ancient Ruins', color: 'text-orange-300' },
+  { value: 'archaeological_site', label: '🏺 Archaeological Site', color: 'text-orange-400' },
   { value: 'abandoned_settlement', label: '🏚️ Abandoned Settlement', color: 'text-slate-300' },
 ];
 
