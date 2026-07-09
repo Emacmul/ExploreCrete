@@ -18,6 +18,14 @@
       "type": "string",
       "description": "Last name"
     },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "narrator"
+      ],
+      "description": "Admin panel role: admin=full access, narrator=narration-only access. Leave unset for regular app users."
+    },
     "date_of_birth": {
       "type": "string",
       "format": "date",

@@ -5,11 +5,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Plus, Trash2, ChevronDown, ChevronUp, Info, Loader2, X, ArrowUp, ArrowDown,
-  Upload, FileCheck, Save, Flag, Square, Circle,
+  Plus, Trash2, ChevronDown, ChevronUp, Info, Loader2,
+  Upload, FileCheck, Save, Flag, Square, Circle, ArrowUp, ArrowDown, Lock,
 } from 'lucide-react';
-import { getRoleColour, getRoleLabel, buildSegmentId, WAYPOINT_ROLE_COLOURS } from '@/lib/routeExport';
+import { getRoleColour, getRoleLabel, buildSegmentId } from '@/lib/routeExport';
 import AudioTriggerFields from './AudioTriggerFields';
+import SimpleAudioUpload from './SimpleAudioUpload';
 
 const ROLES = [
   { value: 'primary_start', label: 'Primary-Start', icon: Flag },
@@ -50,7 +51,8 @@ function parseGpxCoords(xmlText) {
   })).filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
 }
 
-export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving }) {
+export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin' }) {
+  const isNarrator = userRole === 'narrator';
   const [expanded, setExpanded] = useState(null);
   const [newWp, setNewWp] = useState(EMPTY_WP);
   const [showAddForm, setShowAddForm] = useState(true);
@@ -131,7 +133,6 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
     const updated = waypoints.map((wp, i) => {
       if (i !== index) return wp;
       const next = { ...wp, [field]: value };
-      // Recompute derived fields when relevant inputs change
       if (field === 'waypoint_role') {
         next.waypoint_colour = autoColour(value);
         next.type = value;
@@ -220,184 +221,166 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
         <div className="flex items-start gap-2 bg-purple-900/30 border border-purple-700/50 rounded-lg p-3 text-sm text-purple-300">
           <Info className="w-4 h-4 mt-0.5 shrink-0" />
           <span>
-            Define Primary-Start, Primary-Stop and Secondary points. Segment IDs are built
-            from the Tour Code ({tourCode || '—'}) + a 2-digit number. Marker colours are
-            assigned automatically.
+            {isNarrator
+              ? 'Edit narration scripts and audio triggers for each waypoint below. All other fields are managed by the admin.'
+              : `Define Primary-Start, Primary-Stop and Secondary points. Segment IDs are built from the Tour Code (${tourCode || '—'}) + a 2-digit number.`}
           </span>
         </div>
       </div>
 
-      {/* GPX Import */}
-      <div className="flex items-center gap-3">
-        <label className="flex items-center gap-2 cursor-pointer bg-blue-700/30 hover:bg-blue-700/50 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-300 hover:text-blue-100 transition-colors text-sm font-medium">
-          <Upload className="w-4 h-4" />
-          Import GPX Waypoints
-          <input type="file" accept=".gpx,application/gpx+xml" className="hidden" onChange={handleGpxImport} />
-        </label>
-        {gpxImportResult && (
-          gpxImportResult.error
-            ? <span className="text-red-400 text-sm">{gpxImportResult.error}</span>
-            : <span className="flex items-center gap-1 text-green-400 text-sm"><FileCheck className="w-4 h-4" /> {gpxImportResult.count} waypoint{gpxImportResult.count !== 1 ? 's' : ''} imported</span>
-        )}
-      </div>
+      {/* GPX Import - admin only */}
+      {!isNarrator && (
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer bg-blue-700/30 hover:bg-blue-700/50 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-300 hover:text-blue-100 transition-colors text-sm font-medium">
+            <Upload className="w-4 h-4" />
+            Import GPX Waypoints
+            <input type="file" accept=".gpx,application/gpx+xml" className="hidden" onChange={handleGpxImport} />
+          </label>
+          {gpxImportResult && (
+            gpxImportResult.error
+              ? <span className="text-red-400 text-sm">{gpxImportResult.error}</span>
+              : <span className="flex items-center gap-1 text-green-400 text-sm"><FileCheck className="w-4 h-4" /> {gpxImportResult.count} waypoint{gpxImportResult.count !== 1 ? 's' : ''} imported</span>
+          )}
+        </div>
+      )}
 
-      {/* Add new waypoint form */}
-      <div className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setShowAddForm(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <Plus className="w-4 h-4 text-purple-400" />
-            Add New Waypoint
-          </span>
-          {showAddForm ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-        </button>
+      {/* Add new waypoint form - admin only */}
+      {!isNarrator && (
+        <div className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowAddForm(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Plus className="w-4 h-4 text-purple-400" />
+              Add New Waypoint
+            </span>
+            {showAddForm ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          </button>
 
-        {showAddForm && (
-          <div className="px-4 pb-4 pt-1 border-t border-slate-600 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-slate-400 text-xs mb-1 block">Latitude *</Label>
-                <Input
-                  type="number" step="0.000001"
-                  value={newWp.lat}
-                  onChange={e => setNewWp(p => ({ ...p, lat: e.target.value }))}
-                  onPaste={handlePaste}
-                  placeholder="35.301900"
-                  className="bg-slate-700 border-slate-500 text-white font-mono"
-                />
+          {showAddForm && (
+            <div className="px-4 pb-4 pt-1 border-t border-slate-600 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1 block">Latitude *</Label>
+                  <Input
+                    type="number" step="0.000001"
+                    value={newWp.lat}
+                    onChange={e => setNewWp(p => ({ ...p, lat: e.target.value }))}
+                    onPaste={handlePaste}
+                    placeholder="35.301900"
+                    className="bg-slate-700 border-slate-500 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1 block">Longitude *</Label>
+                  <Input
+                    type="number" step="0.000001"
+                    value={newWp.lng}
+                    onChange={e => setNewWp(p => ({ ...p, lng: e.target.value }))}
+                    placeholder="23.963300"
+                    className="bg-slate-700 border-slate-500 text-white font-mono"
+                  />
+                </div>
               </div>
-              <div>
-                <Label className="text-slate-400 text-xs mb-1 block">Longitude *</Label>
-                <Input
-                  type="number" step="0.000001"
-                  value={newWp.lng}
-                  onChange={e => setNewWp(p => ({ ...p, lng: e.target.value }))}
-                  placeholder="23.963300"
-                  className="bg-slate-700 border-slate-500 text-white font-mono"
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-slate-400 text-xs mb-1 block">Waypoint Role *</Label>
-                <Select value={newWp.waypoint_role} onValueChange={v => setNewWp(p => ({ ...p, waypoint_role: v }))}>
-                  <SelectTrigger className="bg-slate-700 border-slate-500 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map(r => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1 block">Waypoint Role *</Label>
+                  <Select value={newWp.waypoint_role} onValueChange={v => setNewWp(p => ({ ...p, waypoint_role: v }))}>
+                    <SelectTrigger className="bg-slate-700 border-slate-500 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map(r => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1 block">Segment Number (01–99)</Label>
+                  <Input
+                    type="number" min="1" max="99"
+                    value={newWp.segment_number}
+                    onChange={e => setNewWp(p => ({ ...p, segment_number: e.target.value }))}
+                    placeholder={nextSegmentNumber()}
+                    className="bg-slate-700 border-slate-500 text-white font-mono"
+                  />
+                </div>
               </div>
-              <div>
-                <Label className="text-slate-400 text-xs mb-1 block">Segment Number (01–99)</Label>
-                <Input
-                  type="number" min="1" max="99"
-                  value={newWp.segment_number}
-                  onChange={e => setNewWp(p => ({ ...p, segment_number: e.target.value }))}
-                  placeholder={nextSegmentNumber()}
-                  className="bg-slate-700 border-slate-500 text-white font-mono"
-                />
-              </div>
-            </div>
 
-            <div>
-              <Label className="text-slate-400 text-xs mb-1 block">Segment Title *</Label>
-              <Input
-                value={newWp.segment_title}
-                onChange={e => setNewWp(p => ({ ...p, segment_title: e.target.value }))}
-                placeholder="e.g. Leaving Chania Old Town"
-                className="bg-slate-700 border-slate-500 text-white"
-              />
-            </div>
-
-            {newWp.waypoint_role === 'primary_start' && (
               <div>
-                <Label className="text-slate-400 text-xs mb-1 block">
-                  Average Segment Speed (km/h) *
-                  <span className="ml-1 text-purple-400">Required for Primary-Start</span>
-                </Label>
+                <Label className="text-slate-400 text-xs mb-1 block">Segment Title *</Label>
                 <Input
-                  type="number" step="0.1"
-                  value={newWp.avg_segment_speed_kmh}
-                  onChange={e => setNewWp(p => ({ ...p, avg_segment_speed_kmh: e.target.value }))}
-                  placeholder="e.g. 45"
+                  value={newWp.segment_title}
+                  onChange={e => setNewWp(p => ({ ...p, segment_title: e.target.value }))}
+                  placeholder="e.g. Leaving Chania Old Town"
                   className="bg-slate-700 border-slate-500 text-white"
                 />
               </div>
-            )}
 
-            <div>
-              <Label className="text-slate-400 text-xs mb-1 block">Description (optional)</Label>
-              <Input
-                value={newWp.description}
-                onChange={e => setNewWp(p => ({ ...p, description: e.target.value }))}
-                placeholder="Notes for this waypoint"
-                className="bg-slate-700 border-slate-500 text-white"
-              />
-            </div>
+              {newWp.waypoint_role === 'primary_start' && (
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1 block">
+                    Average Segment Speed (km/h) *
+                    <span className="ml-1 text-purple-400">Required for Primary-Start</span>
+                  </Label>
+                  <Input
+                    type="number" step="0.1"
+                    value={newWp.avg_segment_speed_kmh}
+                    onChange={e => setNewWp(p => ({ ...p, avg_segment_speed_kmh: e.target.value }))}
+                    placeholder="e.g. 45"
+                    className="bg-slate-700 border-slate-500 text-white"
+                  />
+                </div>
+              )}
 
-            <div>
-              <Label className="text-slate-400 text-xs mb-1 block">
-                Narration Script
-                <span className="ml-1 text-blue-400">(SSML break tags supported)</span>
-              </Label>
-              <Textarea
-                value={newWp.narration_script}
-                onChange={e => setNewWp(p => ({ ...p, narration_script: e.target.value }))}
-                placeholder={'Write the narration script for this location...\n\nSSML pauses: <break time="2s"/> or <break strength="medium"/>'}
-                rows={5}
-                className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
-              />
-            </div>
-
-            {/* GPS Audio Trigger fields */}
-            <AudioTriggerFields
-              wp={newWp}
-              onChange={(field, value) => setNewWp(p => ({ ...p, [field]: value }))}
-            />
-
-            {/* Auto-generated Segment ID preview */}
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span>Segment ID:</span>
-              <code className="bg-slate-800 px-2 py-0.5 rounded text-purple-300 font-mono">
-                {buildSegmentId(tourCode, newWp.segment_number || nextSegmentNumber()) || '—'}
-              </code>
-              <span className="ml-2">Colour:</span>
-              <span
-                className="inline-block w-4 h-4 rounded-full border border-slate-500"
-                style={{ backgroundColor: autoColour(newWp.waypoint_role) }}
-              />
-              <span className="text-slate-500">auto-assigned</span>
-            </div>
-
-            {addError && (
-              <div className="text-red-400 text-sm bg-red-900/30 border border-red-700/50 rounded-lg px-3 py-2">
-                {addError}
+              <div>
+                <Label className="text-slate-400 text-xs mb-1 block">Description (optional)</Label>
+                <Input
+                  value={newWp.description}
+                  onChange={e => setNewWp(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Notes for this waypoint"
+                  className="bg-slate-700 border-slate-500 text-white"
+                />
               </div>
-            )}
-            <Button onClick={addWaypoint} className="bg-purple-600 hover:bg-purple-700 gap-2 w-full text-white font-semibold">
-              <Plus className="w-4 h-4" /> Save Waypoint
-            </Button>
-          </div>
-        )}
-      </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span>Segment ID:</span>
+                <code className="bg-slate-800 px-2 py-0.5 rounded text-purple-300 font-mono">
+                  {buildSegmentId(tourCode, newWp.segment_number || nextSegmentNumber()) || '—'}
+                </code>
+                <span className="ml-2">Colour:</span>
+                <span
+                  className="inline-block w-4 h-4 rounded-full border border-slate-500"
+                  style={{ backgroundColor: autoColour(newWp.waypoint_role) }}
+                />
+                <span className="text-slate-500">auto-assigned</span>
+              </div>
+
+              {addError && (
+                <div className="text-red-400 text-sm bg-red-900/30 border border-red-700/50 rounded-lg px-3 py-2">
+                  {addError}
+                </div>
+              )}
+              <Button onClick={addWaypoint} className="bg-purple-600 hover:bg-purple-700 gap-2 w-full text-white font-semibold">
+                <Plus className="w-4 h-4" /> Save Waypoint
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Existing waypoints */}
       {waypoints.length === 0 ? (
         <div className="text-center py-8 text-slate-500 border border-dashed border-slate-600 rounded-lg">
-          No waypoints yet. Add tour points above.
+          {isNarrator ? 'No waypoints assigned to this tour yet.' : 'No waypoints yet. Add tour points above.'}
         </div>
       ) : (
         <div className="space-y-2">
           {waypoints.map((wp, index) => {
-            const roleInfo = ROLES.find(r => r.value === wp.waypoint_role) || ROLES[2];
             const colour = wp.waypoint_colour || autoColour(wp.waypoint_role);
             return (
               <div key={index} className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
@@ -405,22 +388,24 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                   className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-slate-700/80"
                   onClick={() => setExpanded(expanded === index ? null : index)}
                 >
-                  <div className="flex flex-col gap-0.5" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={() => moveWaypoint(index, -1)}
-                      disabled={index === 0}
-                      className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
-                    >
-                      <ArrowUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => moveWaypoint(index, 1)}
-                      disabled={index === waypoints.length - 1}
-                      className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
-                    >
-                      <ArrowDown className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {!isNarrator && (
+                    <div className="flex flex-col gap-0.5" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => moveWaypoint(index, -1)}
+                        disabled={index === 0}
+                        className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => moveWaypoint(index, 1)}
+                        disabled={index === waypoints.length - 1}
+                        className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <span
                     className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-400"
                     style={{ backgroundColor: colour }}
@@ -435,114 +420,156 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                   </div>
                   <span className="text-xs text-slate-500">{getRoleLabel(wp.waypoint_role)}</span>
                   {expanded === index ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                  <Button
-                    variant="ghost" size="icon"
-                    onClick={e => { e.stopPropagation(); removeWaypoint(index); }}
-                    className="text-slate-500 hover:text-red-400 w-7 h-7"
-                    title="Remove"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  {!isNarrator && (
+                    <Button
+                      variant="ghost" size="icon"
+                      onClick={e => { e.stopPropagation(); removeWaypoint(index); }}
+                      className="text-slate-500 hover:text-red-400 w-7 h-7"
+                      title="Remove"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
                 </div>
 
                 {expanded === index && (
                   <div className="px-4 pb-4 border-t border-slate-600 pt-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-slate-400 text-xs mb-1 block">Latitude</Label>
-                        <Input
-                          type="number" step="0.000001"
-                          value={wp.lat}
-                          onChange={e => updateWaypoint(index, 'lat', parseFloat(e.target.value))}
-                          className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
+                    {isNarrator ? (
+                      <>
+                        {/* Read-only context for narrators */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Segment ID</Label>
+                            <Input value={wp.segment_id || ''} readOnly className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Role</Label>
+                            <Input value={getRoleLabel(wp.waypoint_role)} readOnly className="bg-slate-800 border-slate-600 text-slate-400 h-8 text-sm" />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-slate-400 text-xs mb-1 block">Segment Title</Label>
+                          <Input value={wp.segment_title || ''} readOnly className="bg-slate-800 border-slate-600 text-slate-300 h-8 text-sm" />
+                        </div>
+                        {wp.description && (
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Description</Label>
+                            <Input value={wp.description} readOnly className="bg-slate-800 border-slate-600 text-slate-300 h-8 text-sm" />
+                          </div>
+                        )}
+
+                        {/* Editable: Narration Script */}
+                        <div>
+                          <Label className="text-slate-400 text-xs mb-1 block">
+                            Narration Script
+                            <span className="ml-1 text-blue-400">(SSML break tags supported)</span>
+                          </Label>
+                          <Textarea
+                            value={wp.narration_script || ''}
+                            onChange={e => updateWaypoint(index, 'narration_script', e.target.value)}
+                            placeholder={'Write the narration script for this location...\n\nSSML pauses: <break time="2s"/> or <break strength="medium"/>'}
+                            rows={5}
+                            className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
+                          />
+                        </div>
+
+                        {/* Editable: Audio Trigger Fields */}
+                        <AudioTriggerFields
+                          wp={wp}
+                          onChange={(field, value) => updateWaypoint(index, field, value)}
                         />
-                      </div>
-                      <div>
-                        <Label className="text-slate-400 text-xs mb-1 block">Longitude</Label>
-                        <Input
-                          type="number" step="0.000001"
-                          value={wp.lng}
-                          onChange={e => updateWaypoint(index, 'lng', parseFloat(e.target.value))}
-                          className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
+                      </>
+                    ) : (
+                      <>
+                        {/* Admin: all fields except narration_script; simple audio upload */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Latitude</Label>
+                            <Input
+                              type="number" step="0.000001"
+                              value={wp.lat}
+                              onChange={e => updateWaypoint(index, 'lat', parseFloat(e.target.value))}
+                              className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Longitude</Label>
+                            <Input
+                              type="number" step="0.000001"
+                              value={wp.lng}
+                              onChange={e => updateWaypoint(index, 'lng', parseFloat(e.target.value))}
+                              className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Waypoint Role</Label>
+                            <Select value={wp.waypoint_role} onValueChange={v => updateWaypoint(index, 'waypoint_role', v)}>
+                              <SelectTrigger className="bg-slate-700 border-slate-500 text-white h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ROLES.map(r => (
+                                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Segment Number</Label>
+                            <Input
+                              type="number" min="1" max="99"
+                              value={wp.segment_number || ''}
+                              onChange={e => updateWaypoint(index, 'segment_number', e.target.value)}
+                              className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-slate-400 text-xs mb-1 block">Segment ID (auto)</Label>
+                          <Input
+                            value={wp.segment_id || ''}
+                            readOnly
+                            className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-slate-400 text-xs mb-1 block">Segment Title</Label>
+                          <Input
+                            value={wp.segment_title || ''}
+                            onChange={e => updateWaypoint(index, 'segment_title', e.target.value)}
+                            className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                          />
+                        </div>
+                        {wp.waypoint_role === 'primary_start' && (
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Average Segment Speed (km/h) *</Label>
+                            <Input
+                              type="number" step="0.1"
+                              value={wp.avg_segment_speed_kmh ?? ''}
+                              onChange={e => updateWaypoint(index, 'avg_segment_speed_kmh', e.target.value === '' ? null : parseFloat(e.target.value))}
+                              className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <Label className="text-slate-400 text-xs mb-1 block">Description</Label>
+                          <Input
+                            value={wp.description || ''}
+                            onChange={e => updateWaypoint(index, 'description', e.target.value)}
+                            className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                          />
+                        </div>
+
+                        {/* Simple audio upload for admin (no trigger config) */}
+                        <SimpleAudioUpload
+                          audioUrl={wp.audio_clip_url}
+                          onChange={(field, value) => updateWaypoint(index, field, value)}
                         />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-slate-400 text-xs mb-1 block">Waypoint Role</Label>
-                        <Select value={wp.waypoint_role} onValueChange={v => updateWaypoint(index, 'waypoint_role', v)}>
-                          <SelectTrigger className="bg-slate-700 border-slate-500 text-white h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ROLES.map(r => (
-                              <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-slate-400 text-xs mb-1 block">Segment Number</Label>
-                        <Input
-                          type="number" min="1" max="99"
-                          value={wp.segment_number || ''}
-                          onChange={e => updateWaypoint(index, 'segment_number', e.target.value)}
-                          className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-slate-400 text-xs mb-1 block">Segment ID (auto)</Label>
-                      <Input
-                        value={wp.segment_id || ''}
-                        readOnly
-                        className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-400 text-xs mb-1 block">Segment Title</Label>
-                      <Input
-                        value={wp.segment_title || ''}
-                        onChange={e => updateWaypoint(index, 'segment_title', e.target.value)}
-                        className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
-                      />
-                    </div>
-                    {wp.waypoint_role === 'primary_start' && (
-                      <div>
-                        <Label className="text-slate-400 text-xs mb-1 block">Average Segment Speed (km/h) *</Label>
-                        <Input
-                          type="number" step="0.1"
-                          value={wp.avg_segment_speed_kmh ?? ''}
-                          onChange={e => updateWaypoint(index, 'avg_segment_speed_kmh', e.target.value === '' ? null : parseFloat(e.target.value))}
-                          className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
-                        />
-                      </div>
+                      </>
                     )}
-                    <div>
-                      <Label className="text-slate-400 text-xs mb-1 block">Description</Label>
-                      <Input
-                        value={wp.description || ''}
-                        onChange={e => updateWaypoint(index, 'description', e.target.value)}
-                        className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-400 text-xs mb-1 block">
-                        Narration Script
-                        <span className="ml-1 text-blue-400">(SSML break tags supported)</span>
-                      </Label>
-                      <Textarea
-                        value={wp.narration_script || ''}
-                        onChange={e => updateWaypoint(index, 'narration_script', e.target.value)}
-                        placeholder={'Write the narration script for this location...\n\nSSML pauses: <break time="2s"/> or <break strength="medium"/>'}
-                        rows={5}
-                        className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
-                      />
-                    </div>
-                    <AudioTriggerFields
-                      wp={wp}
-                      onChange={(field, value) => updateWaypoint(index, field, value)}
-                    />
+
                     {onSave && (
                       <div className="pt-2 border-t border-slate-600">
                         <Button

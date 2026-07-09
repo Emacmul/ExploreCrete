@@ -50,12 +50,13 @@ function SaveButton({ onSave, saving }) {
   );
 }
 
-export default function WalkEditor({ walk, onSave, onCancel }) {
+export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' }) {
+  const isNarrator = userRole === 'narrator';
   console.log('WalkEditor mounted/rendering');
   const [form, setForm] = useState({ ...EMPTY_WALK, ...walk });
   const [saving, setSaving] = useState(false);
   const [gpxUploading, setGpxUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState(walk?.id ? 'waypoints' : 'details');
+  const [activeTab, setActiveTab] = useState(isNarrator ? 'waypoints' : (walk?.id ? 'waypoints' : 'details'));
   const [interests, setInterests] = useState(DEFAULT_INTERESTS);
   const [editingInterests, setEditingInterests] = useState(false);
   const [newInterest, setNewInterest] = useState('');
@@ -449,12 +450,14 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
     setSaving(false);
   };
 
-  const tabs = [
-    { id: 'details', label: 'General' },
-    { id: 'trail', label: 'Route Path (GPS)' },
-    { id: 'waypoints', label: `Waypoints${form.waypoints.length ? ` (${form.waypoints.length})` : ''}` },
-    { id: 'preview', label: 'Preview' },
-  ];
+  const tabs = isNarrator
+    ? [{ id: 'waypoints', label: `Waypoints${form.waypoints.length ? ` (${form.waypoints.length})` : ''}` }]
+    : [
+      { id: 'details', label: 'General' },
+      { id: 'trail', label: 'Route Path (GPS)' },
+      { id: 'waypoints', label: `Waypoints${form.waypoints.length ? ` (${form.waypoints.length})` : ''}` },
+      { id: 'preview', label: 'Preview' },
+    ];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -912,6 +915,7 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
                 tourCode={form.code}
                 onSave={handleSave}
                 saving={saving}
+                userRole={userRole}
               />
             ) : (
               <WaypointEditor
