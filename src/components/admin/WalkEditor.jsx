@@ -13,7 +13,7 @@ import DrivingTourExportPanel from './DrivingTourExportPanel';
 import TourSimulator from './TourSimulator';
 import TrailPathEditor from './TrailPathEditor';
 import AdminPreviewMap from './AdminPreviewMap';
-import { validateDrivingTour, generateGpx, generateKml, downloadTextFile } from '@/lib/routeExport';
+import { validateDrivingTour, generateGpx, generateKml, downloadTextFile, buildSegmentId, getRoleColour } from '@/lib/routeExport';
 
 const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology', 'Photography', 'Routes of Faith'];
 
@@ -102,7 +102,48 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
   const generateIntermediateWaypoints = (trailPath) => {
     // If no waypoints from file, auto-generate start, end, and ~5 intermediate points
     if (trailPath.length < 3) return [];
-    
+
+    if (isDrivingAudioTour) {
+      const wps = [];
+      const makeDrivingWp = (lat, lng, role, segNum) => {
+        const segId = buildSegmentId(form.code, segNum) || '';
+        return {
+          lat, lng,
+          waypoint_role: role,
+          segment_number: segNum,
+          segment_id: segId,
+          segment_title: role === 'primary_start' ? 'Start' : role === 'primary_stop' ? 'End' : `Point ${segNum}`,
+          avg_segment_speed_kmh: null,
+          description: '',
+          narration_script: '',
+          trigger_audio: false,
+          audio_clip_url: '',
+          trigger_radius_m: 150,
+          trigger_once: true,
+          use_bearing: false,
+          bearing_direction: 0,
+          bearing_tolerance: 30,
+          waypoint_colour: getRoleColour(role),
+          name: segId ? `${segId} — ${role === 'primary_start' ? 'Start' : role === 'primary_stop' ? 'End' : `Point ${segNum}`}` : (role === 'primary_start' ? 'Start' : role === 'primary_stop' ? 'End' : `Point ${segNum}`),
+          type: role,
+        };
+      };
+
+      wps.push(makeDrivingWp(trailPath[0].lat, trailPath[0].lng, 'primary_start', '01'));
+
+      const step = Math.max(1, Math.floor(trailPath.length / 6));
+      let segIdx = 2;
+      for (let i = step; i < trailPath.length - step; i += step) {
+        const segNum = String(segIdx).padStart(2, '0').slice(-2);
+        wps.push(makeDrivingWp(trailPath[i].lat, trailPath[i].lng, 'secondary', segNum));
+        segIdx++;
+      }
+
+      const endSegNum = String(segIdx).padStart(2, '0').slice(-2);
+      wps.push(makeDrivingWp(trailPath[trailPath.length - 1].lat, trailPath[trailPath.length - 1].lng, 'primary_stop', endSegNum));
+      return wps;
+    }
+
     const wps = [];
     wps.push({
       lat: trailPath[0].lat,
@@ -183,6 +224,35 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         const ele = (eleTxt && parseFloat(eleTxt) > 0) ? parseFloat(eleTxt) : null;
         const nameTxt = wpt.querySelector('name')?.textContent || `Waypoint ${i + 1}`;
         const descTxt = wpt.querySelector('desc')?.textContent || '';
+
+        if (isDrivingAudioTour) {
+          const role = i === 0 ? 'primary_start' : (i === wpts.length - 1 ? 'primary_stop' : 'secondary');
+          const segNum = String(i + 1).padStart(2, '0').slice(-2);
+          const segId = buildSegmentId(form.code, segNum) || '';
+          return {
+            lat: parseFloat(wpt.getAttribute('lat')),
+            lng: parseFloat(wpt.getAttribute('lon')),
+            waypoint_role: role,
+            segment_number: segNum,
+            segment_id: segId,
+            segment_title: nameTxt,
+            avg_segment_speed_kmh: null,
+            description: descTxt,
+            narration_script: '',
+            trigger_audio: false,
+            audio_clip_url: '',
+            trigger_radius_m: 150,
+            trigger_once: true,
+            use_bearing: false,
+            bearing_direction: 0,
+            bearing_tolerance: 30,
+            waypoint_colour: getRoleColour(role),
+            name: segId ? `${segId} — ${nameTxt}` : nameTxt,
+            type: role,
+            ...(ele !== null && !isNaN(ele) ? { elevation: Math.round(ele) } : {}),
+          };
+        }
+
         return {
           lat: parseFloat(wpt.getAttribute('lat')),
           lng: parseFloat(wpt.getAttribute('lon')),
@@ -295,14 +365,46 @@ export default function WalkEditor({ walk, onSave, onCancel }) {
         console.log('Course points found:', coursePoints.length);
         if (coursePoints.length > 0) console.log('First course point:', coursePoints[0]);
 
-        const waypoints = coursePoints.map((cp, i) => ({
-          lat: cp.position_lat || cp.positionLat,
-          lng: cp.position_long || cp.positionLong,
-          name: cp.name || `Waypoint ${i + 1}`,
-          description: cp.type ? `Type: ${cp.type}` : '',
-          type: 'landmark',
-          image_url: '',
-        })).filter(p => p.lat != null && p.lng != null);
+        const waypoints = coursePoints.map((cp, i) => {
+          const cpName = cp.name || `Waypoint ${i + 1}`;
+          const cpDesc = cp.type ? `Type: ${cp.type}` : '';
+
+          if (isDrivingAudioTour) {
+            const role = i === 0 ? 'primary_start' : (i === coursePoints.length - 1 ? 'primary_stop' : 'secondary');
+            const segNum = String(i + 1).padStart(2, '0').slice(-2);
+            const segId = buildSegmentId(form.code, segNum) || '';
+            return {
+              lat: cp.position_lat || cp.positionLat,
+              lng: cp.position_long || cp.positionLong,
+              waypoint_role: role,
+              segment_number: segNum,
+              segment_id: segId,
+              segment_title: cpName,
+              avg_segment_speed_kmh: null,
+              description: cpDesc,
+              narration_script: '',
+              trigger_audio: false,
+              audio_clip_url: '',
+              trigger_radius_m: 150,
+              trigger_once: true,
+              use_bearing: false,
+              bearing_direction: 0,
+              bearing_tolerance: 30,
+              waypoint_colour: getRoleColour(role),
+              name: segId ? `${segId} — ${cpName}` : cpName,
+              type: role,
+            };
+          }
+
+          return {
+            lat: cp.position_lat || cp.positionLat,
+            lng: cp.position_long || cp.positionLong,
+            name: cpName,
+            description: cpDesc,
+            type: 'landmark',
+            image_url: '',
+          };
+        }).filter(p => p.lat != null && p.lng != null);
 
         applyImportedData(trailPath, waypoints, elevations);
         });

@@ -42,7 +42,14 @@ export default function WalkDetail({ walk, onClose }) {
 
   if (!walk) return null;
 
-  const waypoints = walk.waypoints || [];
+  const isDrivingTour = walk.route_type === 'driving_audio_tour';
+
+  // For driving tours, only show primary_start and primary_stop waypoints to users.
+  // Secondary waypoints and all admin-only fields (triggers, bearing, audio, etc.)
+  // are never exposed in the user-facing UI.
+  const waypoints = isDrivingTour
+    ? (walk.waypoints || []).filter(wp => wp.waypoint_role === 'primary_start' || wp.waypoint_role === 'primary_stop')
+    : (walk.waypoints || []);
 
   return (
     <AnimatePresence>
@@ -177,12 +184,25 @@ export default function WalkDetail({ walk, onClose }) {
 
             {waypoints.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Key Points</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {isDrivingTour ? 'Tour Stops' : 'Key Points'}
+                </h3>
 
                 <div className="space-y-2">
                   {waypoints.map((waypoint, index) => {
                     const config = waypointIcons[waypoint.type] || waypointIcons.landmark;
                     const Icon = config.icon;
+
+                    // For driving tours, use role-based styling
+                    const roleConfig = isDrivingTour ? {
+                      primary_start: { icon: Navigation, color: 'text-green-600', bg: 'bg-green-100', label: 'Start' },
+                      primary_stop: { icon: MapPin, color: 'text-red-600', bg: 'bg-red-100', label: 'Stop' },
+                    }[waypoint.waypoint_role] : null;
+                    const displayIcon = roleConfig ? roleConfig.icon : Icon;
+                    const displayBg = roleConfig ? roleConfig.bg : config.bg;
+                    const displayColor = roleConfig ? roleConfig.color : config.color;
+                    const displayName = isDrivingTour ? (waypoint.segment_title || waypoint.name) : waypoint.name;
+                    const displayLabel = roleConfig ? roleConfig.label : (waypoint.type ? waypoint.type.replace('_', ' ') : null);
 
                     return (
                       <motion.div
@@ -196,19 +216,19 @@ export default function WalkDetail({ walk, onClose }) {
                             : 'bg-gray-50'
                         }`}
                       >
-                        <div className={`p-2 rounded-lg ${config.bg}`}>
-                          <Icon className={`w-4 h-4 ${config.color}`} />
+                        <div className={`p-2 rounded-lg ${displayBg}`}>
+                          <displayIcon className={`w-4 h-4 ${displayColor}`} />
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-gray-900">
-                              {waypoint.name}
+                              {displayName}
                             </span>
 
-                            {waypoint.type && (
+                            {displayLabel && (
                               <Badge variant="outline" className="text-xs capitalize">
-                                {waypoint.type.replace('_', ' ')}
+                                {displayLabel}
                               </Badge>
                             )}
                           </div>
@@ -222,7 +242,7 @@ export default function WalkDetail({ walk, onClose }) {
                           {waypoint.image_url && (
                             <img
                               src={waypoint.image_url}
-                              alt={waypoint.name}
+                              alt={displayName}
                               className="mt-2 w-full max-w-xs h-32 object-cover rounded-lg border"
                             />
                           )}

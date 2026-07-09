@@ -50,9 +50,22 @@ function FitBoundsToTrail({ trailPath, waypoints }) {
   return null;
 }
 
+const drivingRoleConfig = {
+  primary_start: { color: '#22c55e', icon: '🚩', label: 'Start' },
+  primary_stop: { color: '#ef4444', icon: '🏁', label: 'Stop' },
+  secondary: { color: '#3b82f6', icon: '📍', label: 'Point' },
+};
+
 export default function WalkDetailMap({ walk, followGps = false }) {
   const trailPath = walk.trail_path || [];
-  const waypoints = walk.waypoints || [];
+  const isDrivingTour = walk.route_type === 'driving_audio_tour';
+
+  // For driving tours, only show primary_start and primary_stop markers on the user-facing map.
+  // Secondary waypoints are used internally for audio triggering only.
+  const allWaypoints = walk.waypoints || [];
+  const waypoints = isDrivingTour
+    ? allWaypoints.filter(wp => wp.waypoint_role === 'primary_start' || wp.waypoint_role === 'primary_stop')
+    : allWaypoints;
 
   const center = trailPath.length > 0
     ? [trailPath[0].lat, trailPath[0].lng]
@@ -84,11 +97,28 @@ export default function WalkDetailMap({ walk, followGps = false }) {
         />
       )}
 
-      {waypoints.map((wp, i) => (
+      {waypoints.map((wp, i) => {
+        const roleConfig = isDrivingTour
+          ? (drivingRoleConfig[wp.waypoint_role] || drivingRoleConfig.secondary)
+          : null;
+        const iconConfig = roleConfig
+          ? { color: roleConfig.color, icon: roleConfig.icon }
+          : (waypointConfig[wp.type] || waypointConfig.landmark);
+        const wpIcon = L.divIcon({
+          className: 'custom-waypoint-marker',
+          html: `<div style="width:32px;height:32px;border-radius:50%;background:${iconConfig.color};display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${iconConfig.icon}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        });
+        const wpLabel = roleConfig ? roleConfig.label : (waypointConfig[wp.type]?.label || wp.type);
+        const wpColor = iconConfig.color;
+        const wpName = isDrivingTour ? (wp.segment_title || wp.name) : wp.name;
+
+        return (
         <Marker
           key={i}
           position={[wp.lat, wp.lng]}
-          icon={createWaypointIcon(wp.type)}
+          icon={wpIcon}
         >
           <Popup minWidth={160} maxWidth={220}>
             <div style={{ textAlign: 'center', padding: '4px' }}>
@@ -100,14 +130,14 @@ export default function WalkDetailMap({ walk, followGps = false }) {
                   padding: '2px 8px',
                   borderRadius: '9999px',
                   color: 'white',
-                  backgroundColor: waypointConfig[wp.type]?.color || '#6366f1',
+                  backgroundColor: wpColor,
                 }}
               >
-                {waypointConfig[wp.type]?.label || wp.type}
+                {wpLabel}
               </span>
 
               <p style={{ fontWeight: '600', marginTop: '6px', marginBottom: 0 }}>
-                {wp.name}
+                {wpName}
               </p>
 
               {wp.description && (
@@ -119,7 +149,7 @@ export default function WalkDetailMap({ walk, followGps = false }) {
               {wp.image_url && (
                 <img
                   src={wp.image_url}
-                  alt={wp.name}
+                  alt={wpName}
                   style={{
                     marginTop: '8px',
                     borderRadius: '6px',
@@ -133,7 +163,8 @@ export default function WalkDetailMap({ walk, followGps = false }) {
             </div>
           </Popup>
         </Marker>
-      ))}
+        );
+      })}
 
       <LiveGpsMarker followUser={followGps} />
     </MapContainer>
