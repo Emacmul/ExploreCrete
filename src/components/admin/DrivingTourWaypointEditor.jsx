@@ -405,7 +405,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                       className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 touch-none"
                       title="Drag to reorder"
                     >
-                      <GripVertical className="w-4 h-4" />
+                      <GripVertical className="w-5 h-5" />
                     </div>
                   )}
                   <span

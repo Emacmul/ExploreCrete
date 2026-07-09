@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, ChevronDown, ChevronUp, Info, ImagePlus, Loader2, X, ArrowUp, ArrowDown, Upload, FileCheck, Save } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Info, ImagePlus, Loader2, X, GripVertical, Upload, FileCheck, Save } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { base44 } from '@/api/base44Client';
 
 const WAYPOINT_TYPES = [
@@ -99,13 +100,12 @@ export default function WaypointEditor({ waypoints, onChange, onSave, saving }) 
     onChange(updated);
   };
 
-  const moveWaypoint = (index, direction) => {
+  const onDragEnd = (result) => {
+    if (!result.destination || result.destination.index === result.source.index) return;
     const updated = [...waypoints];
-    const target = index + direction;
-    if (target < 0 || target >= updated.length) return;
-    [updated[index], updated[target]] = [updated[target], updated[index]];
+    const [moved] = updated.splice(result.source.index, 1);
+    updated.splice(result.destination.index, 0, moved);
     onChange(updated);
-    // Keep the expanded block closed — don't change expanded state
   };
 
   const [uploadingIndex, setUploadingIndex] = useState(null); // null = new form, number = existing index
@@ -292,31 +292,31 @@ export default function WaypointEditor({ waypoints, onChange, onSave, saving }) 
           No key points yet. Add important places above.
         </div>
       ) : (
-        <div className="space-y-2">
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="waypoints">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
           {waypoints.map((wp, index) => {
             const typeInfo = WAYPOINT_TYPES.find(t => t.value === wp.type);
             return (
-              <div key={index} className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
+              <Draggable key={index} draggableId={`wp-${index}`} index={index}>
+                {(dragProvided, snapshot) => (
+              <div
+                ref={dragProvided.innerRef}
+                {...dragProvided.draggableProps}
+                className={`bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden ${snapshot.isDragging ? 'shadow-2xl shadow-amber-900/50 ring-2 ring-amber-500' : ''}`}
+              >
                 <div
                   className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-slate-700/80"
                   onClick={() => setExpanded(expanded === index ? null : index)}
                 >
-                  {/* Order controls */}
-                  <div className="flex flex-col gap-0.5" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={() => moveWaypoint(index, -1)}
-                      disabled={index === 0}
-                      className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
-                    >
-                      <ArrowUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => moveWaypoint(index, 1)}
-                      disabled={index === waypoints.length - 1}
-                      className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
-                    >
-                      <ArrowDown className="w-3.5 h-3.5" />
-                    </button>
+                  <div
+                    {...dragProvided.dragHandleProps}
+                    onClick={e => e.stopPropagation()}
+                    className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 touch-none"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="w-5 h-5" />
                   </div>
                   <span className="text-xs text-slate-600 font-mono w-5 text-center">{index + 1}</span>
                   <span className="text-sm">{typeInfo?.label.split(' ')[0]}</span>
@@ -443,10 +443,16 @@ export default function WaypointEditor({ waypoints, onChange, onSave, saving }) 
                   </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+                )}
+              </Draggable>
+              );
+              })}
+                {provided.placeholder}
+              </div>
+              )}
+              </Droppable>
+              </DragDropContext>
+              )}
+              </div>
+              );
+              }
