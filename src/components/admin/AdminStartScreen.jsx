@@ -152,7 +152,7 @@ export default function AdminStartScreen({ userRole, walks, onNewTour, onContinu
             <Button variant="outline" onClick={onManageWalks} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 gap-2 h-auto py-3 justify-start">
               <List className="w-5 h-5 text-blue-400" />
               <div className="text-left">
-                <p className="font-medium">Manage Walks</p>
+                <p className="font-medium">Manage Tours</p>
                 <p className="text-xs text-slate-400">All tours</p>
               </div>
             </Button>

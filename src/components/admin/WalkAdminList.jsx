@@ -16,6 +16,7 @@ const difficultyColors = {
 
 export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelete, onVouchers }) {
   const [confirmDelete, setConfirmDelete] = React.useState(null); // holds the walk object
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const [sendingEmail, setSendingEmail] = React.useState(null);
   const [emailSent, setEmailSent] = React.useState({});
 
@@ -30,18 +31,25 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
     setConfirmDelete(walk);
   };
 
-  const confirmDeleteWalk = () => {
+  const confirmDeleteWalk = async () => {
     const id = confirmDelete?.id;
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(id);
+    } catch (e) {
+      console.error('Delete failed:', e);
+    }
+    setIsDeleting(false);
     setConfirmDelete(null);
-    if (id) onDelete(id);
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6 mt-2">
         <div>
-          <h2 className="text-xl font-bold text-white">Walks</h2>
-          <p className="text-slate-400 text-sm">{walks.length} walks in database</p>
+          <h2 className="text-xl font-bold text-white">Tours</h2>
+          <p className="text-slate-400 text-sm">{walks.length} tours in database</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -167,7 +175,12 @@ export default function WalkAdminList({ walks, isLoading, onNew, onEdit, onDelet
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteWalk} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDeleteWalk(); }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
               Yes, delete tour
             </AlertDialogAction>
           </AlertDialogFooter>
