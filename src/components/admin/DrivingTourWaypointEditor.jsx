@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Plus, Trash2, ChevronDown, ChevronUp, Info, Loader2,
-  Upload, FileCheck, Save, Flag, Square, Circle, ArrowUp, ArrowDown, Lock,
+  Upload, FileCheck, Save, Flag, Square, Circle, GripVertical,
 } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getRoleColour, getRoleLabel, buildSegmentId } from '@/lib/routeExport';
 import AudioTriggerFields from './AudioTriggerFields';
 import SimpleAudioUpload from './SimpleAudioUpload';
@@ -153,11 +154,11 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
     onChange(updated);
   };
 
-  const moveWaypoint = (index, direction) => {
+  const onDragEnd = (result) => {
+    if (!result.destination || result.destination.index === result.source.index) return;
     const updated = [...waypoints];
-    const target = index + direction;
-    if (target < 0 || target >= updated.length) return;
-    [updated[index], updated[target]] = [updated[target], updated[index]];
+    const [moved] = updated.splice(result.source.index, 1);
+    updated.splice(result.destination.index, 0, moved);
     onChange(updated);
   };
 
@@ -379,31 +380,32 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           {isNarrator ? 'No waypoints assigned to this tour yet.' : 'No waypoints yet. Add tour points above.'}
         </div>
       ) : (
-        <div className="space-y-2">
-          {waypoints.map((wp, index) => {
-            const colour = wp.waypoint_colour || autoColour(wp.waypoint_role);
-            return (
-              <div key={index} className="bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden">
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="waypoints">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+           {waypoints.map((wp, index) => {
+             const colour = wp.waypoint_colour || autoColour(wp.waypoint_role);
+             return (
+              <Draggable key={index} draggableId={`wp-${index}`} index={index} isDragDisabled={isNarrator}>
+                {(dragProvided, snapshot) => (
+              <div
+                ref={dragProvided.innerRef}
+                {...dragProvided.draggableProps}
+                className={`bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden ${snapshot.isDragging ? 'shadow-2xl shadow-purple-900/50 ring-2 ring-purple-500' : ''}`}
+              >
                 <div
                   className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-slate-700/80"
                   onClick={() => setExpanded(expanded === index ? null : index)}
                 >
                   {!isNarrator && (
-                    <div className="flex flex-col gap-0.5" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveWaypoint(index, -1)}
-                        disabled={index === 0}
-                        className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => moveWaypoint(index, 1)}
-                        disabled={index === waypoints.length - 1}
-                        className="p-0.5 text-slate-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
+                    <div
+                      {...dragProvided.dragHandleProps}
+                      onClick={e => e.stopPropagation()}
+                      className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 touch-none"
+                      title="Drag to reorder"
+                    >
+                      <GripVertical className="w-4 h-4" />
                     </div>
                   )}
                   <span
@@ -585,10 +587,16 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                   </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+                )}
+              </Draggable>
+              );
+              })}
+                {provided.placeholder}
+              </div>
+              )}
+              </Droppable>
+              </DragDropContext>
+              )}
+              </div>
+              );
+              }
