@@ -16,6 +16,8 @@ import { isWalkOutdated, saveWalkOffline, preCacheWalkTiles } from '../component
 import SplashScreen from '../components/onboarding/SplashScreen';
 import RegistrationForm from '../components/onboarding/RegistrationForm';
 import RedeemCode from '../components/walks/RedeemCode';
+import TourCategoryPicker from '../components/walks/TourCategoryPicker';
+import { getTourCategory } from '../lib/tourCategories';
 import NewWalkAnnouncementModal, { getUnseenAnnouncement } from '../components/walks/NewWalkAnnouncementModal';
 
 export default function Home() {
@@ -29,6 +31,7 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splash_seen'));
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [newWalkAnnouncement, setNewWalkAnnouncement] = useState(null);
+  const [selectedTourCategory, setSelectedTourCategory] = useState(() => sessionStorage.getItem('tour_category'));
 
   const { getAllOfflineWalks } = useOfflineWalks();
   const offlineCount = getAllOfflineWalks().length;
@@ -142,6 +145,25 @@ export default function Home() {
     base44.auth.logout();
   };
 
+  const handleCategorySelect = (code) => {
+    sessionStorage.setItem('tour_category', code);
+    setSelectedTourCategory(code);
+    setSelectedWalk(null);
+    setShowDetail(false);
+  };
+
+  const handleChangeCategory = () => {
+    sessionStorage.removeItem('tour_category');
+    setSelectedTourCategory(null);
+    setSelectedWalk(null);
+    setShowDetail(false);
+  };
+
+  const accessibleWalks = getAccessibleWalks(walks);
+  const categoryWalks = selectedTourCategory
+    ? accessibleWalks.filter(w => w.tour_category === selectedTourCategory)
+    : accessibleWalks;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-amber-50 flex items-center justify-center">
@@ -159,6 +181,12 @@ export default function Home() {
         user={user}
         onComplete={() => setRegistrationComplete(true)}
       />
+    );
+  }
+
+  if (registrationComplete && !showSplash && !selectedTourCategory) {
+    return (
+      <TourCategoryPicker onSelect={handleCategorySelect} />
     );
   }
 
@@ -200,6 +228,18 @@ export default function Home() {
               <User className="w-4 h-4" />
               <span>{user?.full_name || user?.email}</span>
             </div>
+
+            {selectedTourCategory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleChangeCategory}
+                className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                <span className="font-mono text-xs font-bold">{selectedTourCategory}</span>
+                <span className="hidden sm:inline">Change</span>
+              </Button>
+            )}
 
             <Link to={createPageUrl('MyWalks')}>
               <Button variant="outline" size="sm" className="gap-2 border-green-300 text-green-700 hover:bg-green-50 relative">
@@ -249,7 +289,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-180px)]">
           <div className="lg:col-span-1 h-full">
             <WalkList
-              walks={getAccessibleWalks(walks)}
+              walks={categoryWalks}
               selectedWalk={selectedWalk}
               onWalkSelect={handleWalkSelect}
               searchQuery={searchQuery}
@@ -287,7 +327,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <CreteMap
-                        walks={getAccessibleWalks(walks)}
+                        walks={categoryWalks}
                         selectedWalk={selectedWalk}
                         onWalkSelect={handleWalkSelect}
                         onMapClick={handleMapClick}

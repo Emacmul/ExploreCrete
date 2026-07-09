@@ -9,6 +9,7 @@ import WalkEditor from '../components/admin/WalkEditor';
 import WalkAdminList from '../components/admin/WalkAdminList';
 import VoucherManager from '../components/admin/VoucherManager';
 import WalksDashboard from '../components/admin/WalksDashboard';
+import { getRouteTypeForCategory } from '@/lib/tourCategories';
 
 export default function Admin() {
   const [user, setUser] = useState(null);
@@ -147,7 +148,7 @@ export default function Admin() {
           <WalkAdminList
             walks={walks}
             isLoading={walksLoading}
-            onNew={() => setEditingWalk({})}
+            onNew={(categoryCode) => setEditingWalk({ tour_category: categoryCode, route_type: getRouteTypeForCategory(categoryCode) })}
             onEdit={(walk) => setEditingWalk(walk)}
             onDelete={handleDelete}
             onVouchers={(walk) => setVoucherWalk(walk)}

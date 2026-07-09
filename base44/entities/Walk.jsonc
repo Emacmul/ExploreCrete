@@ -2,6 +2,16 @@
   "name": "Walk",
   "type": "object",
   "properties": {
+    "tour_category": {
+      "type": "string",
+      "enum": [
+        "WHT",
+        "WBT",
+        "DDV"
+      ],
+      "default": "WHT",
+      "description": "Tour category: WHT=Walking/Hiking Tour, WBT=Walkabout Tour, DDV=Driving Tour"
+    },
     "route_type": {
       "type": "string",
       "enum": [
@@ -9,7 +19,7 @@
         "driving_audio_tour"
       ],
       "default": "walk",
-      "description": "Walking Route or Driving Audio Tour"
+      "description": "Internal editor type: walk for WHT, driving_audio_tour for WBT and DDV"
     },
     "code": {
       "type": "string",

@@ -18,6 +18,7 @@ import { validateDrivingTour, generateGpx, generateKml, downloadTextFile, buildS
 const DEFAULT_INTERESTS = ['Wild Flowers', 'History', 'Mythology', 'Archaeology', 'Photography', 'Routes of Faith'];
 
 const EMPTY_WALK = {
+  tour_category: 'WHT', // WHT | WBT | DDV
   route_type: 'walk', // 'walk' | 'driving_audio_tour'
   code: '',
   name: '',
