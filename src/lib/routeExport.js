@@ -32,9 +32,9 @@ export function getRoleLabel(role) {
  */
 export function buildSegmentId(tourCode, segmentNumber) {
   const code = (tourCode || '').trim().toUpperCase();
-  const num = String(segmentNumber || '').padStart(2, '0').slice(-2);
+  const num = parseInt(String(segmentNumber || ''), 10);
   if (!/^[A-Z]{3}$/.test(code)) return null;
-  if (!/^\d{2}$/.test(num)) return null;
+  if (isNaN(num) || num < 1) return null;
   return `${code}${num}`;
 }
 

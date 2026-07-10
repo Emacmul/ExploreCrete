@@ -28,7 +28,7 @@ const EMPTY_WP = {
   waypoint_role: 'secondary',
   segment_number: '',
   segment_title: '',
-  avg_segment_speed_kmh: '',
+  avg_segment_speed_kmh: 50,
   description: '',
   narration_script: '',
   trigger_audio: false,
@@ -328,7 +328,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           segment_number: segNum,
           segment_id: segId,
           segment_title: pt.name || `Segment ${segNum}`,
-          avg_segment_speed_kmh: null,
+          avg_segment_speed_kmh: isPS ? 50 : null,
           description: '',
           narration_script: '',
           trigger_audio: false,
@@ -360,7 +360,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           <span>
             {isNarrator
               ? 'Edit narration scripts and audio triggers for each waypoint below. All other fields are managed by the admin.'
-              : `Define Primary-Start, Primary-Stop and Secondary points. Segment IDs are built from the Tour Code (${tourCode || '—'}) + a 2-digit number.`}
+              : `Define Primary-Start, Primary-Stop and Secondary points. Location IDs are built from the Tour Code (${tourCode || '—'}) + the segment number (e.g. BRZ1, BRZ2).`}
           </span>
         </div>
       </div>
@@ -437,9 +437,9 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-slate-400 text-xs mb-1 block">Segment Number (01–99)</Label>
+                  <Label className="text-slate-400 text-xs mb-1 block">Segment Number</Label>
                   <Input
-                    type="number" min="1" max="99"
+                    type="number" min="1"
                     value={newWp.segment_number}
                     onChange={e => setNewWp(p => ({ ...p, segment_number: e.target.value }))}
                     placeholder={nextSegmentNumber()}
@@ -462,13 +462,13 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                 <div>
                   <Label className="text-slate-400 text-xs mb-1 block">
                     Average Segment Speed (km/h) *
-                    <span className="ml-1 text-purple-400">Required for Primary-Start</span>
+                    <span className="ml-1 text-purple-400">Required for Primary-Start · defaults to 50</span>
                   </Label>
                   <Input
                     type="number" step="0.1"
                     value={newWp.avg_segment_speed_kmh}
                     onChange={e => setNewWp(p => ({ ...p, avg_segment_speed_kmh: e.target.value }))}
-                    placeholder="e.g. 45"
+                    placeholder="50"
                     className="bg-slate-700 border-slate-500 text-white"
                   />
                 </div>
@@ -681,7 +681,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           <div>
                             <Label className="text-slate-400 text-xs mb-1 block">Segment Number</Label>
                             <Input
-                              type="number" min="1" max="99"
+                              type="number" min="1"
                               value={wp.segment_number || ''}
                               onChange={e => updateWaypoint(index, 'segment_number', e.target.value)}
                               className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
