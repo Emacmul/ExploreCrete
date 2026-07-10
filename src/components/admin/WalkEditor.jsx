@@ -214,15 +214,12 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' 
       const trkpts = Array.from(doc.querySelectorAll('trkpt'));
       const rtepts = Array.from(doc.querySelectorAll('rtept'));
       const wpts = Array.from(doc.querySelectorAll('wpt'));
-      const pts = trkpts.length > 0 ? trkpts : rtepts.length > 0 ? rtepts : wpts;
 
-      const trailPath = pts.map(pt => ({
-        lat: parseFloat(pt.getAttribute('lat')),
-        lng: parseFloat(pt.getAttribute('lon')),
-      })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
-
-      // Sort waypoints by naming convention: XXX<segment><letter>[-PS] before assigning roles/segments
-      const sortedWpts = [...wpts].sort((a, b) => {
+      // Sort waypoints by naming convention (XXX<segment><letter>[-PS]) so that
+      // BOTH the route line and the waypoint list follow the correct sequence
+      // (1a, 1b, 1c, 2a, 2b, ...). This prevents the route from being drawn in
+      // GPX file order, which may differ from the intended tour sequence.
+      wpts.sort((a, b) => {
         const na = a.querySelector('name')?.textContent?.trim() || '';
         const nb = b.querySelector('name')?.textContent?.trim() || '';
         const ka = na.match(/^\D*(\d+)([a-z])/);
@@ -237,7 +234,14 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' 
         return 0;
       });
 
-      const waypoints = sortedWpts.map((wpt, i) => {
+      const pts = trkpts.length > 0 ? trkpts : rtepts.length > 0 ? rtepts : wpts;
+
+      const trailPath = pts.map(pt => ({
+        lat: parseFloat(pt.getAttribute('lat')),
+        lng: parseFloat(pt.getAttribute('lon')),
+      })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+
+      const waypoints = wpts.map((wpt, i) => {
         const eleTxt = wpt.querySelector('ele')?.textContent;
         const ele = (eleTxt && parseFloat(eleTxt) > 0) ? parseFloat(eleTxt) : null;
         const nameTxt = wpt.querySelector('name')?.textContent || `Waypoint ${i + 1}`;

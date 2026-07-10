@@ -44,11 +44,12 @@ export default function WalkDetail({ walk, onClose }) {
 
   const isDrivingTour = walk.route_type === 'driving_audio_tour';
 
-  // For driving tours, only show primary_start and primary_stop waypoints to users.
-  // Secondary waypoints and all admin-only fields (triggers, bearing, audio, etc.)
-  // are never exposed in the user-facing UI.
+  // For driving tours, only show primary_start (the -PS segment-start points) to users.
+  // Secondary waypoints are used internally for audio triggering only and are never
+  // exposed in the user-facing UI. The route line still follows the full waypoint
+  // sequence via trail_path.
   const waypoints = isDrivingTour
-    ? (walk.waypoints || []).filter(wp => wp.waypoint_role === 'primary_start' || wp.waypoint_role === 'primary_stop')
+    ? (walk.waypoints || []).filter(wp => wp.waypoint_role === 'primary_start')
     : (walk.waypoints || []);
 
   return (

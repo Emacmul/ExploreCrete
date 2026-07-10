@@ -60,11 +60,13 @@ export default function WalkDetailMap({ walk, followGps = false }) {
   const trailPath = walk.trail_path || [];
   const isDrivingTour = walk.route_type === 'driving_audio_tour';
 
-  // For driving tours, only show primary_start and primary_stop markers on the user-facing map.
-  // Secondary waypoints are used internally for audio triggering only.
+  // For driving tours, only show primary_start markers (the -PS segment-start points)
+  // on the user-facing map. Secondary waypoints are used internally for audio
+  // triggering only. The route line (Polyline) follows trail_path which preserves
+  // the full sorted waypoint sequence.
   const allWaypoints = walk.waypoints || [];
   const waypoints = isDrivingTour
-    ? allWaypoints.filter(wp => wp.waypoint_role === 'primary_start' || wp.waypoint_role === 'primary_stop')
+    ? allWaypoints.filter(wp => wp.waypoint_role === 'primary_start')
     : allWaypoints;
 
   const center = trailPath.length > 0
