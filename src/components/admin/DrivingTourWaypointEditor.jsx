@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Plus, Trash2, ChevronDown, ChevronUp, Info, Loader2,
-  Upload, FileCheck, Save, Flag, Square, Circle, GripVertical, Play,
+  Upload, FileCheck, Save, Flag, Square, Circle, GripVertical, Play, Compass,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getRoleColour, getRoleLabel, buildSegmentId } from '@/lib/routeExport';
@@ -14,6 +14,7 @@ import AudioTriggerFields from './AudioTriggerFields';
 import SimpleAudioUpload from './SimpleAudioUpload';
 import TourSimulator from './TourSimulator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 
 const ROLES = [
   { value: 'primary_start', label: 'Primary-Start', icon: Flag },
@@ -32,7 +33,7 @@ const EMPTY_WP = {
   narration_script: '',
   trigger_audio: false,
   audio_clip_url: '',
-  trigger_radius_m: 150,
+  trigger_radius_m: 30,
   trigger_once: true,
   use_bearing: false,
   bearing_direction: 0,
@@ -131,6 +132,26 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       return () => clearTimeout(timer);
     }
   }, [focusWaypointIndex]);
+
+  // Auto-fill missing segment_number and segment_id on mount
+  useEffect(() => {
+    if (!waypoints || waypoints.length === 0) return;
+    const needsUpdate = waypoints.some(wp => !wp.segment_number || (!wp.segment_id && wp.segment_number));
+    if (!needsUpdate) return;
+    let nextSeg = 1;
+    const updated = waypoints.map(wp => {
+      let segNum = wp.segment_number;
+      if (!segNum) {
+        segNum = String(nextSeg).padStart(2, '0');
+        nextSeg++;
+      } else {
+        nextSeg = Math.max(nextSeg, parseInt(segNum, 10) + 1);
+      }
+      const segId = wp.segment_id || buildSegmentId(tourCode, segNum) || '';
+      return { ...wp, segment_number: segNum, segment_id: segId };
+    });
+    onChange(updated);
+  }, []);
 
   const nextSegmentNumber = () => {
     const used = waypoints
@@ -284,7 +305,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           narration_script: '',
           trigger_audio: false,
           audio_clip_url: '',
-          trigger_radius_m: 150,
+          trigger_radius_m: 30,
           trigger_once: true,
           use_bearing: false,
           bearing_direction: 0,
@@ -658,8 +679,62 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                         {/* Simple audio upload for admin (no trigger config) */}
                         <SimpleAudioUpload
                           audioUrl={wp.audio_clip_url}
-                          onChange={(field, value) => updateWaypoint(index, field, value)}
+                          onChange={(field, value) => {
+                            updateWaypoint(index, field, value);
+                            if (field === 'audio_clip_url' && value) {
+                              updateWaypoint(index, 'trigger_audio', true);
+                            }
+                          }}
                         />
+
+                        {/* Audio activation radius and bearing */}
+                        <div className="bg-slate-800/50 rounded-lg border border-red-600/30 p-3 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Compass className="w-4 h-4 text-red-400" />
+                            <Label className="text-slate-300 text-sm font-medium">Audio Activation Radius & Bearing</Label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-slate-400 text-xs mb-1 block">Trigger Radius (m)</Label>
+                              <Input
+                                type="number" min="10" max="2000" step="5"
+                                value={wp.trigger_radius_m ?? 30}
+                                onChange={e => updateWaypoint(index, 'trigger_radius_m', e.target.value === '' ? 30 : Number(e.target.value))}
+                                className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-slate-400 text-xs mb-1 block">Bearing Direction (0–359°)</Label>
+                              <Input
+                                type="number" min="0" max="359"
+                                value={wp.bearing_direction ?? 0}
+                                onChange={e => updateWaypoint(index, 'bearing_direction', e.target.value === '' ? 0 : Math.max(0, Math.min(359, Number(e.target.value))))}
+                                className="bg-slate-700 border-slate-500 text-white h-8 text-sm font-mono"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-slate-400 text-xs mb-1 block">Bearing Tolerance (°)</Label>
+                              <Input
+                                type="number" min="0" max="180"
+                                value={wp.bearing_tolerance ?? 30}
+                                onChange={e => updateWaypoint(index, 'bearing_tolerance', e.target.value === '' ? 30 : Math.max(0, Math.min(180, Number(e.target.value))))}
+                                className="bg-slate-700 border-slate-500 text-white h-8 text-sm font-mono"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between pt-4">
+                              <Label className="text-slate-400 text-xs">Use Bearing</Label>
+                              <Switch
+                                checked={wp.use_bearing ?? false}
+                                onCheckedChange={v => updateWaypoint(index, 'use_bearing', v)}
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Radius and bearing are also editable in the simulator — drag the white arrow to rotate bearing, drag the circle edge to resize radius.
+                          </p>
+                        </div>
                       </>
                     )}
 
@@ -685,10 +760,11 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                   <Button
                     disabled={!isSegmentTestable(segGroup)}
                     onClick={() => setTestSegment({
-                      title: segGroup.waypoints[0]?.segment_title || `Segment ${wp.segment_number}`,
-                      trailPath: segGroup.waypoints.map(p => ({ lat: p.lat, lng: p.lng })),
-                      waypoints: segGroup.waypoints.map(p => ({ ...p, trigger_audio: true })),
-                    })}
+                       startIndex: segGroup.startIndex,
+                       title: segGroup.waypoints[0]?.segment_title || `Segment ${wp.segment_number}`,
+                       trailPath: segGroup.waypoints.map(p => ({ lat: p.lat, lng: p.lng })),
+                       waypoints: segGroup.waypoints.map(p => ({ ...p, trigger_audio: true })),
+                     })}
                     title={isSegmentTestable(segGroup)
                       ? 'Test this segment in the simulator'
                       : 'Segment needs a Primary-Start and audio on every point before testing'}
@@ -719,6 +795,9 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                       trail_path: testSegment.trailPath,
                       waypoints: testSegment.waypoints,
                       code: tourCode,
+                    }} onWaypointUpdate={(idx, field, value) => {
+                      const origIdx = (testSegment.startIndex || 0) + idx;
+                      updateWaypoint(origIdx, field, value);
                     }} />
                   </DialogContent>
                 </Dialog>

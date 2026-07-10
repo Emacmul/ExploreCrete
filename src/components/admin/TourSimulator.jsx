@@ -54,7 +54,7 @@ function fmtTime(ms) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-export default function TourSimulator({ form }) {
+export default function TourSimulator({ form, onWaypointUpdate }) {
   const trailPath = form.trail_path || [];
   const waypoints = (form.waypoints || []).filter(wp => wp.lat && wp.lng);
 
@@ -81,6 +81,17 @@ export default function TourSimulator({ form }) {
   const tickRef = useRef(null);
   const autoSpeedRef = useRef(true);
   const passedSegmentsRef = useRef(new Set());
+  const audioQueueRef = useRef([]);
+  const handleAudioEndedRef = useRef(null);
+  handleAudioEndedRef.current = () => {
+    if (audioQueueRef.current.length > 0) {
+      const next = audioQueueRef.current.shift();
+      if (audioRef.current) {
+        audioRef.current.src = next;
+        audioRef.current.play().catch(() => {});
+      }
+    }
+  };
 
   const pathData = useMemo(() => buildPath(trailPath), [trailPath]);
   const speedZones = useMemo(() => {
@@ -100,6 +111,7 @@ export default function TourSimulator({ form }) {
     simTimeRef.current = 0;
     triggeredRef.current = {};
     passedSegmentsRef.current = new Set();
+    audioQueueRef.current = [];
     setDistTraveled(0);
     setSimTime(0);
     setTriggered({});
@@ -119,6 +131,14 @@ export default function TourSimulator({ form }) {
 
   useEffect(() => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const handler = () => handleAudioEndedRef.current();
+    audio.addEventListener('ended', handler);
+    return () => audio.removeEventListener('ended', handler);
   }, []);
 
   tickRef.current = () => {
@@ -146,7 +166,7 @@ export default function TourSimulator({ form }) {
       if (wp.trigger_once !== false && triggeredRef.current[i]) return;
 
       const d = haversine(newPos.lat, newPos.lng, wp.lat, wp.lng);
-      const radius = Number(wp.trigger_radius_m) || 150;
+      const radius = Number(wp.trigger_radius_m) || 30;
       if (d > radius) return;
 
       if (wp.use_bearing && prevPosRef.current) {
@@ -160,8 +180,12 @@ export default function TourSimulator({ form }) {
       triggeredRef.current[i] = true;
       const wasPlaying = audioRef.current && !audioRef.current.paused;
       if (audioRef.current) {
-        audioRef.current.src = wp.audio_clip_url;
-        audioRef.current.play().catch(() => {});
+        if (wasPlaying) {
+          audioQueueRef.current.push(wp.audio_clip_url);
+        } else {
+          audioRef.current.src = wp.audio_clip_url;
+          audioRef.current.play().catch(() => {});
+        }
       }
       setTriggered({ ...triggeredRef.current });
       setTriggerLog(prev => [...prev, {
@@ -388,6 +412,7 @@ export default function TourSimulator({ form }) {
           waypoints={waypoints}
           triggered={triggered}
           currentPos={currentPos}
+          onWaypointUpdate={onWaypointUpdate}
         />
       </div>
 

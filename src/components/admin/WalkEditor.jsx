@@ -982,7 +982,12 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin',
             {isDrivingAudioTour && (
               <>
                 <DrivingTourExportPanel form={form} />
-                <TourSimulator form={form} />
+                <TourSimulator form={form} onWaypointUpdate={(index, field, value) => {
+                  const updated = form.waypoints.map((wp, i) =>
+                    i === index ? { ...wp, [field]: value } : wp
+                  );
+                  set('waypoints', updated);
+                }} />
               </>
             )}
             <SaveButton onSave={handleSave} saving={saving} />
