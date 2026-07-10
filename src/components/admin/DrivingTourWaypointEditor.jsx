@@ -100,8 +100,8 @@ function sortWaypointsByName(points) {
  */
 function parseLocationPrefix(wp) {
   const source = wp.segment_id || wp.name || '';
-  const m = source.match(/^([A-Z]{3}\d+)/);
-  return m ? m[1] : null;
+  const m = source.match(/^([A-Z]{3})0*(\d+)/);
+  return m ? `${m[1]}${parseInt(m[2], 10)}` : null;
 }
 
 export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin', focusWaypointIndex }) {
