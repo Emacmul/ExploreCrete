@@ -582,10 +582,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                       <>
                         {/* Read-only context for narrators */}
                         <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-slate-400 text-xs mb-1 block">Location ID</Label>
-                            <Input value={wp.segment_id || buildSegmentId(tourCode, wp.segment_number) || ''} readOnly className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm" />
-                          </div>
+
                           <div>
                             <Label className="text-slate-400 text-xs mb-1 block">Role</Label>
                             <Input value={getRoleLabel(wp.waypoint_role)} readOnly className="bg-slate-800 border-slate-600 text-slate-400 h-8 text-sm" />
@@ -685,14 +682,6 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                               className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
                             />
                           </div>
-                        </div>
-                        <div>
-                          <Label className="text-slate-400 text-xs mb-1 block">Location ID</Label>
-                          <Input
-                            value={wp.segment_id || buildSegmentId(tourCode, wp.segment_number) || ''}
-                            readOnly
-                            className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm"
-                          />
                         </div>
                         <div>
                           <Label className="text-slate-400 text-xs mb-1 block">Location Title</Label>
