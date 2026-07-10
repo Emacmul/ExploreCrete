@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,12 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Plus, Trash2, ChevronDown, ChevronUp, Info, Loader2,
-  Upload, FileCheck, Save, Flag, Square, Circle, GripVertical,
+  Upload, FileCheck, Save, Flag, Square, Circle, GripVertical, Play,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getRoleColour, getRoleLabel, buildSegmentId } from '@/lib/routeExport';
 import AudioTriggerFields from './AudioTriggerFields';
 import SimpleAudioUpload from './SimpleAudioUpload';
+import TourSimulator from './TourSimulator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const ROLES = [
   { value: 'primary_start', label: 'Primary-Start', icon: Flag },
@@ -97,6 +99,27 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
   const [showAddForm, setShowAddForm] = useState(true);
   const [addError, setAddError] = useState('');
   const [gpxImportResult, setGpxImportResult] = useState(null);
+  const [testSegment, setTestSegment] = useState(null);
+
+  // Group consecutive waypoints by segment_number
+  const segmentGroups = useMemo(() => {
+    const groups = {};
+    waypoints.forEach((wp, index) => {
+      const seg = wp.segment_number;
+      if (!groups[seg]) groups[seg] = { segmentNumber: seg, startIndex: index, endIndex: index, waypoints: [] };
+      groups[seg].endIndex = index;
+      groups[seg].waypoints.push(wp);
+    });
+    return groups;
+  }, [waypoints]);
+
+  // A segment is testable when it has a Primary-Start and every point has audio
+  const isSegmentTestable = (group) => {
+    if (!group) return false;
+    const hasPrimaryStart = group.waypoints.some(wp => wp.waypoint_role === 'primary_start');
+    if (!hasPrimaryStart) return false;
+    return group.waypoints.every(wp => wp.audio_clip_url);
+  };
 
   useEffect(() => {
     if (focusWaypointIndex != null) {
@@ -450,8 +473,11 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
            {waypoints.map((wp, index) => {
              const colour = wp.waypoint_colour || autoColour(wp.waypoint_role);
+             const segGroup = segmentGroups[wp.segment_number];
+             const isLastOfSegment = segGroup && index === segGroup.endIndex;
              return (
-              <Draggable key={index} draggableId={`wp-${index}`} index={index} isDragDisabled={isNarrator}>
+              <React.Fragment key={index}>
+              <Draggable draggableId={`wp-${index}`} index={index} isDragDisabled={isNarrator}>
                 {(dragProvided, snapshot) => (
               <div
                 id={`wp-row-${index}`}
@@ -654,6 +680,26 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               </div>
                 )}
               </Draggable>
+              {isLastOfSegment && !isNarrator && (
+                <div className="pl-1 pr-1 pb-1">
+                  <Button
+                    disabled={!isSegmentTestable(segGroup)}
+                    onClick={() => setTestSegment({
+                      title: segGroup.waypoints[0]?.segment_title || `Segment ${wp.segment_number}`,
+                      trailPath: segGroup.waypoints.map(p => ({ lat: p.lat, lng: p.lng })),
+                      waypoints: segGroup.waypoints.map(p => ({ ...p, trigger_audio: true })),
+                    })}
+                    title={isSegmentTestable(segGroup)
+                      ? 'Test this segment in the simulator'
+                      : 'Segment needs a Primary-Start and audio on every point before testing'}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Play className="w-4 h-4" />
+                    Test Segment {wp.segment_id || wp.segment_number} in Simulator
+                  </Button>
+                </div>
+              )}
+              </React.Fragment>
               );
               })}
                 {provided.placeholder}
@@ -661,6 +707,21 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               )}
               </Droppable>
               </DragDropContext>
+              )}
+
+              {testSegment && (
+                <Dialog open={!!testSegment} onOpenChange={() => setTestSegment(null)}>
+                  <DialogContent className="max-w-4xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">Segment Simulator — {testSegment.title}</DialogTitle>
+                    </DialogHeader>
+                    <TourSimulator form={{
+                      trail_path: testSegment.trailPath,
+                      waypoints: testSegment.waypoints,
+                      code: tourCode,
+                    }} />
+                  </DialogContent>
+                </Dialog>
               )}
               </div>
               );
