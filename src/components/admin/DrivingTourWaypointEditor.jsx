@@ -328,7 +328,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           segment_number: segNum,
           segment_id: segId,
           segment_title: pt.name || `Segment ${segNum}`,
-          avg_segment_speed_kmh: isPS ? 50 : null,
+          avg_segment_speed_kmh: 50,
           description: '',
           narration_script: '',
           trigger_audio: false,
@@ -458,21 +458,19 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                 />
               </div>
 
-              {newWp.waypoint_role === 'primary_start' && (
-                <div>
-                  <Label className="text-slate-400 text-xs mb-1 block">
-                    Average Segment Speed (km/h) *
-                    <span className="ml-1 text-purple-400">Required for Primary-Start · defaults to 50</span>
-                  </Label>
-                  <Input
-                    type="number" step="0.1"
-                    value={newWp.avg_segment_speed_kmh}
-                    onChange={e => setNewWp(p => ({ ...p, avg_segment_speed_kmh: e.target.value }))}
-                    placeholder="50"
-                    className="bg-slate-700 border-slate-500 text-white"
-                  />
-                </div>
-              )}
+              <div>
+                <Label className="text-slate-400 text-xs mb-1 block">
+                  Average Segment Speed (km/h)
+                  <span className="ml-1 text-purple-400">defaults to 50</span>
+                </Label>
+                <Input
+                  type="number" step="0.1"
+                  value={newWp.avg_segment_speed_kmh}
+                  onChange={e => setNewWp(p => ({ ...p, avg_segment_speed_kmh: e.target.value }))}
+                  placeholder="50"
+                  className="bg-slate-700 border-slate-500 text-white"
+                />
+              </div>
 
               <div>
                 <Label className="text-slate-400 text-xs mb-1 block">Description (optional)</Label>
@@ -585,8 +583,8 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                         {/* Read-only context for narrators */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-slate-400 text-xs mb-1 block">Segment ID</Label>
-                            <Input value={wp.segment_id || ''} readOnly className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm" />
+                            <Label className="text-slate-400 text-xs mb-1 block">Location ID</Label>
+                            <Input value={wp.segment_id || buildSegmentId(tourCode, wp.segment_number) || ''} readOnly className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm" />
                           </div>
                           <div>
                             <Label className="text-slate-400 text-xs mb-1 block">Role</Label>
@@ -691,7 +689,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                         <div>
                           <Label className="text-slate-400 text-xs mb-1 block">Location ID</Label>
                           <Input
-                            value={wp.segment_id || ''}
+                            value={wp.segment_id || buildSegmentId(tourCode, wp.segment_number) || ''}
                             readOnly
                             className="bg-slate-800 border-slate-600 text-purple-300 font-mono h-8 text-sm"
                           />
@@ -704,17 +702,15 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                             className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
                           />
                         </div>
-                        {wp.waypoint_role === 'primary_start' && (
-                          <div>
-                            <Label className="text-slate-400 text-xs mb-1 block">Average Segment Speed (km/h) *</Label>
-                            <Input
-                              type="number" step="0.1"
-                              value={wp.avg_segment_speed_kmh ?? ''}
-                              onChange={e => updateWaypoint(index, 'avg_segment_speed_kmh', e.target.value === '' ? null : parseFloat(e.target.value))}
-                              className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
-                            />
-                          </div>
-                        )}
+                        <div>
+                          <Label className="text-slate-400 text-xs mb-1 block">Average Segment Speed (km/h)</Label>
+                          <Input
+                            type="number" step="0.1"
+                            value={wp.avg_segment_speed_kmh ?? 50}
+                            onChange={e => updateWaypoint(index, 'avg_segment_speed_kmh', e.target.value === '' ? null : parseFloat(e.target.value))}
+                            className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
+                          />
+                        </div>
                         <div>
                           <Label className="text-slate-400 text-xs mb-1 block">Description</Label>
                           <Input
