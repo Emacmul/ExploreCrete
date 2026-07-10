@@ -55,18 +55,20 @@ function parseGpxCoords(xmlText) {
 
 /**
  * Parse a waypoint name following the convention XXX<segment><letter>[-PS]
- * e.g. "BRZ1a-PS" → { segment: 1, letter: 'a', isPrimaryStart: true }
- * e.g. "BRZ12h"    → { segment: 12, letter: 'h', isPrimaryStart: false }
+ * e.g. "BRZ1a-PS Bikakis Bakery" → { segment: 1, letter: 'a', isPrimaryStart: true }
+ * e.g. "BRZ12h Old Fountain"     → { segment: 12, letter: 'h', isPrimaryStart: false }
+ * The code is extracted from the START of the name; trailing description text is ignored.
+ * A point with letter 'a' is always treated as a Primary-Start (segment start).
  * Returns null if the name doesn't match the convention.
  */
 function parseWpNameSortKey(name) {
   if (!name) return null;
-  const m = name.match(/^([A-Z]{3})(\d+)([a-z])(?:-PS)?$/);
+  const m = name.match(/^([A-Z]{3})(\d+)([a-z])(?:-PS)?(?:\s|$)/);
   if (!m) return null;
   return {
     segment: parseInt(m[2], 10),
     letterOrder: m[3].charCodeAt(0) - 96, // a=1, b=2, …
-    isPrimaryStart: name.includes('-PS'),
+    isPrimaryStart: m[3] === 'a' || name.includes('-PS'),
   };
 }
 
