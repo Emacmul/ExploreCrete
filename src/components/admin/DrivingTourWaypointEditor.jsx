@@ -212,6 +212,12 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
   const handleGpxImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (waypoints.length > 0) {
+      if (!window.confirm(`This will replace all ${waypoints.length} existing waypoints with the ones from the GPX file. Continue?`)) {
+        e.target.value = '';
+        return;
+      }
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const parsed = parseGpxCoords(ev.target.result);
@@ -223,12 +229,12 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       // Sort by naming convention: XXX<segment><letter>[-PS]
       const sorted = sortWaypointsByName(parsed);
 
-      const imported = sorted.map((pt, i) => {
+      const imported = sorted.map((pt) => {
         const key = parseWpNameSortKey(pt.name);
-        const isPS = key ? key.isPrimaryStart : (i === 0);
+        const isPS = key ? key.isPrimaryStart : false;
         const segNum = key
           ? String(key.segment).padStart(2, '0').slice(-2)
-          : String(waypoints.length + i + 1).padStart(2, '0').slice(-2);
+          : '01';
         const segId = buildSegmentId(tourCode, segNum) || '';
         const role = isPS ? 'primary_start' : 'secondary';
         return {
@@ -254,7 +260,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           type: role,
         };
       });
-      onChange([...waypoints, ...imported]);
+      onChange(imported);
       setGpxImportResult({ count: imported.length });
       setTimeout(() => setGpxImportResult(null), 4000);
     };
