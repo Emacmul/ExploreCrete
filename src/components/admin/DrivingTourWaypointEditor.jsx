@@ -453,7 +453,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               </div>
 
               <div>
-                <Label className="text-slate-400 text-xs mb-1 block">Segment Title *</Label>
+                <Label className="text-slate-400 text-xs mb-1 block">Location Title *</Label>
                 <Input
                   value={newWp.segment_title}
                   onChange={e => setNewWp(p => ({ ...p, segment_title: e.target.value }))}
