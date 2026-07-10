@@ -93,6 +93,17 @@ function sortWaypointsByName(points) {
   });
 }
 
+/**
+ * Extract the location prefix from a waypoint name or segment_id.
+ * e.g. "BRZ1a Bikakis Bakery" → "BRZ1", "BRZ12h" → "BRZ12"
+ * Returns null if the name doesn't match the convention.
+ */
+function parseLocationPrefix(wp) {
+  const source = wp.segment_id || wp.name || '';
+  const m = source.match(/^([A-Z]{3}\d+)/);
+  return m ? m[1] : null;
+}
+
 export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin', focusWaypointIndex }) {
   const isNarrator = userRole === 'narrator';
   const [expanded, setExpanded] = useState(focusWaypointIndex != null ? focusWaypointIndex : null);
@@ -114,11 +125,32 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
     return groups;
   }, [waypoints]);
 
-  // A segment is testable when it has a Primary-Start and every point has audio
-  const isSegmentTestable = (group) => {
-    if (!group) return false;
-    const hasPrimaryStart = group.waypoints.some(wp => wp.waypoint_role === 'primary_start');
-    if (!hasPrimaryStart) return false;
+  // Group consecutive waypoints by location prefix (e.g. BRZ1a, BRZ1b → location "BRZ1")
+  // A location spans one or more consecutive segments that share the same numeric prefix.
+  const locationGroups = useMemo(() => {
+    const groups = [];
+    let current = null;
+    waypoints.forEach((wp, index) => {
+      const loc = parseLocationPrefix(wp);
+      if (!current || current.location !== loc) {
+        current = {
+          location: loc,
+          startIndex: index,
+          endIndex: index,
+          waypoints: [wp],
+        };
+        groups.push(current);
+      } else {
+        current.endIndex = index;
+        current.waypoints.push(wp);
+      }
+    });
+    return groups;
+  }, [waypoints]);
+
+  // A location is testable when every waypoint in it has an audio clip
+  const isLocationTestable = (group) => {
+    if (!group || group.waypoints.length === 0) return false;
     return group.waypoints.every(wp => wp.audio_clip_url);
   };
 
@@ -495,7 +527,8 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
            {waypoints.map((wp, index) => {
              const colour = wp.waypoint_colour || autoColour(wp.waypoint_role);
              const segGroup = segmentGroups[wp.segment_number];
-             const isLastOfSegment = segGroup && index === segGroup.endIndex;
+             const locGroup = locationGroups.find(g => index >= g.startIndex && index <= g.endIndex);
+             const isLastOfLocation = locGroup && index === locGroup.endIndex;
              return (
               <React.Fragment key={index}>
               <Draggable draggableId={`wp-${index}`} index={index} isDragDisabled={isNarrator}>
@@ -755,23 +788,26 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               </div>
                 )}
               </Draggable>
-              {isLastOfSegment && !isNarrator && (
-                <div className="pl-1 pr-1 pb-1">
+              {isLastOfLocation && !isNarrator && locGroup && (
+                <div className="pl-1 pr-1 pb-1 pt-1">
                   <Button
-                    disabled={!isSegmentTestable(segGroup)}
+                    disabled={!isLocationTestable(locGroup)}
                     onClick={() => setTestSegment({
-                       startIndex: segGroup.startIndex,
-                       title: segGroup.waypoints[0]?.segment_title || `Segment ${wp.segment_number}`,
-                       trailPath: segGroup.waypoints.map(p => ({ lat: p.lat, lng: p.lng })),
-                       waypoints: segGroup.waypoints.map(p => ({ ...p, trigger_audio: true })),
+                       startIndex: locGroup.startIndex,
+                       title: locGroup.location || `Location ${wp.segment_number}`,
+                       trailPath: locGroup.waypoints.map(p => ({ lat: p.lat, lng: p.lng })),
+                       waypoints: locGroup.waypoints.map(p => ({ ...p, trigger_audio: true })),
                      })}
-                    title={isSegmentTestable(segGroup)
-                      ? 'Test this segment in the simulator'
-                      : 'Segment needs a Primary-Start and audio on every point before testing'}
+                    title={isLocationTestable(locGroup)
+                      ? `Test all ${locGroup.waypoints.length} waypoints in location ${locGroup.location} in the simulator`
+                      : `Location ${locGroup.location} needs audio on every waypoint before testing`}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Play className="w-4 h-4" />
-                    Test Segment {wp.segment_id || wp.segment_number} in Simulator
+                    Test Location {locGroup.location} in Simulator
+                    <span className="ml-1 text-emerald-200 text-xs">
+                      ({locGroup.waypoints.filter(w => w.audio_clip_url).length}/{locGroup.waypoints.length} audio)
+                    </span>
                   </Button>
                 </div>
               )}
@@ -789,7 +825,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                 <Dialog open={!!testSegment} onOpenChange={() => setTestSegment(null)}>
                   <DialogContent className="max-w-4xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="text-white">Segment Simulator — {testSegment.title}</DialogTitle>
+                      <DialogTitle className="text-white">Location Simulator — {testSegment.title}</DialogTitle>
                     </DialogHeader>
                     <TourSimulator form={{
                       trail_path: testSegment.trailPath,
