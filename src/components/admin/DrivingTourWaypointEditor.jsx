@@ -595,7 +595,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           </div>
                         </div>
                         <div>
-                          <Label className="text-slate-400 text-xs mb-1 block">Segment Title</Label>
+                          <Label className="text-slate-400 text-xs mb-1 block">Location Title</Label>
                           <Input value={wp.segment_title || ''} readOnly className="bg-slate-800 border-slate-600 text-slate-300 h-8 text-sm" />
                         </div>
                         {wp.description && (
@@ -674,7 +674,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           </div>
                         </div>
                         <div>
-                          <Label className="text-slate-400 text-xs mb-1 block">Segment ID (auto)</Label>
+                          <Label className="text-slate-400 text-xs mb-1 block">Location ID</Label>
                           <Input
                             value={wp.segment_id || ''}
                             readOnly
@@ -682,7 +682,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           />
                         </div>
                         <div>
-                          <Label className="text-slate-400 text-xs mb-1 block">Segment Title</Label>
+                          <Label className="text-slate-400 text-xs mb-1 block">Location Title</Label>
                           <Input
                             value={wp.segment_title || ''}
                             onChange={e => updateWaypoint(index, 'segment_title', e.target.value)}
