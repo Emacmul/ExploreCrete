@@ -221,15 +221,33 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' 
         lng: parseFloat(pt.getAttribute('lon')),
       })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
 
-      const waypoints = wpts.map((wpt, i) => {
+      // Sort waypoints by naming convention: XXX<segment><letter>[-PS] before assigning roles/segments
+      const sortedWpts = [...wpts].sort((a, b) => {
+        const na = a.querySelector('name')?.textContent?.trim() || '';
+        const nb = b.querySelector('name')?.textContent?.trim() || '';
+        const ka = na.match(/^\D*(\d+)([a-z])/);
+        const kb = nb.match(/^\D*(\d+)([a-z])/);
+        if (ka && kb) {
+          const sa = parseInt(ka[1], 10), sb = parseInt(kb[1], 10);
+          if (sa !== sb) return sa - sb;
+          return ka[2].charCodeAt(0) - kb[2].charCodeAt(0);
+        }
+        if (ka) return -1;
+        if (kb) return 1;
+        return 0;
+      });
+
+      const waypoints = sortedWpts.map((wpt, i) => {
         const eleTxt = wpt.querySelector('ele')?.textContent;
         const ele = (eleTxt && parseFloat(eleTxt) > 0) ? parseFloat(eleTxt) : null;
         const nameTxt = wpt.querySelector('name')?.textContent || `Waypoint ${i + 1}`;
         const descTxt = wpt.querySelector('desc')?.textContent || '';
 
         if (isDrivingAudioTour) {
-          const role = i === 0 ? 'primary_start' : (i === wpts.length - 1 ? 'primary_stop' : 'secondary');
-          const segNum = String(i + 1).padStart(2, '0').slice(-2);
+          const isPS = nameTxt.includes('-PS') || /^\D*\d+a\b/.test(nameTxt);
+          const role = isPS ? 'primary_start' : 'secondary';
+          const segMatch = nameTxt.match(/^\D*(\d+)/);
+          const segNum = segMatch ? String(parseInt(segMatch[1], 10)).padStart(2, '0').slice(-2) : String(i + 1).padStart(2, '0').slice(-2);
           const segId = buildSegmentId(form.code, segNum) || '';
           return {
             lat: parseFloat(wpt.getAttribute('lat')),
@@ -249,7 +267,7 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' 
             bearing_direction: 0,
             bearing_tolerance: 30,
             waypoint_colour: getRoleColour(role),
-            name: segId ? `${segId} — ${nameTxt}` : nameTxt,
+            name: nameTxt,
             type: role,
             ...(ele !== null && !isNaN(ele) ? { elevation: Math.round(ele) } : {}),
           };
