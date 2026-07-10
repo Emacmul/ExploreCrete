@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -90,13 +90,24 @@ function sortWaypointsByName(points) {
   });
 }
 
-export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin' }) {
+export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin', focusWaypointIndex }) {
   const isNarrator = userRole === 'narrator';
-  const [expanded, setExpanded] = useState(null);
+  const [expanded, setExpanded] = useState(focusWaypointIndex != null ? focusWaypointIndex : null);
   const [newWp, setNewWp] = useState(EMPTY_WP);
   const [showAddForm, setShowAddForm] = useState(true);
   const [addError, setAddError] = useState('');
   const [gpxImportResult, setGpxImportResult] = useState(null);
+
+  useEffect(() => {
+    if (focusWaypointIndex != null) {
+      setExpanded(focusWaypointIndex);
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`wp-row-${focusWaypointIndex}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [focusWaypointIndex]);
 
   const nextSegmentNumber = () => {
     const used = waypoints
@@ -443,9 +454,10 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               <Draggable key={index} draggableId={`wp-${index}`} index={index} isDragDisabled={isNarrator}>
                 {(dragProvided, snapshot) => (
               <div
+                id={`wp-row-${index}`}
                 ref={dragProvided.innerRef}
                 {...dragProvided.draggableProps}
-                className={`bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden ${snapshot.isDragging ? 'shadow-2xl shadow-purple-900/50 ring-2 ring-purple-500' : ''}`}
+                className={`bg-slate-700/50 rounded-lg border border-slate-600 overflow-hidden ${snapshot.isDragging ? 'shadow-2xl shadow-purple-900/50 ring-2 ring-purple-500' : ''} ${focusWaypointIndex === index ? 'ring-2 ring-amber-500' : ''}`}
               >
                 <div
                   className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-slate-700/80"

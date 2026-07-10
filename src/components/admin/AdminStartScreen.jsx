@@ -4,14 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import {
   Footprints, MapPin, Car, ChevronRight, ShieldCheck, Mic,
-  LayoutDashboard, List, Users, Plus, AlertCircle,
+  LayoutDashboard, List, Users, Plus, AlertCircle, Volume2,
 } from 'lucide-react';
 import { TOUR_CATEGORIES, getTourCategory } from '@/lib/tourCategories';
 
 const CATEGORY_ICONS = { Footprints, MapPin, Car };
 
 /**
- * Determine if a tour has waypoints that still need narration scripts.
+ * Determine if a tour has waypoints that still need narration scripts (narrator view).
  */
 function needsNarration(walk) {
   if (walk.route_type !== 'driving_audio_tour') return false;
@@ -21,21 +21,23 @@ function needsNarration(walk) {
 }
 
 /**
- * Determine if a tour is unfinished (admin view).
+ * Determine if a tour has waypoints with missing audio (admin view).
+ * A waypoint is "missing audio" if trigger_audio is true but no audio_clip_url.
  */
-function isTourUnfinished(walk) {
+function hasMissingAudio(walk) {
+  if (walk.route_type !== 'driving_audio_tour') return false;
   const wps = walk.waypoints || [];
-  if (wps.length === 0) return true;
-  return wps.some(wp =>
-    !wp.narration_script ||
-    (wp.trigger_audio && !wp.audio_clip_url)
-  );
+  return wps.some(wp => wp.trigger_audio && !wp.audio_clip_url);
 }
 
-function TourRow({ walk, onContinue }) {
-  const cat = getTourCategory(walk.tour_category);
+function getMissingAudioWaypoints(walk) {
+  return (walk.waypoints || [])
+    .map((wp, index) => ({ wp, index }))
+    .filter(({ wp }) => wp.trigger_audio && !wp.audio_clip_url);
+}
+
+function NarratorTourRow({ walk, onContinue }) {
   const missingNarration = (walk.waypoints || []).filter(wp => !wp.narration_script).length;
-  const missingAudio = (walk.waypoints || []).filter(wp => wp.trigger_audio && !wp.audio_clip_url).length;
 
   return (
     <button
@@ -50,31 +52,74 @@ function TourRow({ walk, onContinue }) {
       </span>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-white truncate">{walk.name}</p>
-        <div className="flex items-center gap-3 mt-0.5">
-          {missingNarration > 0 && (
-            <span className="text-xs text-amber-400 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> {missingNarration} script{missingNarration !== 1 ? 's' : ''} missing
-            </span>
-          )}
-          {missingAudio > 0 && (
-            <span className="text-xs text-blue-400 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> {missingAudio} audio missing
-            </span>
-          )}
-          {missingNarration === 0 && missingAudio === 0 && (
-            <span className="text-xs text-green-400">Complete</span>
-          )}
-        </div>
+        {missingNarration > 0 && (
+          <span className="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+            <AlertCircle className="w-3 h-3" /> {missingNarration} script{missingNarration !== 1 ? 's' : ''} missing
+          </span>
+        )}
       </div>
       <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors shrink-0" />
     </button>
   );
 }
 
+function MissingAudioTourCard({ walk, onJumpToWaypoint }) {
+  const missingWps = getMissingAudioWaypoints(walk);
+
+  return (
+    <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 flex items-center gap-3 border-b border-slate-700">
+        <span className="font-mono text-xs bg-slate-700 text-amber-300 px-2 py-1 rounded font-bold shrink-0">
+          {walk.code}
+        </span>
+        <span className="font-mono text-xs bg-slate-600 text-slate-300 px-2 py-0.5 rounded font-bold shrink-0">
+          {walk.tour_category || 'WHT'}
+        </span>
+        <p className="font-medium text-white truncate flex-1">{walk.name}</p>
+        <span className="text-xs text-amber-400 flex items-center gap-1 shrink-0">
+          <Volume2 className="w-3 h-3" /> {missingWps.length} audio missing
+        </span>
+      </div>
+
+      <div className="p-3 space-y-1">
+        <p className="text-xs text-slate-500 mb-2">
+          Audio for the following points is missing — click a point to upload its MP3:
+        </p>
+        {missingWps.map(({ wp, index }) => {
+          const displayName = wp.segment_id || wp.name || `Point ${index + 1}`;
+          const subtitle = wp.segment_title && wp.segment_title !== wp.name
+            ? wp.segment_title
+            : wp.name && wp.name !== displayName ? wp.name : null;
+
+          return (
+            <button
+              key={index}
+              onClick={() => onJumpToWaypoint(walk, index)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/40 hover:bg-slate-700/80 transition-colors text-left group"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-slate-300 group-hover:text-white truncate block">
+                  {displayName}
+                </span>
+                {subtitle && (
+                  <span className="text-xs text-slate-500 truncate block">{subtitle}</span>
+                )}
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 shrink-0" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminStartScreen({ userRole, walks, onNewTour, onContinueTour, onManageUsers, onDashboard, onManageWalks }) {
   const isNarrator = userRole === 'narrator';
+
   const unfinishedWalks = walks
-    .filter(isNarrator ? needsNarration : isTourUnfinished)
+    .filter(isNarrator ? needsNarration : hasMissingAudio)
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   return (
@@ -126,12 +171,18 @@ export default function AdminStartScreen({ userRole, walks, onNewTour, onContinu
         {unfinishedWalks.length === 0 ? (
           <div className="text-center py-8 text-slate-500 border border-dashed border-slate-700 rounded-xl">
             <AlertCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="font-medium">{isNarrator ? 'No tours need narration right now' : 'No unfinished tours'}</p>
+            <p className="font-medium">{isNarrator ? 'No tours need narration right now' : 'All audio clips uploaded'}</p>
           </div>
-        ) : (
+        ) : isNarrator ? (
           <div className="space-y-2">
             {unfinishedWalks.map(walk => (
-              <TourRow key={walk.id} walk={walk} onContinue={onContinueTour} />
+              <NarratorTourRow key={walk.id} walk={walk} onContinue={onContinueTour} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {unfinishedWalks.map(walk => (
+              <MissingAudioTourCard key={walk.id} walk={walk} onJumpToWaypoint={onContinueTour} />
             ))}
           </div>
         )}

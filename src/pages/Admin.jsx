@@ -20,6 +20,7 @@ export default function Admin() {
   const [editingWalk, setEditingWalk] = useState(null);
   const [voucherWalk, setVoucherWalk] = useState(null);
   const [view, setView] = useState('start');
+  const [focusWaypointIndex, setFocusWaypointIndex] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function Admin() {
     }
     queryClient.invalidateQueries({ queryKey: ['walks'] });
     setEditingWalk(null);
+    setFocusWaypointIndex(null);
   };
 
   const handleDelete = async (walkId) => {
@@ -132,8 +134,9 @@ export default function Admin() {
           <WalkEditor
             walk={editingWalk}
             onSave={handleSave}
-            onCancel={() => setEditingWalk(null)}
+            onCancel={() => { setEditingWalk(null); setFocusWaypointIndex(null); }}
             userRole={userRole}
+            focusWaypointIndex={focusWaypointIndex}
           />
         ) : voucherWalk !== null ? (
           <VoucherManager
@@ -158,7 +161,7 @@ export default function Admin() {
             userRole={userRole}
             walks={walks}
             onNewTour={(categoryCode) => setEditingWalk({ tour_category: categoryCode, route_type: getRouteTypeForCategory(categoryCode) })}
-            onContinueTour={(walk) => setEditingWalk(walk)}
+            onContinueTour={(walk, wpIndex) => { setEditingWalk(walk); setFocusWaypointIndex(wpIndex ?? null); }}
             onManageUsers={() => setView('users')}
             onDashboard={() => setView('dashboard')}
             onManageWalks={() => setView('walks')}

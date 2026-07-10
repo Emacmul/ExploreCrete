@@ -50,7 +50,7 @@ function SaveButton({ onSave, saving }) {
   );
 }
 
-export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' }) {
+export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin', focusWaypointIndex }) {
   const isNarrator = userRole === 'narrator';
   console.log('WalkEditor mounted/rendering');
   const [form, setForm] = useState({ ...EMPTY_WALK, ...walk });
@@ -938,6 +938,7 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin' 
                 onSave={handleSave}
                 saving={saving}
                 userRole={userRole}
+                focusWaypointIndex={focusWaypointIndex}
               />
             ) : (
               <WaypointEditor
