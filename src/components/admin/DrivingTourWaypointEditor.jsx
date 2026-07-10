@@ -49,7 +49,43 @@ function parseGpxCoords(xmlText) {
     lat: parseFloat(wpt.getAttribute('lat')),
     lng: parseFloat(wpt.getAttribute('lon')),
     elevation: wpt.querySelector('ele') ? parseFloat(wpt.querySelector('ele').textContent) : null,
+    name: wpt.querySelector('name')?.textContent?.trim() || '',
   })).filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
+}
+
+/**
+ * Parse a waypoint name following the convention XXX<segment><letter>[-PS]
+ * e.g. "BRZ1a-PS" → { segment: 1, letter: 'a', isPrimaryStart: true }
+ * e.g. "BRZ12h"    → { segment: 12, letter: 'h', isPrimaryStart: false }
+ * Returns null if the name doesn't match the convention.
+ */
+function parseWpNameSortKey(name) {
+  if (!name) return null;
+  const m = name.match(/^([A-Z]{3})(\d+)([a-z])(?:-PS)?$/);
+  if (!m) return null;
+  return {
+    segment: parseInt(m[2], 10),
+    letterOrder: m[3].charCodeAt(0) - 96, // a=1, b=2, …
+    isPrimaryStart: name.includes('-PS'),
+  };
+}
+
+/**
+ * Sort waypoints by their naming convention: segment number first, then letter.
+ * Waypoints that don't match the convention are kept at the end in original order.
+ */
+function sortWaypointsByName(points) {
+  return [...points].sort((a, b) => {
+    const ka = parseWpNameSortKey(a.name);
+    const kb = parseWpNameSortKey(b.name);
+    if (ka && kb) {
+      if (ka.segment !== kb.segment) return ka.segment - kb.segment;
+      return ka.letterOrder - kb.letterOrder;
+    }
+    if (ka) return -1;
+    if (kb) return 1;
+    return 0;
+  });
 }
 
 export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin' }) {
@@ -181,14 +217,23 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
         setGpxImportResult({ error: 'No waypoints found in this GPX file.' });
         return;
       }
-      const imported = parsed.map((pt, i) => {
-        const segNum = String(waypoints.length + i + 1).padStart(2, '0').slice(-2);
+
+      // Sort by naming convention: XXX<segment><letter>[-PS]
+      const sorted = sortWaypointsByName(parsed);
+
+      const imported = sorted.map((pt, i) => {
+        const key = parseWpNameSortKey(pt.name);
+        const isPS = key ? key.isPrimaryStart : (i === 0);
+        const segNum = key
+          ? String(key.segment).padStart(2, '0').slice(-2)
+          : String(waypoints.length + i + 1).padStart(2, '0').slice(-2);
         const segId = buildSegmentId(tourCode, segNum) || '';
+        const role = isPS ? 'primary_start' : 'secondary';
         return {
           lat: pt.lat,
           lng: pt.lng,
           elevation: pt.elevation,
-          waypoint_role: i === 0 ? 'primary_start' : 'secondary',
+          waypoint_role: role,
           segment_number: segNum,
           segment_id: segId,
           segment_title: `Segment ${segNum}`,
@@ -202,9 +247,9 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           use_bearing: false,
           bearing_direction: 0,
           bearing_tolerance: 30,
-          waypoint_colour: autoColour(i === 0 ? 'primary_start' : 'secondary'),
-          name: segId ? `${segId} — Segment ${segNum}` : `Segment ${segNum}`,
-          type: i === 0 ? 'primary_start' : 'secondary',
+          waypoint_colour: autoColour(role),
+          name: pt.name || (segId ? `${segId} — Segment ${segNum}` : `Segment ${segNum}`),
+          type: role,
         };
       });
       onChange([...waypoints, ...imported]);
