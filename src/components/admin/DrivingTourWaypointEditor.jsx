@@ -557,6 +557,9 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                   <div className="flex-1 min-w-0">
                     <span className="text-white font-medium">{wp.segment_id || '—'}</span>
                     <span className="ml-2 text-xs text-slate-400">{wp.segment_title}</span>
+                    {wp.elevation != null && (
+                      <span className="ml-2 text-xs text-amber-400 font-medium">{Math.round(wp.elevation)} m</span>
+                    )}
                     {wp.avg_segment_speed_kmh != null && (
                       <span className="ml-2 text-xs text-slate-500">{wp.avg_segment_speed_kmh} km/h</span>
                     )}
@@ -588,6 +591,14 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           <div>
                             <Label className="text-slate-400 text-xs mb-1 block">Role</Label>
                             <Input value={getRoleLabel(wp.waypoint_role)} readOnly className="bg-slate-800 border-slate-600 text-slate-400 h-8 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Elevation (m)</Label>
+                            <Input
+                              value={wp.elevation != null ? Math.round(wp.elevation) : '—'}
+                              readOnly
+                              className="bg-slate-800 border-slate-600 text-amber-400 font-medium h-8 text-sm"
+                            />
                           </div>
                         </div>
                         <div>
@@ -642,6 +653,14 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                               value={wp.lng}
                               onChange={e => updateWaypoint(index, 'lng', parseFloat(e.target.value))}
                               className="bg-slate-700 border-slate-500 text-white font-mono h-8 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-slate-400 text-xs mb-1 block">Elevation (m)</Label>
+                            <Input
+                              value={wp.elevation != null ? Math.round(wp.elevation) : '—'}
+                              readOnly
+                              className="bg-slate-800 border-slate-600 text-amber-400 font-medium h-8 text-sm"
                             />
                           </div>
                         </div>
