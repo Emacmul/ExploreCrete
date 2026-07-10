@@ -207,7 +207,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       return;
     }
     if (!newWp.segment_title.trim()) {
-      setAddError('Segment Title is required.');
+      setAddError('Location Title is required.');
       return;
     }
     if (newWp.waypoint_role === 'primary_start') {
@@ -240,7 +240,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       bearing_direction: Number(newWp.bearing_direction) || 0,
       bearing_tolerance: Number(newWp.bearing_tolerance) || 30,
       waypoint_colour: autoColour(role),
-      name: segId ? `${segId} — ${newWp.segment_title.trim()}` : newWp.segment_title.trim(),
+      name: newWp.segment_title.trim(),
       type: role,
     };
 
@@ -265,14 +265,10 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
       }
       if (field === 'segment_number' || field === 'waypoint_role') {
         next.segment_id = buildSegmentId(tourCode, next.segment_number) || '';
-        next.name = next.segment_id
-          ? `${next.segment_id} — ${next.segment_title || ''}`.trim()
-          : (next.segment_title || next.name);
+        next.name = next.segment_title || next.name;
       }
       if (field === 'segment_title') {
-        next.name = next.segment_id
-          ? `${next.segment_id} — ${value || ''}`.trim()
-          : value;
+        next.name = value;
       }
       return next;
     });
@@ -331,7 +327,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           waypoint_role: role,
           segment_number: segNum,
           segment_id: segId,
-          segment_title: `Segment ${segNum}`,
+          segment_title: pt.name || `Segment ${segNum}`,
           avg_segment_speed_kmh: null,
           description: '',
           narration_script: '',
