@@ -6,6 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { calculateBearing, isBearingInRange } from '@/lib/routeExport';
 import TourSimulatorMap from './TourSimulatorMap';
 import ScriptTimingPanel from './ScriptTimingPanel';
+import NarrationTtsEditor from './NarrationTtsEditor';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const R_EARTH = 6371000;
 const TICK_MS = 100;
@@ -69,6 +71,7 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
   const [tourComplete, setTourComplete] = useState(false);
   const [autoSpeed, setAutoSpeed] = useState(true);
   const [currentSegment, setCurrentSegment] = useState(null);
+  const [editWpIndex, setEditWpIndex] = useState(null);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -470,6 +473,41 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
           </div>
         </div>
       )}
+
+      {/* Quick-edit TTS for any waypoint without leaving the simulator */}
+      <div className="bg-slate-800/60 rounded-lg border border-blue-700/40 p-3 space-y-3">
+        <div className="flex items-center gap-2">
+          <Volume2 className="w-4 h-4 text-blue-400" />
+          <Label className="text-slate-300 text-sm font-medium">Quick Edit Script & TTS</Label>
+        </div>
+        <Select
+          value={editWpIndex != null ? String(editWpIndex) : undefined}
+          onValueChange={(val) => setEditWpIndex(Number(val))}
+        >
+          <SelectTrigger className="bg-slate-700 border-slate-500 text-white h-9">
+            <SelectValue placeholder="Select a waypoint to edit its script…" />
+          </SelectTrigger>
+          <SelectContent>
+            {waypoints.map((wp, i) => (
+              <SelectItem key={i} value={String(i)}>
+                {wp.segment_title || wp.name || `Waypoint ${i + 1}`}
+                {wp.audio_clip_url ? ' ✓' : ' (no audio)'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {editWpIndex != null && waypoints[editWpIndex] && (
+          <NarrationTtsEditor
+            script={waypoints[editWpIndex].narration_script || ''}
+            audioUrl={waypoints[editWpIndex].audio_clip_url || ''}
+            onScriptChange={(val) => onWaypointUpdate(editWpIndex, 'narration_script', val)}
+            onAudioChange={(val) => {
+              onWaypointUpdate(editWpIndex, 'audio_clip_url', val);
+              if (val) onWaypointUpdate(editWpIndex, 'trigger_audio', true);
+            }}
+          />
+        )}
+      </div>
 
       {/* Hidden audio element */}
       <audio ref={audioRef} />
