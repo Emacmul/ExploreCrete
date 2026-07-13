@@ -72,6 +72,12 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
   const [autoSpeed, setAutoSpeed] = useState(true);
   const [currentSegment, setCurrentSegment] = useState(null);
   const [editWpIndex, setEditWpIndex] = useState(null);
+  const [currentBearing, setCurrentBearing] = useState(() =>
+    trailPath.length >= 2
+      ? calculateBearing(trailPath[0].lat, trailPath[0].lng, trailPath[1].lat, trailPath[1].lng)
+      : 0
+  );
+  const initialBearingRef = useRef(currentBearing);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -105,7 +111,16 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
 
   useEffect(() => { speedRef.current = speed; }, [speed]);
   useEffect(() => { multRef.current = simMult; }, [simMult]);
-  useEffect(() => { autoSpeedRef.current = autoSpeed; }, [autoSpeed]);
+  useEffect(() => {
+    if (trailPath.length >= 2) {
+      const b = calculateBearing(trailPath[0].lat, trailPath[0].lng, trailPath[1].lat, trailPath[1].lng);
+      initialBearingRef.current = b;
+      setCurrentBearing(b);
+    } else {
+      initialBearingRef.current = 0;
+      setCurrentBearing(0);
+    }
+  }, [trailPath]);
 
   const stopSim = () => {
     setIsPlaying(false);
@@ -121,6 +136,7 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
     setTriggerLog([]);
     setTourComplete(false);
     setCurrentSegment(null);
+    setCurrentBearing(initialBearingRef.current);
     if (audioRef.current) audioRef.current.pause();
     const startPos = trailPath[0];
     if (startPos) { setCurrentPos(startPos); prevPosRef.current = startPos; }
@@ -215,6 +231,14 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
           }
         }
       });
+    }
+
+    // Update heading when the car has moved meaningfully
+    if (prevPosRef.current) {
+      const moveDist = haversine(prevPosRef.current.lat, prevPosRef.current.lng, newPos.lat, newPos.lng);
+      if (moveDist > 1) {
+        setCurrentBearing(calculateBearing(prevPosRef.current.lat, prevPosRef.current.lng, newPos.lat, newPos.lng));
+      }
     }
 
     distRef.current = newDist;
@@ -415,6 +439,7 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
           waypoints={waypoints}
           triggered={triggered}
           currentPos={currentPos}
+          currentBearing={currentBearing}
           onWaypointUpdate={onWaypointUpdate}
         />
       </div>

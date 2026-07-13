@@ -46,12 +46,24 @@ function FitBounds({ trailPath, waypoints }) {
   return null;
 }
 
-const carIcon = L.divIcon({
-  className: '',
-  html: `<div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.6);display:flex;align-items:center;justify-content:center;font-size:18px;">🚗</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
-});
+const RED_CAR_SVG = `<svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="18" cy="23" rx="12" ry="14" fill="rgba(0,0,0,0.25)"/>
+  <rect x="7" y="3" width="22" height="38" rx="9" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/>
+  <path d="M10,10 Q18,6 26,10 L24,15 Q18,12 12,15 Z" fill="#dbeafe" opacity="0.9"/>
+  <rect x="10" y="15" width="16" height="12" rx="2" fill="#dc2626"/>
+  <path d="M12,29 Q18,31 24,29 L26,34 Q18,36 10,34 Z" fill="#dbeafe" opacity="0.75"/>
+  <circle cx="11" cy="6" r="1.5" fill="#fde68a"/>
+  <circle cx="25" cy="6" r="1.5" fill="#fde68a"/>
+</svg>`;
+
+function carIcon(bearing) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="transform: rotate(${bearing}deg); transform-origin: center; transition: transform 0.15s linear; width:36px;height:44px;">${RED_CAR_SVG}</div>`,
+    iconSize: [36, 44],
+    iconAnchor: [18, 22],
+  });
+}
 
 function wpIcon(colour, emoji) {
   return L.divIcon({
@@ -80,7 +92,7 @@ function handleIcon(colour) {
   });
 }
 
-export default function TourSimulatorMap({ trailPath, waypoints, triggered, currentPos, onWaypointUpdate }) {
+export default function TourSimulatorMap({ trailPath, waypoints, triggered, currentPos, currentBearing, onWaypointUpdate }) {
   const center = trailPath.length > 0
     ? [trailPath[0].lat, trailPath[0].lng]
     : waypoints.length > 0
@@ -173,7 +185,7 @@ export default function TourSimulatorMap({ trailPath, waypoints, triggered, curr
       })}
 
       {currentPos && (
-        <Marker position={[currentPos.lat, currentPos.lng]} icon={carIcon} />
+        <Marker position={[currentPos.lat, currentPos.lng]} icon={carIcon(currentBearing || 0)} />
       )}
     </MapContainer>
   );
