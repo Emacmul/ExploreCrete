@@ -12,6 +12,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getRoleColour, getRoleLabel, buildSegmentId } from '@/lib/routeExport';
 import AudioTriggerFields from './AudioTriggerFields';
 import SimpleAudioUpload from './SimpleAudioUpload';
+import NarrationTtsEditor from './NarrationTtsEditor';
 import TourSimulator from './TourSimulator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -607,20 +608,16 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           </div>
                         )}
 
-                        {/* Editable: Narration Script */}
-                        <div>
-                          <Label className="text-slate-400 text-xs mb-1 block">
-                            Narration Script
-                            <span className="ml-1 text-blue-400">(SSML break tags supported)</span>
-                          </Label>
-                          <Textarea
-                            value={wp.narration_script || ''}
-                            onChange={e => updateWaypoint(index, 'narration_script', e.target.value)}
-                            placeholder={'Write the narration script for this location...\n\nSSML pauses: <break time="2s"/> or <break strength="medium"/>'}
-                            rows={5}
-                            className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
-                          />
-                        </div>
+                        {/* Editable: Narration Script & TTS */}
+                        <NarrationTtsEditor
+                          script={wp.narration_script || ''}
+                          audioUrl={wp.audio_clip_url || ''}
+                          onScriptChange={(val) => updateWaypoint(index, 'narration_script', val)}
+                          onAudioChange={(val) => {
+                            updateWaypoint(index, 'audio_clip_url', val);
+                            if (val) updateWaypoint(index, 'trigger_audio', true);
+                          }}
+                        />
 
                         {/* Editable: Audio Trigger Fields */}
                         <AudioTriggerFields
@@ -709,7 +706,18 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           />
                         </div>
 
-                        {/* Simple audio upload for admin (no trigger config) */}
+                        {/* Narration Script & TTS generation */}
+                        <NarrationTtsEditor
+                          script={wp.narration_script || ''}
+                          audioUrl={wp.audio_clip_url || ''}
+                          onScriptChange={(val) => updateWaypoint(index, 'narration_script', val)}
+                          onAudioChange={(val) => {
+                            updateWaypoint(index, 'audio_clip_url', val);
+                            if (val) updateWaypoint(index, 'trigger_audio', true);
+                          }}
+                        />
+
+                        {/* Manual MP3 upload (alternative to TTS) */}
                         <SimpleAudioUpload
                           audioUrl={wp.audio_clip_url}
                           onChange={(field, value) => {
