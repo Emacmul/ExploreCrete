@@ -9,17 +9,16 @@ import { Upload, Loader2, Volume2, RefreshCw, FileText, Sparkles, Pause } from '
 import AudioPlayer from '@/components/ui/AudioPlayer';
 
 const VOICES = [
-  { value: 'river', label: 'River — calm, neutral' },
-  { value: 'honey', label: 'Honey — warm, soft' },
-  { value: 'sunny', label: 'Sunny — bright, upbeat' },
-  { value: 'storm', label: 'Storm — formal, authoritative' },
-  { value: 'spark', label: 'Spark — energetic, quick' },
+  { value: 'NEUTRAL', label: 'Default voice (auto)' },
+  { value: 'FEMALE', label: 'Female voice' },
+  { value: 'MALE', label: 'Male voice' },
 ];
 
 const LANG_TO_CODE = {
-  English: 'en', Dutch: 'nl', Czech: 'cs', German: 'de', French: 'fr',
-  Italian: 'it', Arabic: 'ar', Hebrew: 'he', Polish: 'pl', Spanish: 'es',
-  Portuguese: 'pt', Turkish: 'tr', Russian: 'ru', Hungarian: 'hu',
+  English: 'en-US', Dutch: 'nl-NL', Czech: 'cs-CZ', German: 'de-DE',
+  French: 'fr-FR', Italian: 'it-IT', Arabic: 'ar-XA', Hebrew: 'he-IL',
+  Polish: 'pl-PL', Spanish: 'es-ES', Portuguese: 'pt-PT', Turkish: 'tr-TR',
+  Russian: 'ru-RU', Hungarian: 'hu-HU',
 };
 
 const MAX_CHARS = 5000;
@@ -42,7 +41,7 @@ const MAX_CHARS = 5000;
 export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, onAudioChange }) {
   const [importing, setImporting] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('river');
+  const [selectedVoice, setSelectedVoice] = useState('NEUTRAL');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [error, setError] = useState('');
   const textareaRef = useRef(null);
@@ -50,7 +49,6 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
 
   const charCount = (script || '').length;
   const overLimit = charCount > MAX_CHARS;
-  const creditCost = Math.min(100, Math.ceil(charCount / 50));
 
   const handleImport = (e) => {
     const file = e.target.files[0];
@@ -88,11 +86,12 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     setError('');
     setGenerating(true);
     try {
-      const result = await base44.integrations.Core.GenerateSpeech({
+      const response = await base44.functions.invoke('generateTts', {
         text: script,
-        voice: selectedVoice,
-        language_code: LANG_TO_CODE[selectedLanguage] || undefined,
+        gender: selectedVoice,
+        language_code: LANG_TO_CODE[selectedLanguage] || 'en-US',
       });
+      const result = response.data;
       if (result?.url) {
         onAudioChange(result.url);
       } else {
@@ -176,8 +175,8 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
             {charCount} / {MAX_CHARS} characters
           </span>
           {charCount > 0 && (
-            <span className="text-xs text-slate-500">
-              ~{creditCost} credit{creditCost !== 1 ? 's' : ''} per generation
+            <span className="text-xs text-green-500">
+              Free via Google TTS (1M chars/month)
             </span>
           )}
         </div>
@@ -186,7 +185,7 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
       {/* TTS voice + language */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className="text-slate-400 text-xs mb-1 block">Voice</Label>
+          <Label className="text-slate-400 text-xs mb-1 block">Voice (Google)</Label>
           <Select value={selectedVoice} onValueChange={setSelectedVoice}>
             <SelectTrigger className="bg-slate-700 border-slate-500 text-white h-8 text-sm">
               <SelectValue />
