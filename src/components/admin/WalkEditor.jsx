@@ -935,6 +935,7 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin',
                 waypoints={form.waypoints}
                 onChange={wps => set('waypoints', wps)}
                 tourCode={form.code}
+                tourCategory={form.tour_category}
                 onSave={handleSave}
                 saving={saving}
                 userRole={userRole}

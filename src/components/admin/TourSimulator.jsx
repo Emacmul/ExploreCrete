@@ -59,6 +59,7 @@ function fmtTime(ms) {
 export default function TourSimulator({ form, onWaypointUpdate }) {
   const trailPath = form.trail_path || [];
   const waypoints = (form.waypoints || []).filter(wp => wp.lat && wp.lng);
+  const isWalkingTour = form.tour_category !== 'DDV';
 
   const [speed, setSpeed] = useState(50);
   const [simMult, setSimMult] = useState(5);
@@ -440,6 +441,7 @@ export default function TourSimulator({ form, onWaypointUpdate }) {
           triggered={triggered}
           currentPos={currentPos}
           currentBearing={currentBearing}
+          isWalkingTour={isWalkingTour}
           onWaypointUpdate={onWaypointUpdate}
         />
       </div>

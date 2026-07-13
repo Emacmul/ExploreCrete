@@ -56,12 +56,22 @@ const RED_CAR_SVG = `<svg width="36" height="44" viewBox="0 0 36 44" xmlns="http
   <circle cx="25" cy="6" r="1.5" fill="#fde68a"/>
 </svg>`;
 
-function carIcon(bearing) {
+const RED_MAN_SVG = `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="14" cy="19" rx="8" ry="10" fill="rgba(0,0,0,0.25)"/>
+  <path d="M14,12 C9,12 6,16 6,22 C6,28 9,32 14,32 C19,32 22,28 22,22 C22,16 19,12 14,12 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/>
+  <circle cx="14" cy="7" r="5" fill="#fecaca" stroke="#b91c1c" stroke-width="2"/>
+  <circle cx="14" cy="3" r="1.2" fill="#b91c1c"/>
+</svg>`;
+
+function moverIcon(bearing, isWalking) {
+  const svg = isWalking ? RED_MAN_SVG : RED_CAR_SVG;
+  const w = isWalking ? 28 : 36;
+  const h = isWalking ? 36 : 44;
   return L.divIcon({
     className: '',
-    html: `<div style="transform: rotate(${bearing}deg); transform-origin: center; transition: transform 0.15s linear; width:36px;height:44px;">${RED_CAR_SVG}</div>`,
-    iconSize: [36, 44],
-    iconAnchor: [18, 22],
+    html: `<div style="transform: rotate(${bearing}deg); transform-origin: center; transition: transform 0.15s linear; width:${w}px;height:${h}px;">${svg}</div>`,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h / 2],
   });
 }
 
@@ -92,7 +102,7 @@ function handleIcon(colour) {
   });
 }
 
-export default function TourSimulatorMap({ trailPath, waypoints, triggered, currentPos, currentBearing, onWaypointUpdate }) {
+export default function TourSimulatorMap({ trailPath, waypoints, triggered, currentPos, currentBearing, isWalkingTour, onWaypointUpdate }) {
   const center = trailPath.length > 0
     ? [trailPath[0].lat, trailPath[0].lng]
     : waypoints.length > 0
@@ -185,7 +195,7 @@ export default function TourSimulatorMap({ trailPath, waypoints, triggered, curr
       })}
 
       {currentPos && (
-        <Marker position={[currentPos.lat, currentPos.lng]} icon={carIcon(currentBearing || 0)} />
+        <Marker position={[currentPos.lat, currentPos.lng]} icon={moverIcon(currentBearing || 0, isWalkingTour)} />
       )}
     </MapContainer>
   );

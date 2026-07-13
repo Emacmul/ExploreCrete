@@ -105,7 +105,7 @@ function parseLocationPrefix(wp) {
   return m ? `${m[1]}${parseInt(m[2], 10)}` : null;
 }
 
-export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, onSave, saving, userRole = 'admin', focusWaypointIndex }) {
+export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, tourCategory, onSave, saving, userRole = 'admin', focusWaypointIndex }) {
   const isNarrator = userRole === 'narrator';
   const [expanded, setExpanded] = useState(focusWaypointIndex != null ? focusWaypointIndex : null);
   const [newWp, setNewWp] = useState(EMPTY_WP);
@@ -839,6 +839,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                       trail_path: testSegment.trailPath,
                       waypoints: testSegment.waypoints,
                       code: tourCode,
+                      tour_category: tourCategory,
                     }} onWaypointUpdate={(idx, field, value) => {
                       const origIdx = (testSegment.startIndex || 0) + idx;
                       updateWaypoint(origIdx, field, value);
