@@ -48,6 +48,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/Login" element={<Login />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
