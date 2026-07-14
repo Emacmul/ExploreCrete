@@ -14,6 +14,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing target language' }, { status: 400 });
     }
 
+    const apiKey = Deno.env.get('GROQ_API_KEY');
+    if (!apiKey) {
+      return Response.json({ error: 'Groq API key not configured' }, { status: 500 });
+    }
+
     const prompt = `Translate the following narration script into ${target_language}.
 
 CRITICAL RULES:
@@ -26,18 +31,35 @@ CRITICAL RULES:
 Script:
 ${text}`;
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          translated_text: { type: 'string', description: 'The translated narration script with all <break> tags preserved' },
-        },
-        required: ['translated_text'],
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional translator for audio narration scripts. You always preserve SSML <break> tags exactly as written.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 8000,
+      }),
     });
 
-    const translatedText = result.translated_text;
+    if (!groqResponse.ok) {
+      const errData = await groqResponse.json().catch(() => ({}));
+      return Response.json({
+        error: errData.error?.message || `Groq API returned ${groqResponse.status}`,
+      }, { status: 500 });
+    }
+
+    const groqData = await groqResponse.json();
+    const translatedText = groqData.choices?.[0]?.message?.content;
 
     if (!translatedText) {
       return Response.json({ error: 'No translation returned' }, { status: 500 });
