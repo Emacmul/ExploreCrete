@@ -5,8 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import { LANGUAGES } from '@/lib/languages';
-import { Upload, Loader2, Volume2, RefreshCw, FileText, Sparkles, Pause } from 'lucide-react';
+import { parseScript, rebuildScript, countCharacters, countBreaks } from '@/lib/ttsParser';
+import TtsSegmentCard from './TtsSegmentCard';
 import AudioPlayer from '@/components/ui/AudioPlayer';
+import { Upload, Loader2, Sparkles, Pause, Play, Download, Braces, FileText, Square } from 'lucide-react';
 
 const VOICES = [
   { value: 'NEUTRAL', label: 'Default voice (auto)' },
@@ -23,32 +25,27 @@ const LANG_TO_CODE = {
 
 const MAX_CHARS = 5000;
 
-/**
- * NarrationTtsEditor — import, edit, and TTS-generate narration audio.
- *
- * Workflow:
- *   1. Import a .txt script file (SSML break tags preserved)
- *   2. Edit text and break tags freely in the textarea
- *   3. Generate TTS audio from the current script
- *   4. Preview, edit again, regenerate — repeatable
- *
- * Props:
- *   script        – current narration_script string
- *   audioUrl      – current audio_clip_url
- *   onScriptChange(val)
- *   onAudioChange(val)
- */
 export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, onAudioChange }) {
   const [importing, setImporting] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('NEUTRAL');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [error, setError] = useState('');
+  const [segments, setSegments] = useState(null);
+  const [segmentAudios, setSegmentAudios] = useState({});
+  const [generatingSegmentId, setGeneratingSegmentId] = useState(null);
+  const [generatingCombined, setGeneratingCombined] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState(null);
+  const [debugLog, setDebugLog] = useState([]);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const currentAudioRef = useRef(null);
+  const stopRef = useRef(false);
 
   const charCount = (script || '').length;
   const overLimit = charCount > MAX_CHARS;
+
+  const addLog = (msg) => setDebugLog((prev) => [...prev, msg]);
 
   const handleImport = (e) => {
     const file = e.target.files[0];
@@ -61,6 +58,8 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     }
     setImporting(true);
     setError('');
+    setSegments(null);
+    setSegmentAudios({});
     const reader = new FileReader();
     reader.onload = (ev) => {
       onScriptChange(ev.target.result);
@@ -74,35 +73,6 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     e.target.value = '';
   };
 
-  const handleGenerateAudio = async () => {
-    if (!script || !script.trim()) {
-      setError('Please import or write a script first.');
-      return;
-    }
-    if (overLimit) {
-      setError(`Script exceeds the ${MAX_CHARS} character limit. Please shorten it.`);
-      return;
-    }
-    setError('');
-    setGenerating(true);
-    try {
-      const response = await base44.functions.invoke('generateTts', {
-        text: script,
-        gender: selectedVoice,
-        language_code: LANG_TO_CODE[selectedLanguage] || 'en-US',
-      });
-      const result = response.data;
-      if (result?.url) {
-        onAudioChange(result.url);
-      } else {
-        setError('TTS generation returned no audio URL.');
-      }
-    } catch (err) {
-      setError(err.message || 'TTS generation failed.');
-    }
-    setGenerating(false);
-  };
-
   const insertBreakTag = (tag) => {
     const textarea = textareaRef.current;
     if (!textarea) {
@@ -113,18 +83,171 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     const end = textarea.selectionEnd;
     const newScript = (script || '').slice(0, start) + tag + (script || '').slice(end);
     onScriptChange(newScript);
+    setSegments(null);
+    setSegmentAudios({});
     setTimeout(() => {
       textarea.focus();
       textarea.selectionStart = textarea.selectionEnd = start + tag.length;
     }, 0);
   };
 
+  const handleTextareaChange = (e) => {
+    onScriptChange(e.target.value);
+    if (segments) {
+      setSegments(null);
+      setSegmentAudios({});
+    }
+  };
+
+  const handleParseAndGenerate = async () => {
+    if (!script || !script.trim()) {
+      setError('Please import or write a script first.');
+      return;
+    }
+    if (overLimit) {
+      setError(`Script exceeds the ${MAX_CHARS} character limit.`);
+      return;
+    }
+
+    setError('');
+    setDebugLog([]);
+    const parsed = parseScript(script);
+    setSegments(parsed);
+    setSegmentAudios({});
+
+    const languageCode = LANG_TO_CODE[selectedLanguage] || 'en-US';
+    const audios = {};
+
+    for (const seg of parsed) {
+      if (seg.type !== 'text') continue;
+      setGeneratingSegmentId(seg.id);
+      addLog(`Generating segment ${seg.id}…`);
+      addLog(`Language: ${languageCode}`);
+      addLog(`Text length: ${seg.content.length}`);
+      try {
+        const response = await base44.functions.invoke('generateTts', {
+          text: seg.content,
+          gender: selectedVoice,
+          language_code: languageCode,
+        });
+        if (response.data?.url) {
+          audios[seg.id] = response.data.url;
+          addLog(`Segment ${seg.id}: OK`);
+        } else {
+          addLog(`Segment ${seg.id}: no URL returned`);
+        }
+      } catch (err) {
+        addLog(`Segment ${seg.id}: ERROR — ${err.message}`);
+        setError(`Segment ${seg.id} failed: ${err.message}`);
+      }
+    }
+
+    setSegmentAudios(audios);
+    setGeneratingSegmentId(null);
+    addLog(`Done. ${Object.keys(audios).length} segment(s) generated.`);
+  };
+
+  const handleDurationChange = (segmentId, newDuration) => {
+    setSegments((prev) => {
+      if (!prev) return prev;
+      const updated = prev.map((seg) =>
+        seg.id === segmentId ? { ...seg, duration: newDuration } : seg
+      );
+      onScriptChange(rebuildScript(updated));
+      return updated;
+    });
+  };
+
+  const playSegment = (segmentId) => {
+    const url = segmentAudios[segmentId];
+    if (!url) return;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+    }
+    const segIndex = segments?.findIndex((s) => s.id === segmentId);
+    setCurrentPlayingIndex(segIndex);
+    const audio = new Audio(url);
+    currentAudioRef.current = audio;
+    audio.onended = () => setCurrentPlayingIndex(null);
+    audio.onerror = () => setCurrentPlayingIndex(null);
+    audio.play().catch(() => setCurrentPlayingIndex(null));
+  };
+
+  const handleBuildAndPlay = async () => {
+    if (!segments || playing) return;
+    stopRef.current = false;
+    setPlaying(true);
+    setError('');
+
+    for (let i = 0; i < segments.length; i++) {
+      if (stopRef.current) break;
+      const seg = segments[i];
+      setCurrentPlayingIndex(i);
+
+      if (seg.type === 'text' && segmentAudios[seg.id]) {
+        await new Promise((resolve) => {
+          const audio = new Audio(segmentAudios[seg.id]);
+          currentAudioRef.current = audio;
+          audio.onended = resolve;
+          audio.onerror = resolve;
+          audio.play().catch(resolve);
+        });
+      } else if (seg.type === 'pause') {
+        await new Promise((resolve) => {
+          setTimeout(resolve, seg.duration * 1000);
+        });
+      }
+    }
+
+    setCurrentPlayingIndex(null);
+    setPlaying(false);
+
+    if (stopRef.current) return;
+
+    setGeneratingCombined(true);
+    addLog('Generating combined audio…');
+    try {
+      const response = await base44.functions.invoke('generateTts', {
+        text: script,
+        gender: selectedVoice,
+        language_code: LANG_TO_CODE[selectedLanguage] || 'en-US',
+      });
+      if (response.data?.url) {
+        onAudioChange(response.data.url);
+        addLog('Combined audio saved.');
+      }
+    } catch (err) {
+      addLog(`Combined audio ERROR: ${err.message}`);
+      setError(`Combined audio failed: ${err.message}`);
+    }
+    setGeneratingCombined(false);
+  };
+
+  const handleStopPlay = () => {
+    stopRef.current = true;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+    }
+    setPlaying(false);
+    setCurrentPlayingIndex(null);
+  };
+
+  const handleDownload = () => {
+    Object.entries(segmentAudios).forEach(([id, url]) => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `segment_${id}.mp3`;
+      a.click();
+    });
+  };
+
+  const hasSegmentAudios = Object.keys(segmentAudios).length > 0;
+
   return (
     <div className="bg-slate-800/50 rounded-lg border border-blue-600/30 p-3 space-y-3">
       <div className="flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-blue-400" />
-        <Label className="text-slate-300 text-sm font-medium">Narration Script & TTS</Label>
-        <span className="text-xs text-slate-500 ml-1">import, edit, generate audio</span>
+        <Label className="text-slate-300 text-sm font-medium">TTS Studio</Label>
       </div>
 
       {/* Import + break tag insert buttons */}
@@ -133,7 +256,7 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
         <Button
           type="button" size="sm" variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          disabled={importing || generating}
+          disabled={importing}
           className="border-slate-500 text-slate-300 gap-1.5"
         >
           {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
@@ -141,19 +264,15 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
         </Button>
         <div className="flex items-center gap-1 ml-1">
           <span className="text-xs text-slate-500">Insert pause:</span>
-          <Button type="button" size="sm" variant="ghost" onClick={() => insertBreakTag('<break time="1s"/>')}
-            className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs gap-1">
-            <Pause className="w-3 h-3" /> 1s
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => insertBreakTag('<break time="2s"/>')}
-            className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs gap-1">
-            <Pause className="w-3 h-3" /> 2s
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => insertBreakTag('<break time="3s"/>')}
-            className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs gap-1">
-            <Pause className="w-3 h-3" /> 3s
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => insertBreakTag('<break strength="medium"/>')}
+          {[1, 2, 3].map((s) => (
+            <Button key={s} type="button" size="sm" variant="ghost"
+              onClick={() => insertBreakTag(`<break time="${s}s"/>`)}
+              className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs gap-1">
+              <Pause className="w-3 h-3" /> {s}s
+            </Button>
+          ))}
+          <Button type="button" size="sm" variant="ghost"
+            onClick={() => insertBreakTag('<break strength="medium"/>')}
             className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs">
             medium
           </Button>
@@ -165,8 +284,8 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
         <Textarea
           ref={textareaRef}
           value={script || ''}
-          onChange={e => onScriptChange(e.target.value)}
-          placeholder={'Import a script file or write here...\n\nSSML pauses are preserved: <break time="2s"/> or <break strength="medium"/>'}
+          onChange={handleTextareaChange}
+          placeholder={'Import a script file or write here...\n\nUse <break time="2s"/> for pauses.'}
           rows={6}
           className="bg-slate-700 border-slate-500 text-white text-sm font-mono resize-y"
         />
@@ -175,14 +294,12 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
             {charCount} / {MAX_CHARS} characters
           </span>
           {charCount > 0 && (
-            <span className="text-xs text-green-500">
-              Free via Google TTS (1M chars/month)
-            </span>
+            <span className="text-xs text-green-500">Free via Google TTS (1M chars/month)</span>
           )}
         </div>
       </div>
 
-      {/* TTS voice + language */}
+      {/* Voice + Language */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label className="text-slate-400 text-xs mb-1 block">Voice (Google)</Label>
@@ -191,9 +308,7 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {VOICES.map(v => (
-                <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
-              ))}
+              {VOICES.map((v) => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -204,27 +319,21 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {LANGUAGES.map(lang => (
-                <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-              ))}
+              {LANGUAGES.map((lang) => <SelectItem key={lang} value={lang}>{lang}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Generate / Regenerate button */}
+      {/* Parse & Generate */}
       <Button
         type="button"
-        onClick={handleGenerateAudio}
-        disabled={generating || overLimit || !script?.trim()}
-        className="w-full bg-blue-600 hover:bg-blue-700 gap-2 text-white"
+        onClick={handleParseAndGenerate}
+        disabled={generatingSegmentId !== null || overLimit || !script?.trim()}
+        className="w-full bg-purple-600 hover:bg-purple-700 gap-2 text-white"
       >
-        {generating
-          ? <Loader2 className="w-4 h-4 animate-spin" />
-          : audioUrl
-            ? <RefreshCw className="w-4 h-4" />
-            : <Volume2 className="w-4 h-4" />}
-        {generating ? 'Generating…' : audioUrl ? 'Regenerate Audio' : 'Generate Audio'}
+        {generatingSegmentId !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : <Braces className="w-4 h-4" />}
+        {generatingSegmentId !== null ? 'Generating…' : 'Parse & Generate'}
       </Button>
 
       {error && (
@@ -233,19 +342,78 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
         </div>
       )}
 
-      {/* Audio preview */}
-      {audioUrl && (
+      {/* Debug log */}
+      {debugLog.length > 0 && (
+        <div className="bg-slate-900/60 rounded-lg p-2.5 text-xs text-slate-400 font-mono space-y-0.5 max-h-32 overflow-y-auto">
+          {debugLog.map((line, i) => <div key={i}>{line}</div>)}
+        </div>
+      )}
+
+      {/* Segments list */}
+      {segments && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+            <span>{countCharacters(segments)} characters</span>
+            <span>·</span>
+            <span>{countBreaks(segments)} breaks detected</span>
+            <span className="text-slate-600">Use &lt;break time="Xs"/&gt; for pauses</span>
+          </div>
+          {segments.map((seg, idx) => (
+            <TtsSegmentCard
+              key={seg.id}
+              segment={seg}
+              audioUrl={segmentAudios[seg.id]}
+              isGenerating={generatingSegmentId === seg.id}
+              isPlaying={currentPlayingIndex === idx}
+              onPlay={playSegment}
+              onDurationChange={handleDurationChange}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Build & Play + Download */}
+      {segments && (
+        <div className="flex gap-2">
+          {playing ? (
+            <Button
+              type="button"
+              onClick={handleStopPlay}
+              className="flex-1 bg-red-600 hover:bg-red-700 gap-2 text-white"
+            >
+              <Square className="w-4 h-4" /> Stop
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleBuildAndPlay}
+              disabled={generatingCombined || !hasSegmentAudios}
+              className="flex-1 bg-purple-600 hover:bg-purple-700 gap-2 text-white"
+            >
+              {generatingCombined ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {generatingCombined ? 'Building…' : 'Build & Play'}
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownload}
+            disabled={!hasSegmentAudios || playing}
+            className="border-slate-500 text-slate-300 gap-2"
+          >
+            <Download className="w-4 h-4" /> Download
+          </Button>
+        </div>
+      )}
+
+      {/* Current saved audio (shown when not in segment mode) */}
+      {audioUrl && !segments && (
         <div className="bg-green-900/20 border border-green-700/40 rounded-lg p-2.5 space-y-2">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-green-400 shrink-0" />
-            <span className="text-green-300 text-sm font-medium">
-              {generating ? 'Updating audio…' : 'Current audio'}
-            </span>
+            <span className="text-green-300 text-sm font-medium">Current audio</span>
           </div>
           <AudioPlayer src={audioUrl} className="w-full" />
-          <p className="text-xs text-slate-500">
-            Edit the script above and click "Regenerate Audio" to update this clip.
-          </p>
         </div>
       )}
     </div>
