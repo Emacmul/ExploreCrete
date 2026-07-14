@@ -88,18 +88,16 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="text-center text-sm text-muted-foreground pt-2 border-t">
-            <p>
-              Don't have an account?{' '}
-              <a
-                href="https://magicalcrete.com/my-account"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-teal-700 font-medium hover:underline"
-              >
-                Register here
-              </a>
-            </p>
+          <div className="text-center pt-2 border-t">
+            <p className="text-sm text-muted-foreground mb-1">Don't have an account?</p>
+            <a
+              href="https://magicalcrete.com/my-account"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-teal-700 font-medium hover:underline"
+            >
+              Create your Free Magical Crete Account
+            </a>
           </div>
         </div>
       </div>
