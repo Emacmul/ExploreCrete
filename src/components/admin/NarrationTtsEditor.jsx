@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { LANGUAGES } from '@/lib/languages';
 import { parseScript, rebuildScript, countCharacters, countBreaks } from '@/lib/ttsParser';
 import TtsSegmentCard from './TtsSegmentCard';
+import TranslationPanel from './TranslationPanel';
 import AudioPlayer from '@/components/ui/AudioPlayer';
 import { Upload, Loader2, Sparkles, Pause, Play, Download, Braces, FileText, Square } from 'lucide-react';
 
@@ -249,6 +250,12 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
         <Sparkles className="w-4 h-4 text-blue-400" />
         <Label className="text-slate-300 text-sm font-medium">TTS Studio</Label>
       </div>
+
+      <TranslationPanel onTranslated={(text) => {
+        onScriptChange(text);
+        setSegments(null);
+        setSegmentAudios({});
+      }} />
 
       {/* Import + break tag insert buttons */}
       <div className="flex items-center gap-2 flex-wrap">
