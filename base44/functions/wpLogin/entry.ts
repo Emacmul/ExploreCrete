@@ -22,9 +22,11 @@ Deno.serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      return Response.json({
-        error: data.message || 'Invalid email or password'
-      }, { status: 401 });
+      // tMeister JWT Auth returns errors as an array of objects
+      const errorMsg = Array.isArray(data)
+        ? data[0]?.message
+        : data.message || 'Invalid email or password';
+      return Response.json({ error: errorMsg }, { status: 401 });
     }
 
     // Decode the JWT payload to extract the WordPress user ID
