@@ -14,6 +14,7 @@ import AudioTriggerFields from './AudioTriggerFields';
 import SimpleAudioUpload from './SimpleAudioUpload';
 import NarrationTtsEditor from './NarrationTtsEditor';
 import TourSimulator from './TourSimulator';
+import SegmentScriptManager from './SegmentScriptManager';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 
@@ -105,7 +106,7 @@ function parseLocationPrefix(wp) {
   return m ? `${m[1]}${parseInt(m[2], 10)}` : null;
 }
 
-export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, tourCategory, onSave, saving, userRole = 'admin', focusWaypointIndex }) {
+export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, tourCategory, onSave, saving, userRole = 'admin', focusWaypointIndex, segmentScripts, onSegmentScriptsChange }) {
   const isNarrator = userRole === 'narrator';
   const [expanded, setExpanded] = useState(focusWaypointIndex != null ? focusWaypointIndex : null);
   const [newWp, setNewWp] = useState(EMPTY_WP);
@@ -827,6 +828,16 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               )}
               </Droppable>
               </DragDropContext>
+              )}
+
+              {waypoints.length > 0 && (
+                <SegmentScriptManager
+                  waypoints={waypoints}
+                  segmentScripts={segmentScripts || []}
+                  onSegmentScriptsChange={onSegmentScriptsChange}
+                  onSave={onSave}
+                  saving={saving}
+                />
               )}
 
               {testSegment && (

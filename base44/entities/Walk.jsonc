@@ -236,6 +236,44 @@
         }
       }
     },
+    "segment_scripts": {
+      "type": "array",
+      "description": "Combined narration scripts per segment, saved for simulator break-tag editing",
+      "items": {
+        "type": "object",
+        "properties": {
+          "segment_number": {
+            "type": "string",
+            "description": "Segment number"
+          },
+          "segment_id": {
+            "type": "string",
+            "description": "Segment ID e.g. WRC01"
+          },
+          "combined_script": {
+            "type": "string",
+            "description": "All waypoint narration scripts in this segment combined in order (a, b, c\u2026) with break tags between them"
+          },
+          "combined_audio_url": {
+            "type": "string",
+            "description": "Google TTS audio URL for the combined draft script"
+          },
+          "final_script": {
+            "type": "string",
+            "description": "Final edited script after simulator break-tag adjustments for speech/speed matching"
+          },
+          "final_audio_url": {
+            "type": "string",
+            "description": "Final audio URL after simulator adjustments (pre-ElevenLabs draft)"
+          },
+          "status": {
+            "type": "string",
+            "default": "draft",
+            "description": "draft = combined but not yet finalized; finalized = break tags adjusted in simulator"
+          }
+        }
+      }
+    },
     "image_url": {
       "type": "string",
       "description": "Main walk image"

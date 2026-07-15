@@ -37,6 +37,7 @@ const EMPTY_WALK = {
   main_interest: '',
   trail_path: [],
   waypoints: [],
+  segment_scripts: [],
 };
 
 function SaveButton({ onSave, saving }) {
@@ -940,6 +941,8 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin',
                 saving={saving}
                 userRole={userRole}
                 focusWaypointIndex={focusWaypointIndex}
+                segmentScripts={form.segment_scripts || []}
+                onSegmentScriptsChange={(scripts) => set('segment_scripts', scripts)}
               />
             ) : (
               <WaypointEditor
@@ -964,7 +967,7 @@ export default function WalkEditor({ walk, onSave, onCancel, userRole = 'admin',
                     i === index ? { ...wp, [field]: value } : wp
                   );
                   set('waypoints', updated);
-                }} />
+                }} segmentScripts={form.segment_scripts || []} onSegmentScriptsChange={(scripts) => set('segment_scripts', scripts)} />
               </>
             )}
             <SaveButton onSave={handleSave} saving={saving} />
