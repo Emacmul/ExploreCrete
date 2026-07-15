@@ -14,13 +14,44 @@ export default function TranslationPanel({ onTranslated }) {
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
+  const isBinaryContent = (text) => {
+    // ZIP/OOXML files (docx, xlsx, etc.) start with "PK"
+    if (text.charCodeAt(0) === 80 && text.charCodeAt(1) === 75) return true;
+    // Check for null bytes or high concentration of replacement chars
+    for (let i = 0; i < Math.min(text.length, 1000); i++) {
+      if (text.charCodeAt(i) === 0) return true;
+    }
+    // Check for high ratio of replacement characters (U+FFFD)
+    const sample = text.slice(0, 200);
+    const replacements = (sample.match(/\uFFFD/g) || []).length;
+    if (sample.length > 0 && replacements / sample.length > 0.1) return true;
+    return false;
+  };
+
   const handleImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setError('');
+    const validExtensions = ['.txt', '.text', '.md'];
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+    if (!validExtensions.includes(ext) && !file.type.startsWith('text/')) {
+      setError(`"${file.name}" is not a plain text file. Use .txt files only — .docx, .pdf, and other binary formats are not supported.`);
+      e.target.value = '';
+      return;
+    }
     setFileName(file.name);
     const reader = new FileReader();
-    reader.onload = (ev) => setImportedText(ev.target.result);
+    reader.onload = (ev) => {
+      const text = ev.target.result;
+      if (isBinaryContent(text)) {
+        setError(`"${file.name}" appears to be a binary file (e.g. .docx or .pdf). Export it as plain text (.txt) first, then import.`);
+        setImportedText('');
+        setFileName('');
+        e.target.value = '';
+        return;
+      }
+      setImportedText(text);
+    };
     reader.onerror = () => setError('Failed to read file.');
     reader.readAsText(file);
     e.target.value = '';
