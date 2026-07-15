@@ -10,6 +10,7 @@ import TtsSegmentCard from './TtsSegmentCard';
 import TranslationPanel from './TranslationPanel';
 import AudioPlayer from '@/components/ui/AudioPlayer';
 import { Upload, Loader2, Sparkles, Pause, Play, Download, Braces, FileText, Square } from 'lucide-react';
+import { extractTextFromFile } from '@/lib/fileTextExtractor';
 
 const VOICES = [
   { value: 'NEUTRAL', label: 'Default voice (auto)' },
@@ -48,27 +49,9 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
 
   const addLog = (msg) => setDebugLog((prev) => [...prev, msg]);
 
-  const isBinaryContent = (text) => {
-    if (text.charCodeAt(0) === 80 && text.charCodeAt(1) === 75) return true;
-    for (let i = 0; i < Math.min(text.length, 1000); i++) {
-      if (text.charCodeAt(i) === 0) return true;
-    }
-    const sample = text.slice(0, 200);
-    const replacements = (sample.match(/\uFFFD/g) || []).length;
-    if (sample.length > 0 && replacements / sample.length > 0.1) return true;
-    return false;
-  };
-
-  const handleImport = (e) => {
+  const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const validExtensions = ['.txt', '.text', '.md'];
-    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-    if (!validExtensions.includes(ext) && !file.type.startsWith('text/')) {
-      setError(`"${file.name}" is not a plain text file. Use .txt files only.`);
-      e.target.value = '';
-      return;
-    }
     if (script && script.trim().length > 0) {
       if (!window.confirm('This will replace the existing script. Continue?')) {
         e.target.value = '';
@@ -79,23 +62,17 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     setError('');
     setSegments(null);
     setSegmentAudios({});
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target.result;
-      if (isBinaryContent(text)) {
-        setError(`"${file.name}" appears to be a binary file (e.g. .docx or .pdf). Export it as plain text (.txt) first.`);
-        setImporting(false);
-        e.target.value = '';
-        return;
+    try {
+      const text = await extractTextFromFile(file);
+      if (!text || !text.trim()) {
+        setError(`"${file.name}" contains no readable text.`);
+      } else {
+        onScriptChange(text);
       }
-      onScriptChange(text);
-      setImporting(false);
-    };
-    reader.onerror = () => {
-      setError('Failed to read file.');
-      setImporting(false);
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      setError(err.message || `Failed to read "${file.name}".`);
+    }
+    setImporting(false);
     e.target.value = '';
   };
 
@@ -285,7 +262,7 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
 
       {/* Import + break tag insert buttons */}
       <div className="flex items-center gap-2 flex-wrap">
-        <input ref={fileInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={handleImport} />
+        <input ref={fileInputRef} type="file" accept=".txt,.docx,.odt,.md,text/plain" className="hidden" onChange={handleImport} />
         <Button
           type="button" size="sm" variant="outline"
           onClick={() => fileInputRef.current?.click()}

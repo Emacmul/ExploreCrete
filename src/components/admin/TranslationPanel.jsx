@@ -5,55 +5,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LANGUAGES } from '@/lib/languages';
 import { base44 } from '@/api/base44Client';
 import { Upload, Loader2, Languages, FileText, ArrowRight } from 'lucide-react';
+import { extractTextFromFile } from '@/lib/fileTextExtractor';
 
 export default function TranslationPanel({ onTranslated }) {
   const [importedText, setImportedText] = useState('');
   const [fileName, setFileName] = useState('');
   const [targetLanguage, setTargetLanguage] = useState('English');
   const [translating, setTranslating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
-  const isBinaryContent = (text) => {
-    // ZIP/OOXML files (docx, xlsx, etc.) start with "PK"
-    if (text.charCodeAt(0) === 80 && text.charCodeAt(1) === 75) return true;
-    // Check for null bytes or high concentration of replacement chars
-    for (let i = 0; i < Math.min(text.length, 1000); i++) {
-      if (text.charCodeAt(i) === 0) return true;
-    }
-    // Check for high ratio of replacement characters (U+FFFD)
-    const sample = text.slice(0, 200);
-    const replacements = (sample.match(/\uFFFD/g) || []).length;
-    if (sample.length > 0 && replacements / sample.length > 0.1) return true;
-    return false;
-  };
-
-  const handleImport = (e) => {
+  const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setError('');
-    const validExtensions = ['.txt', '.text', '.md'];
-    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-    if (!validExtensions.includes(ext) && !file.type.startsWith('text/')) {
-      setError(`"${file.name}" is not a plain text file. Use .txt files only — .docx, .pdf, and other binary formats are not supported.`);
-      e.target.value = '';
-      return;
-    }
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target.result;
-      if (isBinaryContent(text)) {
-        setError(`"${file.name}" appears to be a binary file (e.g. .docx or .pdf). Export it as plain text (.txt) first, then import.`);
+    setImporting(true);
+    try {
+      const text = await extractTextFromFile(file);
+      if (!text || !text.trim()) {
+        setError(`"${file.name}" contains no readable text.`);
         setImportedText('');
         setFileName('');
-        e.target.value = '';
-        return;
+      } else {
+        setImportedText(text);
+        setFileName(file.name);
       }
-      setImportedText(text);
-    };
-    reader.onerror = () => setError('Failed to read file.');
-    reader.readAsText(file);
+    } catch (err) {
+      setError(err.message || `Failed to read "${file.name}".`);
+      setImportedText('');
+      setFileName('');
+    }
+    setImporting(false);
     e.target.value = '';
   };
 
@@ -89,15 +72,15 @@ export default function TranslationPanel({ onTranslated }) {
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <input ref={fileInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={handleImport} />
+        <input ref={fileInputRef} type="file" accept=".txt,.docx,.odt,.md,text/plain" className="hidden" onChange={handleImport} />
         <Button
           type="button" size="sm" variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          disabled={translating}
+          disabled={translating || importing}
           className="border-slate-500 text-slate-300 gap-1.5"
         >
-          <Upload className="w-3.5 h-3.5" />
-          {fileName ? 'Change File' : 'Import File'}
+          {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+          {importing ? 'Reading…' : fileName ? 'Change File' : 'Import File'}
         </Button>
         {fileName && (
           <span className="text-xs text-slate-400 flex items-center gap-1 max-w-[180px] truncate">
