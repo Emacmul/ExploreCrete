@@ -176,12 +176,22 @@ export default function SegmentScriptManager({ waypoints, segmentScripts, onSegm
                   </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {segScript?.status === 'finalized' && (
+                  {segScript?.status === 'accepted' && (
                     <span className="flex items-center gap-1 text-xs text-green-400">
+                      <CheckCircle2 className="w-3 h-3" /> Accepted
+                    </span>
+                  )}
+                  {segScript?.status === 'finalized' && (
+                    <span className="flex items-center gap-1 text-xs text-amber-400">
                       <CheckCircle2 className="w-3 h-3" /> Finalized
                     </span>
                   )}
-                  {segScript?.combined_script && segScript?.status !== 'finalized' && (
+                  {segScript?.combined_script && !segScript?.status && (
+                    <span className="flex items-center gap-1 text-xs text-blue-400">
+                      <FileText className="w-3 h-3" /> Draft saved
+                    </span>
+                  )}
+                  {segScript?.status === 'draft' && (
                     <span className="flex items-center gap-1 text-xs text-blue-400">
                       <FileText className="w-3 h-3" /> Draft saved
                     </span>

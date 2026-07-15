@@ -11,7 +11,6 @@ import {
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getRoleColour, getRoleLabel, buildSegmentId } from '@/lib/routeExport';
 import AudioTriggerFields from './AudioTriggerFields';
-import SimpleAudioUpload from './SimpleAudioUpload';
 import NarrationTtsEditor from './NarrationTtsEditor';
 import TourSimulator from './TourSimulator';
 import SegmentScriptManager from './SegmentScriptManager';
@@ -715,17 +714,6 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           onAudioChange={(val) => {
                             updateWaypoint(index, 'audio_clip_url', val);
                             if (val) updateWaypoint(index, 'trigger_audio', true);
-                          }}
-                        />
-
-                        {/* Manual MP3 upload (alternative to TTS) */}
-                        <SimpleAudioUpload
-                          audioUrl={wp.audio_clip_url}
-                          onChange={(field, value) => {
-                            updateWaypoint(index, field, value);
-                            if (field === 'audio_clip_url' && value) {
-                              updateWaypoint(index, 'trigger_audio', true);
-                            }
                           }}
                         />
 

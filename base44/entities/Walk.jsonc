@@ -264,12 +264,16 @@
           },
           "final_audio_url": {
             "type": "string",
-            "description": "Final audio URL after simulator adjustments (pre-ElevenLabs draft)"
+            "description": "Draft audio URL after simulator adjustments (Google TTS, used for simulator testing only)"
+          },
+          "finished_audio_url": {
+            "type": "string",
+            "description": "Final production audio from ElevenLabs \u2014 only uploadable after the segment is tested and accepted in the simulator"
           },
           "status": {
             "type": "string",
             "default": "draft",
-            "description": "draft = combined but not yet finalized; finalized = break tags adjusted in simulator"
+            "description": "draft = combined but not yet finalized; finalized = break tags adjusted and draft audio saved; accepted = tested in simulator and approved, finished audio upload unlocked"
           }
         }
       }
