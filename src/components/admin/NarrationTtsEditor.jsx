@@ -248,7 +248,8 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     <div className="bg-slate-800/50 rounded-lg border border-blue-600/30 p-3 space-y-3">
       <div className="flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-blue-400" />
-        <Label className="text-slate-300 text-sm font-medium">TTS Studio</Label>
+        <Label className="text-white text-sm font-bold">Narration Script & TTS</Label>
+        <span className="text-xs text-slate-400 ml-1">import, edit, generate audio</span>
       </div>
 
       <TranslationPanel onTranslated={(text) => {
