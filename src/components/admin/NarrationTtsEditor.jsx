@@ -10,6 +10,7 @@ import TtsSegmentCard from './TtsSegmentCard';
 import TranslationPanel from './TranslationPanel';
 import AudioPlayer from '@/components/ui/AudioPlayer';
 import { Loader2, Sparkles, Pause, Play, Download, Braces, FileText, Square } from 'lucide-react';
+import { downloadScriptAsDocx } from '@/lib/docxExporter';
 
 const VOICES = [
   { value: 'NEUTRAL', label: 'Default voice (auto)' },
@@ -206,17 +207,9 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
   };
 
   const handleDownload = async () => {
-    // Download the full edited script as .txt
+    // Download the full edited script as .docx (break tags preserved)
     if (script) {
-      const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'narration_script.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadScriptAsDocx(script, 'narration_script.docx');
     }
 
     // Download the full combined audio as .mp3
