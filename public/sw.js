@@ -1,49 +1,82 @@
-const CACHE_NAME = 'explore-crete-v1';
+/**
+ * Explore Crete — Service Worker
+ *
+ * Version bump (v3) to force-evict all caches from previous versions.
+ * Uses network-first for navigations so users always get the latest UI.
+ * Stale-while-revalidate for static assets (JS/CSS/images).
+ */
 
+const CACHE_VERSION = 'explore-crete-v3';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+
+// Install: activate immediately, don't wait for old SW to release
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate: purge ALL old caches and take control of all clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames
+          .filter((name) => name !== STATIC_CACHE)
+          .map((name) => caches.delete(name))
+      );
+      await self.clients.claim();
+
+      // Tell all open tabs to reload so they pick up the fresh UI
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED' }));
+    })()
   );
-  self.clients.claim();
 });
 
+// Fetch strategy
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const { request } = event;
 
-  if (event.request.method !== 'GET') return;
-  if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/base44/')) return;
+  // Only handle GET
+  if (request.method !== 'GET') return;
 
-  // Network-first for navigation (HTML pages) — keeps app fresh, falls back to cache offline
-  if (event.request.mode === 'navigate') {
+  const url = new URL(request.url);
+
+  // Network-first for navigation (HTML page loads) — ensures fresh UI
+  if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request).then((r) => r || caches.match('/')))
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          const cache = await caches.open(STATIC_CACHE);
+          cache.put(request, networkResponse.clone());
+          return networkResponse;
+        } catch (err) {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) return cachedResponse;
+          throw err;
+        }
+      })()
     );
     return;
   }
 
-  // Cache-first for static assets (JS, CSS, images, fonts)
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      });
-    })
-  );
+  // Stale-while-revalidate for same-origin static assets
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(STATIC_CACHE);
+        const cachedResponse = await cache.match(request);
+        const networkResponsePromise = fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          })
+          .catch(() => null);
+        return cachedResponse || (await networkResponsePromise);
+      })()
+    );
+  }
 });
