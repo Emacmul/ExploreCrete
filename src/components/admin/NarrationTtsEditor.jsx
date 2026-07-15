@@ -9,8 +9,7 @@ import { parseScript, rebuildScript, countCharacters, countBreaks } from '@/lib/
 import TtsSegmentCard from './TtsSegmentCard';
 import TranslationPanel from './TranslationPanel';
 import AudioPlayer from '@/components/ui/AudioPlayer';
-import { Upload, Loader2, Sparkles, Pause, Play, Download, Braces, FileText, Square } from 'lucide-react';
-import { extractTextFromFile } from '@/lib/fileTextExtractor';
+import { Loader2, Sparkles, Pause, Play, Download, Braces, FileText, Square } from 'lucide-react';
 
 const VOICES = [
   { value: 'NEUTRAL', label: 'Default voice (auto)' },
@@ -28,7 +27,6 @@ const LANG_TO_CODE = {
 const MAX_CHARS = 5000;
 
 export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, onAudioChange }) {
-  const [importing, setImporting] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('NEUTRAL');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [error, setError] = useState('');
@@ -40,7 +38,6 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState(null);
   const [debugLog, setDebugLog] = useState([]);
   const textareaRef = useRef(null);
-  const fileInputRef = useRef(null);
   const currentAudioRef = useRef(null);
   const stopRef = useRef(false);
 
@@ -48,33 +45,6 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
   const overLimit = charCount > MAX_CHARS;
 
   const addLog = (msg) => setDebugLog((prev) => [...prev, msg]);
-
-  const handleImport = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (script && script.trim().length > 0) {
-      if (!window.confirm('This will replace the existing script. Continue?')) {
-        e.target.value = '';
-        return;
-      }
-    }
-    setImporting(true);
-    setError('');
-    setSegments(null);
-    setSegmentAudios({});
-    try {
-      const text = await extractTextFromFile(file);
-      if (!text || !text.trim()) {
-        setError(`"${file.name}" contains no readable text.`);
-      } else {
-        onScriptChange(text);
-      }
-    } catch (err) {
-      setError(err.message || `Failed to read "${file.name}".`);
-    }
-    setImporting(false);
-    e.target.value = '';
-  };
 
   const insertBreakTag = (tag) => {
     const textarea = textareaRef.current;
@@ -235,13 +205,41 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
     setCurrentPlayingIndex(null);
   };
 
-  const handleDownload = () => {
-    Object.entries(segmentAudios).forEach(([id, url]) => {
+  const handleDownload = async () => {
+    // Download the full edited script as .txt
+    if (script) {
+      const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `segment_${id}.mp3`;
+      a.download = 'narration_script.txt';
+      document.body.appendChild(a);
       a.click();
-    });
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Download the full combined audio as .mp3
+    if (audioUrl) {
+      try {
+        const response = await fetch(audioUrl);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'narration_audio.mp3';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch {
+        const a = document.createElement('a');
+        a.href = audioUrl;
+        a.download = 'narration_audio.mp3';
+        a.target = '_blank';
+        a.click();
+      }
+    }
   };
 
   const hasSegmentAudios = Object.keys(segmentAudios).length > 0;
@@ -260,33 +258,21 @@ export default function NarrationTtsEditor({ script, audioUrl, onScriptChange, o
         setSegmentAudios({});
       }} />
 
-      {/* Import + break tag insert buttons */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <input ref={fileInputRef} type="file" accept=".txt,.docx,.odt,.md,text/plain" className="hidden" onChange={handleImport} />
-        <Button
-          type="button" size="sm" variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={importing}
-          className="border-slate-500 text-slate-300 gap-1.5"
-        >
-          {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-          Import Script
-        </Button>
-        <div className="flex items-center gap-1 ml-1">
-          <span className="text-xs text-slate-500">Insert pause:</span>
-          {[1, 2, 3].map((s) => (
-            <Button key={s} type="button" size="sm" variant="ghost"
-              onClick={() => insertBreakTag(`<break time="${s}s"/>`)}
-              className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs gap-1">
-              <Pause className="w-3 h-3" /> {s}s
-            </Button>
-          ))}
-          <Button type="button" size="sm" variant="ghost"
-            onClick={() => insertBreakTag('<break strength="medium"/>')}
-            className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs">
-            medium
+      {/* Insert break tags at cursor */}
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-slate-500">Insert pause:</span>
+        {[1, 2, 3].map((s) => (
+          <Button key={s} type="button" size="sm" variant="ghost"
+            onClick={() => insertBreakTag(`<break time="${s}s"/>`)}
+            className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs gap-1">
+            <Pause className="w-3 h-3" /> {s}s
           </Button>
-        </div>
+        ))}
+        <Button type="button" size="sm" variant="ghost"
+          onClick={() => insertBreakTag('<break strength="medium"/>')}
+          className="text-slate-400 hover:text-slate-200 h-7 px-2 text-xs">
+          medium
+        </Button>
       </div>
 
       {/* Editable script textarea */}
