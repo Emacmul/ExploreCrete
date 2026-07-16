@@ -330,7 +330,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
           segment_number: segNum,
           segment_id: segId,
           segment_title: pt.name || `Segment ${segNum}`,
-          avg_segment_speed_kmh: 50,
+          avg_segment_speed_kmh: defaultSpeed,
           description: '',
           narration_script: '',
           trigger_audio: false,
@@ -463,13 +463,13 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
               <div>
                 <Label className="text-slate-400 text-xs mb-1 block">
                   Average Segment Speed (km/h)
-                  <span className="ml-1 text-purple-400">defaults to 50</span>
+                  <span className="ml-1 text-purple-400">defaults to {defaultSpeed}</span>
                 </Label>
                 <Input
                   type="number" step="0.1"
                   value={newWp.avg_segment_speed_kmh}
                   onChange={e => setNewWp(p => ({ ...p, avg_segment_speed_kmh: e.target.value }))}
-                  placeholder="50"
+                  placeholder={String(defaultSpeed)}
                   className="bg-slate-700 border-slate-500 text-white"
                 />
               </div>
@@ -693,7 +693,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
                           <Label className="text-slate-400 text-xs mb-1 block">Average Segment Speed (km/h)</Label>
                           <Input
                             type="number" step="0.1"
-                            value={wp.avg_segment_speed_kmh ?? 50}
+                            value={wp.avg_segment_speed_kmh ?? defaultSpeed}
                             onChange={e => updateWaypoint(index, 'avg_segment_speed_kmh', e.target.value === '' ? null : parseFloat(e.target.value))}
                             className="bg-slate-700 border-slate-500 text-white h-8 text-sm"
                           />
