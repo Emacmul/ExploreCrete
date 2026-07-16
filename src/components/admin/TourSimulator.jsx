@@ -60,7 +60,7 @@ export default function TourSimulator({ form, onWaypointUpdate, segmentScripts, 
   const waypoints = (form.waypoints || []).filter(wp => wp.lat && wp.lng);
   const isWalkingTour = form.tour_category !== 'DDV';
 
-  const [speed, setSpeed] = useState(50);
+  const [speed, setSpeed] = useState(form.tour_category === 'WBT' ? 3 : 50);
   const [simMult, setSimMult] = useState(5);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPos, setCurrentPos] = useState(trailPath[0] || null);

@@ -107,8 +107,9 @@ function parseLocationPrefix(wp) {
 
 export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCode, tourCategory, onSave, saving, userRole = 'admin', focusWaypointIndex, segmentScripts, onSegmentScriptsChange }) {
   const isNarrator = userRole === 'narrator';
+  const defaultSpeed = tourCategory === 'WBT' ? 3 : 50;
   const [expanded, setExpanded] = useState(focusWaypointIndex != null ? focusWaypointIndex : null);
-  const [newWp, setNewWp] = useState(EMPTY_WP);
+  const [newWp, setNewWp] = useState({ ...EMPTY_WP, avg_segment_speed_kmh: defaultSpeed });
   const [showAddForm, setShowAddForm] = useState(true);
   const [addError, setAddError] = useState('');
   const [gpxImportResult, setGpxImportResult] = useState(null);
@@ -246,7 +247,7 @@ export default function DrivingTourWaypointEditor({ waypoints, onChange, tourCod
     };
 
     onChange([...waypoints, wp]);
-    setNewWp({ ...EMPTY_WP, segment_number: nextSegmentNumber() });
+    setNewWp({ ...EMPTY_WP, avg_segment_speed_kmh: defaultSpeed, segment_number: nextSegmentNumber() });
     setShowAddForm(false);
     setExpanded(null);
   };
