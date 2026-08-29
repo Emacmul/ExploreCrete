@@ -1,6 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 
-Deno.serve(async (req) => {
+export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
 
@@ -12,11 +12,6 @@ Deno.serve(async (req) => {
     }
     if (!target_language) {
       return Response.json({ error: 'Missing target language' }, { status: 400 });
-    }
-
-    const apiKey = Deno.env.get('GROQ_API_KEY');
-    if (!apiKey) {
-      return Response.json({ error: 'Groq API key not configured' }, { status: 500 });
     }
 
     const prompt = `Translate the following narration script into ${target_language}.
@@ -31,42 +26,19 @@ CRITICAL RULES:
 Script:
 ${text}`;
 
-    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional translator for audio narration scripts. You always preserve SSML <break> tags exactly as written.',
-          },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.3,
-        max_tokens: 8000,
-      }),
-    });
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
 
-    if (!groqResponse.ok) {
-      const errData = await groqResponse.json().catch(() => ({}));
-      return Response.json({
-        error: errData.error?.message || `Groq API returned ${groqResponse.status}`,
-      }, { status: 500 });
-    }
+    // InvokeLLM returns a plain string when no response_json_schema is provided
+    const translatedText = typeof result === 'string'
+      ? result
+      : (result?.text || result?.data?.text || result?.response || result?.data || '');
 
-    const groqData = await groqResponse.json();
-    const translatedText = groqData.choices?.[0]?.message?.content;
-
-    if (!translatedText) {
+    if (!translatedText || !String(translatedText).trim()) {
       return Response.json({ error: 'No translation returned' }, { status: 500 });
     }
 
-    return Response.json({ translated_text: translatedText.trim() });
+    return Response.json({ translated_text: String(translatedText).trim() });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
